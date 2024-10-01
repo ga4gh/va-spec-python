@@ -30,7 +30,9 @@ keywords = [
 ]
 requires-python = ">=3.10"
 dynamic = ["version"]
-dependencies = []
+dependencies = [
+    "pydantic==2.*"
+]
 
 [project.optional-dependencies]
 dev = [
@@ -133,6 +135,7 @@ ignore = [
 # S101 - assert
 # B011 - assert-false
 "tests/*" = ["ANN001", "ANN2", "ANN102", "S101", "B011"]
+"src/ga4gh/cat_vrs/*models.py" = ["ANN102"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
