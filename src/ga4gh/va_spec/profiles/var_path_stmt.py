@@ -33,9 +33,12 @@ class VariantPathogenicityStatement(StatementBase):
     subjectVariant: Variation | CategoricalVariant | IRI = Field(  # noqa: N815
         ..., description="A variant that is the subject of the Statement."
     )
-    predicate: Literal["isCausalFor"] = "isCausalFor"
+    predicate: Literal["isCausalFor"] = Field(
+        "isCausalFor",
+        description="The relationship declared to hold between the subject and the object of the Statement.",
+    )
     objectCondition: Condition | IRI = Field(  # noqa: N815
-        ..., description="The `Condition` for which the variant impact is stated."
+        ..., description="The Condition for which the variant impact is stated."
     )
     penetranceQualifier: PenetranceQualifier | None = Field(  # noqa: N815
         None,

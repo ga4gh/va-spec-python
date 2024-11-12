@@ -26,7 +26,10 @@ class CohortAlleleFrequencyStudyResult(StudyResultBase):
         None,
         description="The dataset from which the CohortAlleleFrequencyStudyResult was reported.",
     )
-    focusAllele: Allele | str  # noqa: N815
+    focusAllele: Allele | str = Field(  # noqa: N815
+        ...,
+        description="The specific subject or experimental unit in a Study that data in the StudyResult object is about - e.g. a particular variant in a population allele frequency dataset like ExAC or gnomAD.",
+    )
     focusAlleleCount: int = Field(  # noqa: N815
         ..., description="The number of occurrences of the focusAllele in the cohort."
     )

@@ -12,6 +12,8 @@ from ga4gh.core.entity_models import (
     DataSet,
     Method,
     StatementBase,
+    StudyGroup,
+    StudyResult,
     StudyResultBase,
 )
 from ga4gh.vrs.models import MolecularVariation
@@ -50,7 +52,10 @@ class AssayVariantEffectFunctionalClassificationStatement(StatementBase):
         ...,
         description="A protein or genomic contextual or canonical molecular variant.",
     )
-    predicate: Literal["hasAssayVariantEffectFor"] = "hasAssayVariantEffectFor"
+    predicate: Literal["hasAssayVariantEffectFor"] = Field(
+        "hasAssayVariantEffectFor",
+        description="The relationship declared to hold between the subject and the object of the Statement.",
+    )
     objectAssay: IRI | Coding = Field(  # noqa: N815
         ...,
         description="The assay that is evaluated for the variant effect. (e.g growth in haploid cell culture protein stability in fluorescence assay)",
@@ -78,14 +83,17 @@ class AssayVariantEffectClinicalClassificationStatement(StatementBase):
         ...,
         description="A protein or genomic contextual or canonical molecular variant.",
     )
-    predicate: Literal["hasAssayVariantEffectFor"] = "hasAssayVariantEffectFor"
+    predicate: Literal["hasAssayVariantEffectFor"] = Field(
+        "hasAssayVariantEffectFor",
+        description="The relationship declared to hold between the subject and the object of the Statement.",
+    )
     objectAssay: IRI | Coding = Field(  # noqa: N815
         ...,
         description="The assay that is evaluated for the variant effect. (e.g growth in haploid cell culture protein stability in fluorescence assay)",
     )
     classification: AveClinicalClassification = Field(
         ...,
-        description="he clinical strength of evidence of the variant effect in the assay.",
+        description="The clinical strength of evidence of the variant effect in the assay.",
     )
     specifiedBy: Method | IRI | None = Field(  # noqa: N815
         None,
@@ -101,6 +109,14 @@ class AssayVariantEffectMeasurementStudyResult(StudyResultBase):
     type: Literal["AssayVariantEffectMeasurementStudyResult"] = Field(
         "AssayVariantEffectMeasurementStudyResult",
         description="MUST be 'AssayVariantEffectMeasurementStudyResult'.",
+    )
+    componentResult: list[StudyResult] | None = Field(  # noqa: N815
+        None,
+        description="Another StudyResult comprised of data items about the same focus as its parent Result, but based on a more narrowly scoped analysis of the foundational data (e.g. an analysis based on data about a subset of the parent Results full study population) .",
+    )
+    studyGroup: StudyGroup | None = Field(  # noqa: N815
+        None,
+        description="A description of a specific group or population of subjects interrogated in the ResearchStudy that produced the data captured in the StudyResult.",
     )
     focusVariant: MolecularVariation | IRI | None = Field(  # noqa: N815
         None,

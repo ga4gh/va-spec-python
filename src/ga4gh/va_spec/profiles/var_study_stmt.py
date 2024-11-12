@@ -74,9 +74,12 @@ class VariantDiagnosticStudyStatement(StatementBase):
     subjectVariant: Variation | CategoricalVariant | IRI = Field(  # noqa: N815
         ..., description="A variant that is the subject of the Statement."
     )
-    predicate: DiagnosticPredicate
+    predicate: DiagnosticPredicate = Field(
+        ...,
+        description="The relationship declared to hold between the subject and the object of the Statement.",
+    )
     objectCondition: Condition | IRI = Field(  # noqa: N815
-        ..., description="The `Condition` for which the variant impact is stated."
+        ..., description="The disease that is evaluated for diagnosis."
     )
     alleleOriginQualifier: AlleleOriginQualifier | None = Field(  # noqa: N815
         None,
@@ -107,7 +110,10 @@ class VariantOncogenicityStudyStatement(StatementBase):
     subjectVariant: Variation | CategoricalVariant | IRI = Field(  # noqa: N815
         ..., description="A variant that is the subject of the Statement."
     )
-    predicate: OncogenicPredicate
+    predicate: OncogenicPredicate = Field(
+        ...,
+        description="The relationship declared to hold between the subject and the object of the Statement.",
+    )
     objectTumorType: Condition | IRI = Field(  # noqa: N815
         ..., description="The tumor type for which the variant impact is evaluated."
     )
@@ -140,7 +146,10 @@ class VariantPrognosticStudyStatement(StatementBase):
     subjectVariant: Variation | CategoricalVariant | IRI = Field(  # noqa: N815
         ..., description="A variant that is the subject of the Statement."
     )
-    predicate: PrognosticPredicate
+    predicate: PrognosticPredicate = Field(
+        ...,
+        description="The relationship declared to hold between the subject and the object of the Statement.",
+    )
     objectCondition: Condition | IRI = Field(  # noqa: N815
         ..., description="The disease that is evaluated for outcome."
     )
@@ -173,7 +182,10 @@ class VariantTherapeuticResponseStudyStatement(StatementBase):
     subjectVariant: Variation | CategoricalVariant | IRI = Field(  # noqa: N815
         ..., description="A variant that is the subject of the Statement."
     )
-    predicate: TherapeuticResponsePredicate
+    predicate: TherapeuticResponsePredicate = Field(
+        ...,
+        description="The relationship declared to hold between the subject and the object of the Statement.",
+    )
     objectTherapeutic: TherapeuticProcedure | IRI = Field(  # noqa: N815
         ...,
         description="A drug administration or other therapeutic procedure that the neoplasm is intended to respond to.",
@@ -192,5 +204,5 @@ class VariantTherapeuticResponseStudyStatement(StatementBase):
     )
     geneContextQualifier: Gene | IRI | None = Field(  # noqa: N815
         None,
-        description="Reports a gene impacted by the variant, which may contribute to the therapeutic sensitivity or resistance reported in the Statement.",
+        description="Reports a gene impacted by the variant, which may contribute to the therapeutic sensitivity or resistance reported in the Statement. ",
     )
