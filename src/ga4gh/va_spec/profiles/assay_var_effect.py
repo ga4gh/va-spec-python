@@ -48,7 +48,7 @@ class AssayVariantEffectFunctionalClassificationStatement(StatementBase):
         "AssayVariantEffectFunctionalClassificationStatement",
         description="MUST be 'AssayVariantEffectFunctionalClassificationStatement'.",
     )
-    subjectVariant: MolecularVariation | CategoricalVariant | IRI = Field(  # noqa: N815
+    subjectVariant: MolecularVariation | CategoricalVariant | IRI = Field(
         ...,
         description="A protein or genomic contextual or canonical molecular variant.",
     )
@@ -56,7 +56,7 @@ class AssayVariantEffectFunctionalClassificationStatement(StatementBase):
         "hasAssayVariantEffectFor",
         description="The relationship declared to hold between the subject and the object of the Statement.",
     )
-    objectAssay: IRI | Coding = Field(  # noqa: N815
+    objectAssay: IRI | Coding = Field(
         ...,
         description="The assay that is evaluated for the variant effect. (e.g growth in haploid cell culture protein stability in fluorescence assay)",
     )
@@ -64,7 +64,7 @@ class AssayVariantEffectFunctionalClassificationStatement(StatementBase):
         ...,
         description="The functional classification of the variant effect in the assay.",
     )
-    specifiedBy: Method | IRI | None = Field(  # noqa: N815
+    specifiedBy: Method | IRI | None = Field(
         None,
         description="The method that specifies the functional classification of the variant effect in the assay.",
     )
@@ -79,7 +79,7 @@ class AssayVariantEffectClinicalClassificationStatement(StatementBase):
         "AssayVariantEffectClinicalClassificationStatement",
         description="MUST be 'AssayVariantEffectClinicalClassificationStatement'.",
     )
-    subjectVariant: MolecularVariation | CategoricalVariant | IRI = Field(  # noqa: N815
+    subjectVariant: MolecularVariation | CategoricalVariant | IRI = Field(
         ...,
         description="A protein or genomic contextual or canonical molecular variant.",
     )
@@ -87,7 +87,7 @@ class AssayVariantEffectClinicalClassificationStatement(StatementBase):
         "hasAssayVariantEffectFor",
         description="The relationship declared to hold between the subject and the object of the Statement.",
     )
-    objectAssay: IRI | Coding = Field(  # noqa: N815
+    objectAssay: IRI | Coding = Field(
         ...,
         description="The assay that is evaluated for the variant effect. (e.g growth in haploid cell culture protein stability in fluorescence assay)",
     )
@@ -95,7 +95,7 @@ class AssayVariantEffectClinicalClassificationStatement(StatementBase):
         ...,
         description="The clinical strength of evidence of the variant effect in the assay.",
     )
-    specifiedBy: Method | IRI | None = Field(  # noqa: N815
+    specifiedBy: Method | IRI | None = Field(
         None,
         description="The method that specifies the clinical strength of evidence of the variant effect in the assay.",
     )
@@ -110,25 +110,25 @@ class AssayVariantEffectMeasurementStudyResult(StudyResultBase):
         "AssayVariantEffectMeasurementStudyResult",
         description="MUST be 'AssayVariantEffectMeasurementStudyResult'.",
     )
-    componentResult: list[StudyResult] | None = Field(  # noqa: N815
+    componentResult: list[StudyResult] | None = Field(
         None,
         description="Another StudyResult comprised of data items about the same focus as its parent Result, but based on a more narrowly scoped analysis of the foundational data (e.g. an analysis based on data about a subset of the parent Results full study population) .",
     )
-    studyGroup: StudyGroup | None = Field(  # noqa: N815
+    studyGroup: StudyGroup | None = Field(
         None,
         description="A description of a specific group or population of subjects interrogated in the ResearchStudy that produced the data captured in the StudyResult.",
     )
-    focusVariant: MolecularVariation | IRI | None = Field(  # noqa: N815
+    focusVariant: MolecularVariation | IRI | None = Field(
         None,
         description="The human mapped representation of the variant that is the subject of the Statement.",
     )
     score: float | None = Field(
         None, description="The score of the variant effect in the assay."
     )
-    specifiedBy: Method | IRI | None = Field(  # noqa: N815
+    specifiedBy: Method | IRI | None = Field(
         None,
         description="The assay that was used to measure the variant effect with all the various properties",
     )
-    sourceDataSet: list[DataSet] | None = Field(  # noqa: N815
+    sourceDataSet: list[DataSet] | None = Field(
         None, description="The full data set that this measurement is a part of"
     )

@@ -71,25 +71,25 @@ class VariantDiagnosticStudyStatement(StatementBase):
         "VariantDiagnosticStudyStatement",
         description="MUST be 'VariantDiagnosticStudyStatement'.",
     )
-    subjectVariant: Variation | CategoricalVariant | IRI = Field(  # noqa: N815
+    subjectVariant: Variation | CategoricalVariant | IRI = Field(
         ..., description="A variant that is the subject of the Statement."
     )
     predicate: DiagnosticPredicate = Field(
         ...,
         description="The relationship declared to hold between the subject and the object of the Statement.",
     )
-    objectCondition: Condition | IRI = Field(  # noqa: N815
+    objectCondition: Condition | IRI = Field(
         ..., description="The disease that is evaluated for diagnosis."
     )
-    alleleOriginQualifier: AlleleOriginQualifier | None = Field(  # noqa: N815
+    alleleOriginQualifier: AlleleOriginQualifier | None = Field(
         None,
         description="Reports whether the statement should be interpreted in the context of an inherited (germline) variant, an acquired (somatic) mutation, or both (combined).",
     )
-    allelePrevalenceQualifier: AllelePrevalenceQualifier | None = Field(  # noqa: N815
+    allelePrevalenceQualifier: AllelePrevalenceQualifier | None = Field(
         None,
         description="Reports whether the statement should be interpreted in the context of the variant being rare or common.",
     )
-    geneContextQualifier: Gene | IRI | None = Field(  # noqa: N815
+    geneContextQualifier: Gene | IRI | None = Field(
         None,
         description="Reports a gene impacted by the variant, which may contribute to the diagnostic association  in the Statement.",
     )
@@ -107,25 +107,25 @@ class VariantOncogenicityStudyStatement(StatementBase):
         "VariantOncogenicityStudyStatement",
         description="MUST be 'VariantOncogenicityStudyStatement'.",
     )
-    subjectVariant: Variation | CategoricalVariant | IRI = Field(  # noqa: N815
+    subjectVariant: Variation | CategoricalVariant | IRI = Field(
         ..., description="A variant that is the subject of the Statement."
     )
     predicate: OncogenicPredicate = Field(
         ...,
         description="The relationship declared to hold between the subject and the object of the Statement.",
     )
-    objectTumorType: Condition | IRI = Field(  # noqa: N815
+    objectTumorType: Condition | IRI = Field(
         ..., description="The tumor type for which the variant impact is evaluated."
     )
-    alleleOriginQualifier: AlleleOriginQualifier | None = Field(  # noqa: N815
+    alleleOriginQualifier: AlleleOriginQualifier | None = Field(
         None,
         description="Reports whether the statement should be interpreted in the context of an inherited (germline) variant, an acquired (somatic) mutation, or both (combined).",
     )
-    allelePrevalenceQualifier: AllelePrevalenceQualifier | None = Field(  # noqa: N815
+    allelePrevalenceQualifier: AllelePrevalenceQualifier | None = Field(
         None,
         description="Reports whether the statement should be interpreted in the context of the variant being rare or common.",
     )
-    geneContextQualifier: Gene | IRI | None = Field(  # noqa: N815
+    geneContextQualifier: Gene | IRI | None = Field(
         None,
         description="Reports a gene impacted by the variant, which may contribute to the oncogenic role  in the Statement.",
     )
@@ -143,25 +143,25 @@ class VariantPrognosticStudyStatement(StatementBase):
         "VariantPrognosticStudyStatement",
         description="MUST be 'VariantPrognosticStudyStatement'.",
     )
-    subjectVariant: Variation | CategoricalVariant | IRI = Field(  # noqa: N815
+    subjectVariant: Variation | CategoricalVariant | IRI = Field(
         ..., description="A variant that is the subject of the Statement."
     )
     predicate: PrognosticPredicate = Field(
         ...,
         description="The relationship declared to hold between the subject and the object of the Statement.",
     )
-    objectCondition: Condition | IRI = Field(  # noqa: N815
+    objectCondition: Condition | IRI = Field(
         ..., description="The disease that is evaluated for outcome."
     )
-    alleleOriginQualifier: AlleleOriginQualifier | None = Field(  # noqa: N815
+    alleleOriginQualifier: AlleleOriginQualifier | None = Field(
         None,
         description="Reports whether the statement should be interpreted in the context of an inherited (germline) variant, an acquired (somatic) mutation, or both (combined).",
     )
-    allelePrevalenceQualifier: AllelePrevalenceQualifier | None = Field(  # noqa: N815
+    allelePrevalenceQualifier: AllelePrevalenceQualifier | None = Field(
         None,
         description="Reports whether the statement should be interpreted in the context of the variant being rare or common.",
     )
-    geneContextQualifier: Gene | IRI | None = Field(  # noqa: N815
+    geneContextQualifier: Gene | IRI | None = Field(
         None,
         description="Reports a gene impacted by the variant, which may contribute to the prognostic association  in the Statement.",
     )
@@ -179,30 +179,30 @@ class VariantTherapeuticResponseStudyStatement(StatementBase):
         "VariantTherapeuticResponseStudyStatement",
         description="MUST be 'VariantTherapeuticResponseStudyStatement'.",
     )
-    subjectVariant: Variation | CategoricalVariant | IRI = Field(  # noqa: N815
+    subjectVariant: Variation | CategoricalVariant | IRI = Field(
         ..., description="A variant that is the subject of the Statement."
     )
     predicate: TherapeuticResponsePredicate = Field(
         ...,
         description="The relationship declared to hold between the subject and the object of the Statement.",
     )
-    objectTherapeutic: TherapeuticProcedure | IRI = Field(  # noqa: N815
+    objectTherapeutic: TherapeuticProcedure | IRI = Field(
         ...,
         description="A drug administration or other therapeutic procedure that the neoplasm is intended to respond to.",
     )
-    conditionQualifier: Condition | IRI = Field(  # noqa: N815
+    conditionQualifier: Condition | IRI = Field(
         ...,
         description="Reports the disease context in which the variant's association with therapeutic sensitivity or resistance is evaluated. Note that this is a required qualifier in therapeutic response statements.",
     )
-    alleleOriginQualifier: AlleleOriginQualifier | None = Field(  # noqa: N815
+    alleleOriginQualifier: AlleleOriginQualifier | None = Field(
         None,
         description="Reports whether the statement should be interpreted in the context of an inherited (germline) variant, an acquired (somatic) mutation, or both (combined).",
     )
-    allelePrevalenceQualifier: AllelePrevalenceQualifier | None = Field(  # noqa: N815
+    allelePrevalenceQualifier: AllelePrevalenceQualifier | None = Field(
         None,
         description="Reports whether the statement should be interpreted in the context of the variant being rare or common.",
     )
-    geneContextQualifier: Gene | IRI | None = Field(  # noqa: N815
+    geneContextQualifier: Gene | IRI | None = Field(
         None,
         description="Reports a gene impacted by the variant, which may contribute to the therapeutic sensitivity or resistance reported in the Statement. ",
     )

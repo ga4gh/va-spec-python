@@ -22,28 +22,28 @@ class CohortAlleleFrequencyStudyResult(StudyResultBase):
         "CohortAlleleFrequencyStudyResult",
         description="MUST be 'CohortAlleleFrequencyStudyResult'.",
     )
-    sourceDataSet: list[DataSet] | None = Field(  # noqa: N815
+    sourceDataSet: list[DataSet] | None = Field(
         None,
         description="The dataset from which the CohortAlleleFrequencyStudyResult was reported.",
     )
-    focusAllele: Allele | str = Field(  # noqa: N815
+    focusAllele: Allele | str = Field(
         ...,
         description="The specific subject or experimental unit in a Study that data in the StudyResult object is about - e.g. a particular variant in a population allele frequency dataset like ExAC or gnomAD.",
     )
-    focusAlleleCount: int = Field(  # noqa: N815
+    focusAlleleCount: int = Field(
         ..., description="The number of occurrences of the focusAllele in the cohort."
     )
-    locusAlleleCount: int = Field(  # noqa: N815
+    locusAlleleCount: int = Field(
         ...,
         description="The number of occurrences of all alleles at the locus in the cohort (sometimes referred to as 'allele number')",
     )
-    focusAlleleFrequency: float = Field(  # noqa: N815
+    focusAlleleFrequency: float = Field(
         ..., description="The frequency of the focusAllele in the cohort."
     )
     cohort: list[StudyResult] = Field(
         ..., description="The cohort from which the frequency was derived."
     )
-    subCohortFrequency: list[CohortAlleleFrequencyStudyResult] | None = Field(  # noqa: N815
+    subCohortFrequency: list[CohortAlleleFrequencyStudyResult] | None = Field(
         None,
         description="A list of CohortAlleleFrequency objects describing subcohorts of the cohort currently being described. This creates a recursive relationship and subcohorts can be further subdivided into more subcohorts. This enables, for example, the description of different ancestry groups and sexes among those ancestry groups.",
     )
