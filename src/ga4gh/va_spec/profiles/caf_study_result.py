@@ -6,7 +6,7 @@ from typing import Literal
 
 from ga4gh.core.entity_models import (
     DataSet,
-    StudyResult,
+    StudyGroup,
     StudyResultBase,
 )
 from ga4gh.vrs.models import Allele
@@ -40,7 +40,7 @@ class CohortAlleleFrequencyStudyResult(StudyResultBase):
     focusAlleleFrequency: float = Field(
         ..., description="The frequency of the focusAllele in the cohort."
     )
-    cohort: list[StudyResult] = Field(
+    cohort: list[StudyGroup] = Field(
         ..., description="The cohort from which the frequency was derived."
     )
     subCohortFrequency: list[CohortAlleleFrequencyStudyResult] | None = Field(
