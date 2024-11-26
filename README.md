@@ -1,6 +1,7 @@
 # va-spec-python
 
-GA4GH Variant Annotation (VA) Python Implementation
+**VA-Spec-Python** provides Python language support and a reference implementation for
+the [GA4GH Variant Annotation Specification (VA-Spec)](https://github.com/ga4gh/va-spec).
 
 ## Information
 
