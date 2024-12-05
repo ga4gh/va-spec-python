@@ -9,7 +9,7 @@ the [GA4GH Variant Annotation Specification (VA-Spec)](https://github.com/ga4gh/
 
 ## Releases
 
-[![gitHub tag](https://img.shields.io/github/v/tag/ga4gh/va-spec-python.svg)](https://github.com/ga4gh/va-spec-python/releases) [![pypi](https://img.shields.io/pypi/v/ga4gh.va_spec.svg)](https://pypi.org/project/ga4gh.va_spec/)
+[![gitHub tag](https://img.shields.io/github/v/tag/ga4gh/va-spec-python.svg)](https://github.com/ga4gh/va-spec-python/releases) [![pypi](https://img.shields.io/pypi/v/ga4gh.va_spec.svg)](https://pypi.org/project/ga4gh.va_spec/) [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.14226053.svg)](https://doi.org/10.5281/zenodo.14226053)
 
 ## Development
 
