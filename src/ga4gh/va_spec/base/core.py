@@ -6,6 +6,7 @@ from enum import Enum
 from typing import Annotated, Literal
 
 from pydantic import (
+    ConfigDict,
     Field,
     RootModel,
     StringConstraints,
@@ -142,6 +143,8 @@ class VariantDiagnosticProposition(ClinicalVariantProposition):
     """A Proposition about whether a variant is associated with a disease (a diagnostic
     inclusion criterion), or absence of a disease (diagnostic exclusion criterion)."""
 
+    model_config = ConfigDict(use_enum_values=True)
+
     type: Literal["VariantDiagnosticProposition"] = Field(
         "VariantDiagnosticProposition",
         description="MUST be 'VariantDiagnosticProposition'.",
@@ -196,6 +199,8 @@ class PrognosticPredicate(str, Enum):
 class VariantPrognosticProposition(ClinicalVariantProposition):
     """A Proposition about whether a variant is associated with an improved or worse outcome for a disease."""
 
+    model_config = ConfigDict(use_enum_values=True)
+
     type: Literal["VariantPrognosticProposition"] = Field(
         "VariantPrognosticProposition",
         description="MUST be 'VariantPrognosticProposition'.",
@@ -216,6 +221,8 @@ class TherapeuticResponsePredicate(str, Enum):
 class VariantTherapeuticResponseProposition(ClinicalVariantProposition):
     """A Proposition about the role of a variant in modulating the response of a neoplasm to drug
     administration or other therapeutic procedures."""
+
+    model_config = ConfigDict(use_enum_values=True)
 
     type: Literal["VariantTherapeuticResponseProposition"] = Field(
         "VariantTherapeuticResponseProposition",
@@ -374,6 +381,8 @@ class EvidenceLine(InformationEntity):
     an interpretation of one or more pieces of information as evidence for or against
     the target Proposition."""
 
+    model_config = ConfigDict(use_enum_values=True)
+
     type: Literal["EvidenceLine"] = Field(
         CoreType.EVIDENCE_LINE.value,
         description=f"MUST be '{CoreType.EVIDENCE_LINE.value}'.",
@@ -412,6 +421,7 @@ class Statement(InformationEntity):
     as true or false, or to provide a more nuanced assessment of the level of confidence
     or evidence supporting a particular Proposition.
     """
+    model_config = ConfigDict(use_enum_values=True)
 
     type: Literal["Statement"] = Field(
         CoreType.STATEMENT.value, description=f"MUST be '{CoreType.STATEMENT.value}'."
