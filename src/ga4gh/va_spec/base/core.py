@@ -1,3 +1,5 @@
+"""VA Spec Base Core Models"""
+
 from __future__ import annotations
 
 from abc import ABC
@@ -5,17 +7,16 @@ from datetime import date
 from enum import Enum
 from typing import Annotated, Literal
 
+from ga4gh.cat_vrs.models import CategoricalVariant
+from ga4gh.core.models import Entity, MappableConcept, iriReference
+from ga4gh.va_spec.base.domain_entities import Condition, Therapeutic
+from ga4gh.vrs.models import MolecularVariation
 from pydantic import (
     ConfigDict,
     Field,
     RootModel,
     StringConstraints,
 )
-
-from ga4gh.cat_vrs.models import CategoricalVariant
-from ga4gh.core.models import Entity, MappableConcept, iriReference
-from ga4gh.va_spec.base.domain_entities import Condition, Therapeutic
-from ga4gh.vrs.models import MolecularVariation
 
 #########################################
 # Abstract Core Classes
@@ -141,7 +142,8 @@ class DiagnosticPredicate(str, Enum):
 
 class VariantDiagnosticProposition(ClinicalVariantProposition):
     """A Proposition about whether a variant is associated with a disease (a diagnostic
-    inclusion criterion), or absence of a disease (diagnostic exclusion criterion)."""
+    inclusion criterion), or absence of a disease (diagnostic exclusion criterion).
+    """
 
     model_config = ConfigDict(use_enum_values=True)
 
@@ -220,7 +222,8 @@ class TherapeuticResponsePredicate(str, Enum):
 
 class VariantTherapeuticResponseProposition(ClinicalVariantProposition):
     """A Proposition about the role of a variant in modulating the response of a neoplasm to drug
-    administration or other therapeutic procedures."""
+    administration or other therapeutic procedures.
+    """
 
     model_config = ConfigDict(use_enum_values=True)
 
@@ -245,6 +248,8 @@ class VariantTherapeuticResponseProposition(ClinicalVariantProposition):
 
 
 class CoreType(str, Enum):
+    """Define VA Spec Base Core Types"""
+
     METHOD = "Method"
     CONTRIBUTION = "Contribution"
     DOCUMENT = "Document"
@@ -342,15 +347,18 @@ class Agent(Entity):
 
 class Direction(str, Enum):
     """A term indicating whether the Statement supports, disputes, or remains neutral
-    w.r.t. the validity of the Proposition it evaluates."""
+    w.r.t. the validity of the Proposition it evaluates.
+    """
 
     SUPPORTS = "supports"
     NEUTRAL = "neutral"
     DISPUTES = "disputes"
 
+
 class DataSet(Entity):
     """A collection of related data items or records that are organized together in a
-    common format or structure, to enable their computational manipulation as a unit."""
+    common format or structure, to enable their computational manipulation as a unit.
+    """
 
     type: Literal["DataSet"] = Field(
         CoreType.DATA_SET.value, description=f"MUST be '{CoreType.DATA_SET.value}'."
@@ -379,7 +387,8 @@ class EvidenceLine(InformationEntity):
     """An independent, evidence-based argument that may support or refute the validity
     of a specific Proposition. The strength and direction of this argument is based on
     an interpretation of one or more pieces of information as evidence for or against
-    the target Proposition."""
+    the target Proposition.
+    """
 
     model_config = ConfigDict(use_enum_values=True)
 
@@ -421,6 +430,7 @@ class Statement(InformationEntity):
     as true or false, or to provide a more nuanced assessment of the level of confidence
     or evidence supporting a particular Proposition.
     """
+
     model_config = ConfigDict(use_enum_values=True)
 
     type: Literal["Statement"] = Field(

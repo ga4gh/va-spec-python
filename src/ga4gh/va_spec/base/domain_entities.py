@@ -1,9 +1,7 @@
 """VA Spec Shared Domain Entity Data Structures"""
 
-
-from pydantic import Field, RootModel
-
 from ga4gh.core.models import Element, MappableConcept
+from pydantic import Field, RootModel
 
 
 class TraitSet(Element):
@@ -43,8 +41,7 @@ class TherapyGroup(Element):
 
 
 class Therapeutic(RootModel):
-    """A group of therapies (TherapyGroup) or a single therapy (drug, procedure, behavioral intervention, etc.).
-    """
+    """A group of therapies (TherapyGroup) or a single therapy (drug, procedure, behavioral intervention, etc.)."""
 
     root: TherapyGroup | MappableConcept = Field(
         ...,

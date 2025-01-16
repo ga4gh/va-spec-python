@@ -1,14 +1,13 @@
 """AMP/ASCO/CAP 2017"""
 
-from pydantic import (
-    Field,
-)
-
 from ga4gh.va_spec.base.core import (
     Statement,
     VariantDiagnosticProposition,
     VariantPrognosticProposition,
     VariantTherapeuticResponseProposition,
+)
+from pydantic import (
+    Field,
 )
 
 
@@ -19,8 +18,10 @@ class VariantDiagnosticStudyStatement(Statement):
     results.
     """
 
-    proposition: VariantDiagnosticProposition = Field(..., description="A proposition about a diagnostic association between a variant and condition, for which the study provides evidence. The validity of this proposition, and the level of confidence/evidence supporting it, may be assessed and reported by the Statement.")
-
+    proposition: VariantDiagnosticProposition = Field(
+        ...,
+        description="A proposition about a diagnostic association between a variant and condition, for which the study provides evidence. The validity of this proposition, and the level of confidence/evidence supporting it, may be assessed and reported by the Statement.",
+    )
 
 
 class VariantPrognosticStudyStatement(Statement):
@@ -29,8 +30,10 @@ class VariantPrognosticStudyStatement(Statement):
     results.
     """
 
-    proposition: VariantPrognosticProposition = Field(..., description="A proposition about a prognostic association between a variant and condition, for which the study provides evidence. The validity of this proposition, and the level of confidence/evidence supporting it, may be assessed and reported by the Statement.")
-
+    proposition: VariantPrognosticProposition = Field(
+        ...,
+        description="A proposition about a prognostic association between a variant and condition, for which the study provides evidence. The validity of this proposition, and the level of confidence/evidence supporting it, may be assessed and reported by the Statement.",
+    )
 
 
 class VariantTherapeuticResponseStudyStatement(Statement):
@@ -39,4 +42,7 @@ class VariantTherapeuticResponseStudyStatement(Statement):
     interpretation of the study's results.
     """
 
-    proposition: VariantTherapeuticResponseProposition = Field(..., description="A proposition about the therapeutic response associated with a variant, for which the study provides evidence. The validity of this proposition, and the level of confidence/evidence supporting it, may be assessed and reported by the Statement.")
+    proposition: VariantTherapeuticResponseProposition = Field(
+        ...,
+        description="A proposition about the therapeutic response associated with a variant, for which the study provides evidence. The validity of this proposition, and the level of confidence/evidence supporting it, may be assessed and reported by the Statement.",
+    )
