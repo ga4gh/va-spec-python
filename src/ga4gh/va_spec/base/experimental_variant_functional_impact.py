@@ -3,20 +3,20 @@
 from typing import Literal
 
 from ga4gh.core.models import iriReference
-from ga4gh.va_spec.base.core import DataSet, Method, StudyResult
+from ga4gh.va_spec.base.core import StudyResultBase, DataSet, Method, StudyResult
 from ga4gh.vrs.models import MolecularVariation
 from pydantic import Field
 
 
-class ExperimentalVariantFunctionalImpactStudyResult(StudyResult):
+class ExperimentalVariantFunctionalImpactStudyResult(StudyResultBase):
     """A StudyResult that reports a functional impact score from a variant functional assay or study."""
 
     type: Literal["ExperimentalVariantFunctionalImpactStudyResult"] = Field(
         "ExperimentalVariantFunctionalImpactStudyResult",
         description="MUST be 'ExperimentalVariantFunctionalImpactStudyResult'.",
     )
-    focusVariant: MolecularVariation | iriReference | None = Field(
-        None,
+    focusVariant: MolecularVariation | iriReference = Field(
+        ...,
         description="The genetic variant for which a functional impact score is generated.",
     )
     functionalImpactScore: float | None = Field(
@@ -29,5 +29,5 @@ class ExperimentalVariantFunctionalImpactStudyResult(StudyResult):
     )
     sourceDataSet: DataSet | None = Field(
         None,
-        description="The full data set that provided the reported the functional impact score.",
+        description="The full data set that provided the reported the functional impact score. ",
     )

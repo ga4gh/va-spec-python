@@ -1,14 +1,15 @@
 """Cohort Allele Frequency Study Result Standard Profile"""
+from __future__ import annotations
 
 from typing import Literal
 
 from ga4gh.core.models import iriReference
-from ga4gh.va_spec.base.core import DataSet, StudyGroup, StudyResult
+from ga4gh.va_spec.base.core import StudyResultBase, DataSet, StudyGroup, StudyResult
 from ga4gh.vrs.models import Allele
 from pydantic import Field
 
 
-class CohortAlleleFrequencyStudyResult(StudyResult):
+class CohortAlleleFrequencyStudyResult(StudyResultBase):
     """A StudyResult that reports measures related to the frequency of an Allele in a cohort"""
 
     type: Literal["CohortAlleleFrequencyStudyResult"] = Field(
@@ -35,12 +36,9 @@ class CohortAlleleFrequencyStudyResult(StudyResult):
     cohort: StudyGroup = Field(
         ..., description="The cohort from which the frequency was derived."
     )
-    subCohortFrequency: list["CohortAlleleFrequencyStudyResult"] | None = Field(
+    subCohortFrequency: list[CohortAlleleFrequencyStudyResult] | None = Field(
         None,
-        description="A list of CohortAlleleFrequency objects describing subcohorts of the cohort currently being described. Subcohorts can be further subdivided into more subcohorts. This enables, for example, the description of different ancestry groups and sexes among those ancestry groups.",
+        description="A list of CohortAlleleFrequency objects describing subcohorts of the cohort currently being described. Subcohorts can be further subdivided into more subcohorts. This enables, for example, the description  of different ancestry groups and sexes among those ancestry groups.",
     )
     ancillaryResults: dict | None = None
     qualityMeasures: dict | None = None
-
-
-CohortAlleleFrequencyStudyResult.model_rebuild()

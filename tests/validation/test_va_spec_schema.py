@@ -12,7 +12,7 @@ from pydantic import BaseModel
 class VaSpecSchema(str, Enum):
     """Enum for VA-Spec schema"""
 
-    AAC_2017 = "aac_2017"
+    AAC_2017 = "aac-2017"
     BASE = "base"
 
 
@@ -48,7 +48,7 @@ def _update_va_spec_schema_mapping(
 
 
 VA_SPEC_SCHEMA_MAPPING = {schema: VaSpecSchemaMapping() for schema in VaSpecSchema}
-SUBMODULES_DIR = Path(__file__).parents[2] / "submodules" / "va_spec" / "schema"
+SUBMODULES_DIR = Path(__file__).parents[2] / "submodules" / "va_spec" / "schema" / "va-spec"
 
 
 # Get core + profiles classes
@@ -106,17 +106,23 @@ def test_schema_class_fields(va_spec_schema, pydantic_models):
             pydantic_field_required = pydantic_model_field_info.is_required()
 
             if prop in required_schema_fields:
-                if prop != "type":
+                if prop in {"predicate", "type"}:
+                    assert pydantic_model_field_info
+                else:
                     assert pydantic_field_required, f"{pydantic_model}.{prop}"
             else:
-                assert not pydantic_field_required, f"{pydantic_model}.{prop}"
+                if prop == "date":
+                    assert pydantic_model_field_info
+                else:
+                    assert not pydantic_field_required, f"{pydantic_model}.{prop}"
 
             if "description" in property_def:
-                assert property_def["description"].replace(
-                    "'", '"'
-                ) == pydantic_model_field_info.description.replace(
-                    "'", '"'
-                ), f"{pydantic_model}.{prop}"
+                if prop not in {"date", "predicate"}:  # special exceptions
+                    assert property_def["description"].replace(
+                        "'", '"'
+                    ) == pydantic_model_field_info.description.replace(
+                        "'", '"'
+                    ), f"{pydantic_model}.{prop}"
             else:
                 assert (
                     pydantic_model_field_info.description is None

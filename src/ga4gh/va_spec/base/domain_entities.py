@@ -8,7 +8,7 @@ class TraitSet(Element):
     """A set of conditions (diseases, phenotypes, traits) that are co-occurring."""
 
     traits: list[MappableConcept] | None = Field(
-        ...,
+        None,
         min_length=2,
         description="A list of conditions (diseases, phenotypes, traits) that are co-occurring.",
     )
@@ -31,7 +31,7 @@ class TherapyGroup(Element):
     """A group of therapies that are applied together to treat a condition."""
 
     therapies: list[MappableConcept] | None = Field(
-        ...,
+        None,
         min_length=2,
         description="A list of therapies that are applied together to treat a condition.",
     )

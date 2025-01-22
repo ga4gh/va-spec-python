@@ -8,7 +8,7 @@ from enum import Enum
 from typing import Annotated, Literal
 
 from ga4gh.cat_vrs.models import CategoricalVariant
-from ga4gh.core.models import Entity, MappableConcept, iriReference
+from ga4gh.core.models import Entity, EntityBase, MappableConcept, iriReference
 from ga4gh.va_spec.base.domain_entities import Condition, Therapeutic
 from ga4gh.vrs.models import MolecularVariation
 from pydantic import (
@@ -42,19 +42,21 @@ class InformationEntity(Entity):
     )
 
 
-class StudyResult(InformationEntity):
+class StudyResultBase(InformationEntity, ABC):
+    sourceDataSet: DataSet | None = Field(
+        None,
+        description="A larger DataSet from which the data included in the StudyResult was taken or derived.",
+    )
+
+
+class StudyResult(StudyResultBase):
     """A collection of data items from a single study that pertain to a particular subject
     or experimental unit in the study, along with optional provenance information
     describing how these data items were generated.
     """
-
     focus: Entity | MappableConcept | iriReference = Field(
         ...,
         description="The specific participant, subject or experimental unit in a Study that data included in the StudyResult object is about - e.g. a particular variant in a population allele frequency dataset like ExAC or gnomAD.",
-    )
-    sourceDataSet: DataSet | None = Field(
-        None,
-        description="A larger DataSet from which the data included in the StudyResult was taken or derived.",
     )
 
 
@@ -92,8 +94,8 @@ class SubjectVariantProposition(RootModel):
 
 
 class _SubjectVariantPropositionBase(Entity, ABC):
-    subjectVariant: MolecularVariation | CategoricalVariant | iriReference | None = (
-        Field(None, description="A variant that is the subject of the Proposition.")
+    subjectVariant: MolecularVariation | CategoricalVariant | iriReference = (
+        Field(..., description="A variant that is the subject of the Proposition.")
     )
 
 
@@ -102,7 +104,7 @@ class ClinicalVariantProposition(_SubjectVariantPropositionBase):
 
     geneContextQualifier: MappableConcept | iriReference | None = Field(
         None,
-        description="Reports a gene impacted by the variant, which may contribute to the association described in the Proposition.",
+        description="Reports a gene impacted by the variant, which may contribute to the association  described in the Proposition.",
     )
     alleleOriginQualifier: MappableConcept | iriReference | None = Field(
         None,
@@ -125,11 +127,11 @@ class ExperimentalVariantFunctionalImpactProposition(_SubjectVariantPropositionB
     )
     objectSequenceFeature: iriReference | MappableConcept = Field(
         ...,
-        description="The sequence feature (typically a gene or gene product) on whose function the impact of the subject variant is reported.",
+        description="The sequence feature (typically a gene or gene product) on whose function the impact  of the subject variant is reported.",
     )
     experimentalContextQualifier: iriReference | Document | dict | None = Field(
         None,
-        description="An assay in which the reported variant functional impact was determined - providing a specific experimental context in which this effect is asserted to hold.",
+        description="An assay in which the reported variant functional impact was determined -  providing a specific experimental context in which this effect is asserted to hold.",
     )
 
 
@@ -175,11 +177,11 @@ class VariantPathogenicityProposition(ClinicalVariantProposition):
 
     type: Literal["VariantPathogenicityProposition"] = Field(
         "VariantPathogenicityProposition",
-        description="MUST be 'VariantPathogenicityProposition'",
+        description="Must be 'VariantPathogenicityProposition'",
     )
     predicate: str = "isCausalFor"
     objectCondition: Condition | iriReference = Field(
-        ..., description="The :ref:`Condition` for which the variant impact is stated."
+        ..., description="The Condition for which the variant impact is stated."
     )
     penetranceQualifier: MappableConcept | None = Field(
         None,
@@ -238,7 +240,7 @@ class VariantTherapeuticResponseProposition(ClinicalVariantProposition):
     )
     conditionQualifier: Condition | iriReference = Field(
         ...,
-        description="Reports the disease context in which the variant's association with therapeutic sensitivity or resistance is evaluated. Note that this is a required qualifier in therapeutic response propositions.",
+        description="Reports the disease context in which the variant's association with therapeutic sensitivity or resistance is evaluated. Note that this is a required qualifier in therapeutic response propositions. ",
     )
 
 
@@ -301,7 +303,7 @@ class Document(Entity):
     """
 
     type: Literal["Document"] = Field(
-        CoreType.DOCUMENT.value, description=f"Must be '{CoreType.DOCUMENT.value}'."
+        CoreType.DOCUMENT.value, description=f"Must be '{CoreType.DOCUMENT.value}'"
     )
     subtype: MappableConcept | None = Field(
         None,
@@ -321,15 +323,15 @@ class Document(Entity):
         | None
     ) = Field(
         None,
-        description="A `Digital Object Identifier <https://www.doi.org/the-identifier/what-is-a-doi/>`_ for the document.",
+        description="A [Digital Object Identifier](https://www.doi.org/the-identifier/what-is-a-doi/) for the document.",
     )
     pmid: int | None = Field(
         None,
-        description="A `PubMed unique identifier <https://en.wikipedia.org/wiki/PubMed#PubMed_identifier>`_ for the document.",
+        description="A [PubMed unique identifier](https://en.wikipedia.org/wiki/PubMed#PubMed_identifier) for the document.",
     )
 
 
-class Agent(Entity):
+class Agent(EntityBase):
     """An autonomous actor (person, organization, or software agent) that bears some
     form of responsibility for an activity taking place, for the existence of an entity,
     or for another agent's activity.
@@ -450,7 +452,7 @@ class Statement(InformationEntity):
     )
     score: float | None = Field(
         None,
-        description="A quantitative score that indicates the strength of a Proposition's assessment in the direction indicated (i.e. how strongly supported or disputed the Proposition is believed to be). Depending on its implementation, a score may reflect how *confident* that agent is that the Proposition is true or false, or the *strength of evidence* they believe supports or disputes it. Instructions for how to interpret the menaing of a given score may be gleaned from the method or document referenced in 'specifiedBy' attribute.",
+        description="A quantitative score that indicates the strength of a Proposition's assessment in the direction indicated (i.e. how strongly supported or disputed the Proposition is believed to be). Depending on its implementation, a score may reflect how *confident* that agent is that the Proposition is true or false, or the *strength of evidence* they believe supports or disputes it. Instructions for how to interpret the menaing of a given score may be gleaned from the method or document referenced in 'specifiedBy' attribute. ",
     )
     classification: MappableConcept | None = Field(
         None,
