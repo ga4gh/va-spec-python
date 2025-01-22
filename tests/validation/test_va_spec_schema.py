@@ -1,56 +1,105 @@
-"""Test that VA-Spec Python model structures match VA-Spec Schema"""
+"""Test that VA-Spec Python Pydantic models match corresponding JSON schemas"""
 
 import json
+from enum import Enum
 from pathlib import Path
-from typing import Literal, get_args, get_origin
 
-import ga4gh.va_spec.profiles as va_spec_profiles
-
-ROOT_DIR = Path(__file__).parents[2]
-VA_SPEC_SCHEMA_DIR = (
-    ROOT_DIR / "submodules" / "va_spec" / "schema" / "profiles" / "json"
-)
-VA_SPEC_SCHEMA = {}
-
-VA_SPEC_BASE_CLASSES = set()
-VA_SPEC_CONCRETE_CLASSES = set()
-VA_SPEC_PRIMITIVES = set()
+import pytest
+from ga4gh.va_spec import aac_2017, base
+from pydantic import BaseModel
 
 
-# Get profile classes
-for f in VA_SPEC_SCHEMA_DIR.glob("*"):
-    with f.open() as rf:
+class VaSpecSchema(str, Enum):
+    """Enum for VA-Spec schema"""
+
+    AAC_2017 = "aac_2017"
+    BASE = "base"
+
+
+class VaSpecSchemaMapping(BaseModel):
+    """Model for representing VA-Spec Schema concrete classes, primitives, and schema"""
+
+    base_classes: set = set()
+    concrete_classes: set = set()
+    primitives: set = set()
+    schema: dict = {}
+
+
+def _update_va_spec_schema_mapping(
+    f_path: Path, va_spec_schema_mapping: VaSpecSchemaMapping
+) -> None:
+    """Update ``va_spec_schema_mapping`` properties
+
+    :param f_path: Path to JSON Schema file
+    :param va_spec_schema_mapping: VA-Spec schema mapping to update
+    """
+    with f_path.open() as rf:
         cls_def = json.load(rf)
 
-    va_spec_class = cls_def["title"]
-    VA_SPEC_SCHEMA[va_spec_class] = cls_def
+    spec_class = cls_def["title"]
+    va_spec_schema_mapping.schema[spec_class] = cls_def
 
     if "properties" in cls_def:
-        VA_SPEC_CONCRETE_CLASSES.add(va_spec_class)
+        va_spec_schema_mapping.concrete_classes.add(spec_class)
     elif cls_def.get("type") in {"array", "integer", "string"}:
-        VA_SPEC_PRIMITIVES.add(va_spec_class)
+        va_spec_schema_mapping.primitives.add(spec_class)
     else:
-        VA_SPEC_BASE_CLASSES.add(va_spec_class)
+        va_spec_schema_mapping.base_classes.add(spec_class)
 
 
-def test_schema_models_in_pydantic():
+VA_SPEC_SCHEMA_MAPPING = {schema: VaSpecSchemaMapping() for schema in VaSpecSchema}
+SUBMODULES_DIR = Path(__file__).parents[2] / "submodules" / "va_spec" / "schema"
+
+
+# Get core + profiles classes
+for child in SUBMODULES_DIR.iterdir():
+    child_str = str(child)
+    if child_str.endswith(VaSpecSchema.AAC_2017):
+        mapping_key = VaSpecSchema.AAC_2017
+    elif child_str.endswith(VaSpecSchema.BASE):
+        mapping_key = VaSpecSchema.BASE
+    else:
+        continue
+
+    mapping = VA_SPEC_SCHEMA_MAPPING[mapping_key]
+    for f in (child / "json").glob("*"):
+        _update_va_spec_schema_mapping(f, mapping)
+
+
+@pytest.mark.parametrize(
+    ("va_spec_schema", "pydantic_models"),
+    [
+        (VaSpecSchema.AAC_2017, aac_2017),
+        (VaSpecSchema.BASE, base),
+    ],
+)
+def test_schema_models_in_pydantic(va_spec_schema, pydantic_models):
     """Ensure that each schema model has corresponding Pydantic model"""
-    for va_spec_class in (
-        VA_SPEC_BASE_CLASSES | VA_SPEC_CONCRETE_CLASSES | VA_SPEC_PRIMITIVES
+    mapping = VA_SPEC_SCHEMA_MAPPING[va_spec_schema]
+    for schema_model in (
+        mapping.base_classes | mapping.concrete_classes | mapping.primitives
     ):
-        assert getattr(va_spec_profiles, va_spec_class, False), va_spec_class
+        assert getattr(pydantic_models, schema_model, False), schema_model
 
 
-def test_schema_class_fields():
+@pytest.mark.parametrize(
+    ("va_spec_schema", "pydantic_models"),
+    [
+        (VaSpecSchema.AAC_2017, aac_2017),
+        (VaSpecSchema.BASE, base),
+    ],
+)
+def test_schema_class_fields(va_spec_schema, pydantic_models):
     """Check that each schema model properties exist and are required in corresponding
     Pydantic model, and validate required properties
     """
-    for va_spec_class in VA_SPEC_CONCRETE_CLASSES:
-        schema_properties = VA_SPEC_SCHEMA[va_spec_class]["properties"]
-        pydantic_model = getattr(va_spec_profiles, va_spec_class)
-        assert set(pydantic_model.model_fields) == set(schema_properties), va_spec_class
+    mapping = VA_SPEC_SCHEMA_MAPPING[va_spec_schema]
+    for schema_model in mapping.concrete_classes:
+        schema_properties = mapping.schema[schema_model]["properties"]
+        pydantic_model = getattr(pydantic_models, schema_model)
+        assert set(pydantic_model.model_fields) == set(schema_properties), schema_model
 
-        required_schema_fields = set(VA_SPEC_SCHEMA[va_spec_class]["required"])
+        required_schema_fields = set(mapping.schema[schema_model]["required"])
 
         for prop, property_def in schema_properties.items():
             pydantic_model_field_info = pydantic_model.model_fields[prop]
@@ -58,21 +107,16 @@ def test_schema_class_fields():
 
             if prop in required_schema_fields:
                 if prop != "type":
-                    if get_origin(pydantic_model_field_info.annotation) is Literal:
-                        assert (
-                            get_args(pydantic_model_field_info.annotation)[0]
-                            == pydantic_model_field_info.default
-                        )
-                    else:
-                        assert pydantic_field_required, f"{pydantic_model}.{prop}"
+                    assert pydantic_field_required, f"{pydantic_model}.{prop}"
             else:
                 assert not pydantic_field_required, f"{pydantic_model}.{prop}"
 
-            if property_def.get("description") is not None:
-                field_descr = pydantic_model_field_info.description or ""
+            if "description" in property_def:
                 assert property_def["description"].replace(
                     "'", '"'
-                ) == field_descr.replace("'", '"'), f"{pydantic_model}.{prop}"
+                ) == pydantic_model_field_info.description.replace(
+                    "'", '"'
+                ), f"{pydantic_model}.{prop}"
             else:
                 assert (
                     pydantic_model_field_info.description is None
