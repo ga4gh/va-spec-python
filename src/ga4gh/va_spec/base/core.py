@@ -16,6 +16,7 @@ from pydantic import (
     Field,
     RootModel,
     StringConstraints,
+    field_validator,
 )
 
 #########################################
@@ -347,6 +348,11 @@ class Agent(Entity):
         description="A specific type of agent the Agent object represents. Recommended subtypes include codes for `person`, `organization`, or `software`.",
     )
 
+    @field_validator("label", mode="before")
+    def set_label_to_none(cls, v: Any) -> None:  # noqa: ANN401, N805
+        """Set label to None"""
+        return
+
     def __getattribute__(self, name: str) -> Any:  # noqa: ANN401
         """Retrieve the value of the specified attribute
 
@@ -356,7 +362,7 @@ class Agent(Entity):
             Agent or the attribute is `label`
         """
         if name == "label":
-            err_msg = f"'{type(self).__name__!r}' object has no attribute '{name!r}'"
+            err_msg = f"'{type(self).__name__!r}' object has no attribute '{name!r}'. Use 'name' instead."
             raise AttributeError(err_msg)
         return super().__getattribute__(name)
 

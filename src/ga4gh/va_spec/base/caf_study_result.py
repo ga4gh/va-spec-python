@@ -7,7 +7,7 @@ from typing import Any, Literal
 from ga4gh.core.models import iriReference
 from ga4gh.va_spec.base.core import DataSet, StudyGroup, StudyResult
 from ga4gh.vrs.models import Allele
-from pydantic import Field
+from pydantic import Field, field_validator
 
 
 class CohortAlleleFrequencyStudyResult(StudyResult):
@@ -59,6 +59,11 @@ class CohortAlleleFrequencyStudyResult(StudyResult):
             err_msg = f"'{type(self).__name__!r}' object has no attribute '{name!r}'"
             raise AttributeError(err_msg)
         return super().__getattribute__(name)
+
+    @field_validator("focus", mode="before")
+    def set_focus_to_none(cls, v: Any) -> None:  # noqa: ANN401, N805
+        """Set focus to None"""
+        return
 
 
 del CohortAlleleFrequencyStudyResult.model_fields[

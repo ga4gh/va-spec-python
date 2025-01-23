@@ -31,6 +31,16 @@ def test_agent():
     with pytest.raises(ValueError, match='"Agent" object has no field "label"'):
         agent.label = "This is an agent"
 
+    agent = Agent(
+        **{  # noqa: PIE804
+            "name": "Joe",
+            "label": "Jane"
+        }
+    )
+
+    with pytest.raises(AttributeError, match="'Agent' object has no attribute 'label'"):
+        agent.label  # noqa: B018
+
 
 def test_caf_study_result():
     """Ensure CohortAlleleFrequencyStudyResult model works as expected
