@@ -5,10 +5,10 @@ from __future__ import annotations
 from abc import ABC
 from datetime import date
 from enum import Enum
-from typing import Annotated, Literal
+from typing import Annotated, Any, Literal
 
 from ga4gh.cat_vrs.models import CategoricalVariant
-from ga4gh.core.models import Entity, EntityBase, MappableConcept, iriReference
+from ga4gh.core.models import Entity, MappableConcept, iriReference
 from ga4gh.va_spec.base.domain_entities import Condition, Therapeutic
 from ga4gh.vrs.models import MolecularVariation
 from pydantic import (
@@ -42,21 +42,19 @@ class InformationEntity(Entity):
     )
 
 
-class StudyResultBase(InformationEntity, ABC):
-    sourceDataSet: DataSet | None = Field(
-        None,
-        description="A larger DataSet from which the data included in the StudyResult was taken or derived.",
-    )
-
-
-class StudyResult(StudyResultBase):
+class StudyResult(InformationEntity, ABC):
     """A collection of data items from a single study that pertain to a particular subject
     or experimental unit in the study, along with optional provenance information
     describing how these data items were generated.
     """
+
     focus: Entity | MappableConcept | iriReference = Field(
         ...,
         description="The specific participant, subject or experimental unit in a Study that data included in the StudyResult object is about - e.g. a particular variant in a population allele frequency dataset like ExAC or gnomAD.",
+    )
+    sourceDataSet: DataSet | None = Field(
+        None,
+        description="A larger DataSet from which the data included in the StudyResult was taken or derived.",
     )
 
 
@@ -94,8 +92,8 @@ class SubjectVariantProposition(RootModel):
 
 
 class _SubjectVariantPropositionBase(Entity, ABC):
-    subjectVariant: MolecularVariation | CategoricalVariant | iriReference = (
-        Field(..., description="A variant that is the subject of the Proposition.")
+    subjectVariant: MolecularVariation | CategoricalVariant | iriReference = Field(
+        ..., description="A variant that is the subject of the Proposition."
     )
 
 
@@ -331,7 +329,7 @@ class Document(Entity):
     )
 
 
-class Agent(EntityBase):
+class Agent(Entity):
     """An autonomous actor (person, organization, or software agent) that bears some
     form of responsibility for an activity taking place, for the existence of an entity,
     or for another agent's activity.
@@ -340,11 +338,30 @@ class Agent(EntityBase):
     type: Literal["Agent"] = Field(
         CoreType.AGENT.value, description=f"MUST be '{CoreType.AGENT.value}'."
     )
+    label: None = Field(
+        None, exclude=True, repr=False
+    )  # extends property in JSON Schema. Should not be used
     name: str | None = Field(None, description="The given name of the Agent.")
     subtype: MappableConcept | None = Field(
         None,
         description="A specific type of agent the Agent object represents. Recommended subtypes include codes for `person`, `organization`, or `software`.",
     )
+
+    def __getattribute__(self, name: str) -> Any:  # noqa: ANN401
+        """Retrieve the value of the specified attribute
+
+        :param name: Name of attribute being accessed
+        :return: The value of the specified attribute
+        :raises ValueError: If the attribute being accessed is not already defined in
+            Agent or the attribute is `label`
+        """
+        if name == "label":
+            err_msg = f"'{type(self).__name__!r}' object has no attribute '{name!r}'"
+            raise AttributeError(err_msg)
+        return super().__getattribute__(name)
+
+
+del Agent.model_fields["label"]  # Need to remove inherited property
 
 
 class Direction(str, Enum):

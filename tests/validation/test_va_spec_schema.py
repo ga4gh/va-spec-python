@@ -48,7 +48,9 @@ def _update_va_spec_schema_mapping(
 
 
 VA_SPEC_SCHEMA_MAPPING = {schema: VaSpecSchemaMapping() for schema in VaSpecSchema}
-SUBMODULES_DIR = Path(__file__).parents[2] / "submodules" / "va_spec" / "schema" / "va-spec"
+SUBMODULES_DIR = (
+    Path(__file__).parents[2] / "submodules" / "va_spec" / "schema" / "va-spec"
+)
 
 
 # Get core + profiles classes
