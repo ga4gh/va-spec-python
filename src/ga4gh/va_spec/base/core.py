@@ -362,7 +362,7 @@ class Agent(Entity):
             Agent or the attribute is `label`
         """
         if name == "label":
-            err_msg = f"'{type(self).__name__!r}' object has no attribute '{name!r}'. Use 'name' instead."
+            err_msg = f"'{type(self).__name__!r}' object has no attribute '{name!r}'"
             raise AttributeError(err_msg)
         return super().__getattribute__(name)
 
