@@ -1,5 +1,7 @@
 """Test VA Spec Pydantic model"""
 
+import json
+
 import pytest
 from ga4gh.va_spec.base import (
     Agent,
@@ -19,6 +21,9 @@ def test_agent():
     agent = Agent(name="Joe")
     assert agent.type == "Agent"
     assert agent.name == "Joe"
+
+    assert "label" not in agent.model_dump()
+    assert "label" not in json.loads(agent.model_dump_json())
 
     with pytest.raises(AttributeError, match="'Agent' object has no attribute 'label'"):
         agent.label  # noqa: B018
@@ -49,6 +54,9 @@ def test_caf_study_result():
     assert caf.cohort.label == "Overall"
     assert caf.cohort.type == "StudyGroup"
 
+    assert "focus" not in caf.model_dump()
+    assert "focus" not in json.loads(caf.model_dump_json())
+
     with pytest.raises(
         AttributeError,
         match="'CohortAlleleFrequencyStudyResult' object has no attribute 'focus'",
@@ -73,6 +81,11 @@ def test_experimental_func_impact_study_result():
         ExperimentalVariantFunctionalImpactStudyResult(focusVariant="allele.json#/1")
     )
     assert experimental_func_impact_study_result.focusVariant.root == "allele.json#/1"
+
+    assert "focus" not in experimental_func_impact_study_result.model_dump()
+    assert "focus" not in json.loads(
+        experimental_func_impact_study_result.model_dump_json()
+    )
 
     with pytest.raises(
         AttributeError,
