@@ -34,7 +34,7 @@ def test_agent():
     agent = Agent(
         **{  # noqa: PIE804
             "name": "Joe",
-            "label": "Jane"
+            "label": "Jane",
         }
     )
 
