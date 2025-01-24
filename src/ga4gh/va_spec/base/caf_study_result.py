@@ -34,7 +34,7 @@ class CohortAlleleFrequencyStudyResult(StudyResult):
         ...,
         description="The number of occurrences of all alleles at the locus in the cohort.",
     )
-    focusAlleleFrequency: int = Field(
+    focusAlleleFrequency: float = Field(
         ..., description="The frequency of the focusAllele in the cohort."
     )
     cohort: StudyGroup = Field(
