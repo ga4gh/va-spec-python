@@ -32,7 +32,7 @@ requires-python = ">=3.10"
 dynamic = ["version"]
 dependencies = [
     "ga4gh.vrs==2.0.0a14",
-    "ga4gh.cat_vrs @ git+https://github.com/ga4gh/cat-vrs-python@update-vrs-python",
+    "ga4gh.cat_vrs~=0.3.0",
     "pydantic==2.*"
 ]
 
