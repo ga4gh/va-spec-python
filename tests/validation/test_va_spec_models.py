@@ -16,14 +16,9 @@ def test_agent():
 
     Tests that extends property is implemented correctly in the Pydantic models
     """
-    assert "label" not in Agent.model_fields
-
     agent = Agent(name="Joe")
     assert agent.type == "Agent"
     assert agent.name == "Joe"
-
-    assert "label" not in agent.model_dump()
-    assert "label" not in json.loads(agent.model_dump_json())
 
     with pytest.raises(AttributeError, match="'Agent' object has no attribute 'label'"):
         agent.label  # noqa: B018
@@ -54,14 +49,14 @@ def test_caf_study_result():
         focusAlleleCount=0,
         focusAlleleFrequency=0,
         locusAlleleCount=34086,
-        cohort=StudyGroup(id="ALL", label="Overall"),
+        cohort=StudyGroup(id="ALL", name="Overall"),
     )
     assert caf.focusAllele.root == "allele.json#/1"
     assert caf.focusAlleleCount == 0
     assert caf.focusAlleleFrequency == 0
     assert caf.locusAlleleCount == 34086
     assert caf.cohort.id == "ALL"
-    assert caf.cohort.label == "Overall"
+    assert caf.cohort.name == "Overall"
     assert caf.cohort.type == "StudyGroup"
 
     assert "focus" not in caf.model_dump()

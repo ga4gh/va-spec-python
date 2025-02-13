@@ -5,7 +5,7 @@ from __future__ import annotations
 from abc import ABC
 from datetime import date
 from enum import Enum
-from typing import Annotated, Any, Literal
+from typing import Annotated, Literal
 
 from ga4gh.cat_vrs.models import CategoricalVariant
 from ga4gh.core.models import Entity, MappableConcept, iriReference
@@ -16,7 +16,6 @@ from pydantic import (
     Field,
     RootModel,
     StringConstraints,
-    field_validator,
 )
 
 #########################################
@@ -339,35 +338,11 @@ class Agent(Entity):
     type: Literal["Agent"] = Field(
         CoreType.AGENT.value, description=f"MUST be '{CoreType.AGENT.value}'."
     )
-    label: None = Field(
-        None, exclude=True, repr=False
-    )  # extends property in JSON Schema. Should not be used
     name: str | None = Field(None, description="The given name of the Agent.")
     subtype: MappableConcept | None = Field(
         None,
         description="A specific type of agent the Agent object represents. Recommended subtypes include codes for `person`, `organization`, or `software`.",
     )
-
-    @field_validator("label", mode="before")
-    def set_label_to_none(cls, v: Any) -> None:  # noqa: ANN401, N805
-        """Set label to None"""
-        return
-
-    def __getattribute__(self, name: str) -> Any:  # noqa: ANN401
-        """Retrieve the value of the specified attribute
-
-        :param name: Name of attribute being accessed
-        :return: The value of the specified attribute
-        :raises ValueError: If the attribute being accessed is not already defined in
-            Agent or the attribute is `label`
-        """
-        if name == "label":
-            err_msg = f"'{type(self).__name__!r}' object has no attribute '{name!r}'"
-            raise AttributeError(err_msg)
-        return super().__getattribute__(name)
-
-
-del Agent.model_fields["label"]  # Need to remove inherited property
 
 
 class Direction(str, Enum):
