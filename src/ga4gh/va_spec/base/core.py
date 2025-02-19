@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import importlib
+import inspect
 from abc import ABC
 from datetime import date
 from enum import Enum
-from typing import Annotated, Literal
+from typing import Annotated, Any, Literal
 
 from ga4gh.cat_vrs.models import CategoricalVariant
 from ga4gh.core.models import Entity, MappableConcept, iriReference
@@ -16,6 +18,8 @@ from pydantic import (
     Field,
     RootModel,
     StringConstraints,
+    ValidationError,
+    field_validator,
 )
 
 #########################################
@@ -92,9 +96,30 @@ class SubjectVariantProposition(RootModel):
 
 
 class _SubjectVariantPropositionBase(Entity, ABC):
+    subject: None = Field(
+        None, exclude=True, repr=False
+    )  # extends property in JSON Schema. Should not be used
     subjectVariant: MolecularVariation | CategoricalVariant | iriReference = Field(
         ..., description="A variant that is the subject of the Proposition."
     )
+
+    def __getattribute__(self, name: str) -> Any:  # noqa: ANN401
+        """Retrieve the value of the specified attribute
+
+        :param name: Name of attribute being accessed
+        :return: The value of the specified attribute
+        :raises ValueError: If the attribute being accessed is not already defined in
+            _SubjectVariantPropositionBase or the attribute is `subject`
+        """
+        if name == "subject":
+            err_msg = f"'{type(self).__name__!r}' object has no attribute '{name!r}'"
+            raise AttributeError(err_msg)
+        return super().__getattribute__(name)
+
+    @field_validator("subject", mode="before")
+    def set_subject_to_none(cls, v: Any) -> None:  # noqa: ANN401, N805
+        """Set subject to None"""
+        return
 
 
 class ClinicalVariantProposition(_SubjectVariantPropositionBase):
@@ -400,9 +425,7 @@ class EvidenceLine(InformationEntity):
         None,
         description="The possible fact against which evidence items contained in an Evidence Line were collectively evaluated, in determining the overall strength and direction of support they provide. For example, in an ACMG Guideline-based assessment of variant pathogenicity, the support provided by distinct lines of evidence are assessed against a target proposition that the variant is pathogenic for a specific disease.",
     )
-    hasEvidenceItems: (
-        list[StudyResult | Statement | EvidenceLine | iriReference] | None
-    ) = Field(
+    hasEvidenceItems: list[Statement | EvidenceLine | iriReference] | None = Field(
         None,
         description="An individual piece of information that was evaluated as evidence in building the argument represented by an Evidence Line.",
     )
@@ -422,6 +445,40 @@ class EvidenceLine(InformationEntity):
         None,
         description="A term summarizing the overall outcome of the evidence assessment represented by the Evidence Line, in terms of the direction and strength of support it provides for or against the target Proposition.",
     )
+
+    @field_validator("hasEvidenceItems", mode="before")
+    def validate_has_evidence_items(cls, v: list):
+        evidence_items = []
+        aac_2017 = importlib.import_module("ga4gh.va_spec.aac_2017.models")
+        has_evidence_items_models = [
+            obj
+            for _, obj in vars(aac_2017).items()
+            if inspect.isclass(obj)
+            and issubclass(obj, Statement)
+            and obj is not Statement
+        ]
+        has_evidence_items_models.extend([Statement, EvidenceLine, iriReference])
+
+        for evidence_item in v:
+            if isinstance(evidence_item, dict):
+                found_match = False
+                for option in has_evidence_items_models:
+                    try:
+                        evidence_item = option(**evidence_item)
+                    except ValidationError:
+                        pass
+                    else:
+                        evidence_items.append(evidence_item)
+                        found_match = True
+                        break
+
+                if not found_match:
+                    err_msg = "Unable to find match"
+                    raise ValidationError(err_msg)
+            else:
+                evidence_items.append(evidence_item)
+
+        return evidence_items
 
 
 class Statement(InformationEntity):
