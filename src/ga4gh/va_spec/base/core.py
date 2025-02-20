@@ -425,7 +425,7 @@ class EvidenceLine(InformationEntity):
         None,
         description="The possible fact against which evidence items contained in an Evidence Line were collectively evaluated, in determining the overall strength and direction of support they provide. For example, in an ACMG Guideline-based assessment of variant pathogenicity, the support provided by distinct lines of evidence are assessed against a target proposition that the variant is pathogenic for a specific disease.",
     )
-    hasEvidenceItems: list[Statement | EvidenceLine | iriReference] | None = Field(
+    hasEvidenceItems: list[StudyResult | Statement | EvidenceLine | iriReference] | None = Field(
         None,
         description="An individual piece of information that was evaluated as evidence in building the argument represented by an Evidence Line.",
     )
@@ -457,7 +457,7 @@ class EvidenceLine(InformationEntity):
             and issubclass(obj, Statement)
             and obj is not Statement
         ]
-        has_evidence_items_models.extend([Statement, EvidenceLine, iriReference])
+        has_evidence_items_models.extend([Statement, StudyResult, EvidenceLine, iriReference])
 
         for evidence_item in v:
             if isinstance(evidence_item, dict):
