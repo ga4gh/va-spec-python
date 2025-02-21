@@ -425,7 +425,9 @@ class EvidenceLine(InformationEntity):
         None,
         description="The possible fact against which evidence items contained in an Evidence Line were collectively evaluated, in determining the overall strength and direction of support they provide. For example, in an ACMG Guideline-based assessment of variant pathogenicity, the support provided by distinct lines of evidence are assessed against a target proposition that the variant is pathogenic for a specific disease.",
     )
-    hasEvidenceItems: list[StudyResult | Statement | EvidenceLine | iriReference] | None = Field(
+    hasEvidenceItems: (
+        list[StudyResult | Statement | EvidenceLine | iriReference | Any] | None
+    ) = Field(
         None,
         description="An individual piece of information that was evaluated as evidence in building the argument represented by an Evidence Line.",
     )
@@ -447,21 +449,25 @@ class EvidenceLine(InformationEntity):
     )
 
     @field_validator("hasEvidenceItems", mode="before")
-    def validate_has_evidence_items(cls, v: list):
+    def validate_has_evidence_items(cls, v: list[StudyResult, Statement, EvidenceLine, iriReference]):
         evidence_items = []
-        aac_2017 = importlib.import_module("ga4gh.va_spec.aac_2017.models")
+
+        # Avoid circular imports
+        aac_2017_module = importlib.import_module("ga4gh.va_spec.aac_2017.models")
         has_evidence_items_models = [
-            obj
-            for _, obj in vars(aac_2017).items()
-            if inspect.isclass(obj)
-            and issubclass(obj, Statement)
-            and obj is not Statement
+            obj_
+            for _, obj_ in vars(aac_2017_module).items()
+            if inspect.isclass(obj_)
+            and issubclass(obj_, Statement)
+            and obj_ is not Statement
         ]
-        has_evidence_items_models.extend([Statement, StudyResult, EvidenceLine, iriReference])
+        has_evidence_items_models.extend(
+            [Statement, StudyResult, EvidenceLine, iriReference]
+        )
 
         for evidence_item in v:
             if isinstance(evidence_item, dict):
-                found_match = False
+                found_model = False
                 for option in has_evidence_items_models:
                     try:
                         evidence_item = option(**evidence_item)
@@ -469,11 +475,11 @@ class EvidenceLine(InformationEntity):
                         pass
                     else:
                         evidence_items.append(evidence_item)
-                        found_match = True
+                        found_model = True
                         break
 
-                if not found_match:
-                    err_msg = "Unable to find match"
+                if not found_model:
+                    err_msg = "Unable to find valid model"
                     raise ValidationError(err_msg)
             else:
                 evidence_items.append(evidence_item)
