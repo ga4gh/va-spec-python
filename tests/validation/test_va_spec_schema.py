@@ -3,6 +3,7 @@
 import json
 from enum import Enum
 from pathlib import Path
+from types import NoneType
 
 import pytest
 from ga4gh.va_spec import aac_2017, base
@@ -99,7 +100,14 @@ def test_schema_class_fields(va_spec_schema, pydantic_models):
     for schema_model in mapping.concrete_classes:
         schema_properties = mapping.schema[schema_model]["properties"]
         pydantic_model = getattr(pydantic_models, schema_model)
-        assert set(pydantic_model.model_fields) == set(schema_properties), schema_model
+
+        # Exclude extends where name is changed
+        pydantic_model_fields = {
+            k
+            for k, v in pydantic_model.model_fields.items()
+            if v.annotation != NoneType
+        }
+        assert set(pydantic_model_fields) == set(schema_properties), schema_model
 
         required_schema_fields = set(mapping.schema[schema_model]["required"])
 

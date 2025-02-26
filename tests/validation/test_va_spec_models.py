@@ -1,14 +1,29 @@
 """Test VA Spec Pydantic model"""
 
 import json
+from types import NoneType
 
 import pytest
+from ga4gh.core.models import iriReference
+from ga4gh.va_spec.aac_2017.models import VariantTherapeuticResponseStudyStatement
 from ga4gh.va_spec.base import (
     Agent,
     CohortAlleleFrequencyStudyResult,
     ExperimentalVariantFunctionalImpactStudyResult,
 )
-from ga4gh.va_spec.base.core import StudyGroup
+from ga4gh.va_spec.base.core import EvidenceLine, StudyGroup, StudyResult
+
+
+@pytest.fixture(scope="module")
+def caf():
+    """Create test fixture for CohortAlleleFrequencyStudyResult"""
+    return CohortAlleleFrequencyStudyResult(
+        focusAllele="allele.json#/1",
+        focusAlleleCount=0,
+        focusAlleleFrequency=0,
+        locusAlleleCount=34086,
+        cohort=StudyGroup(id="ALL", name="Overall"),
+    )
 
 
 def test_agent():
@@ -37,20 +52,18 @@ def test_agent():
         agent.label  # noqa: B018
 
 
-def test_caf_study_result():
+def test_caf_study_result(caf):
     """Ensure CohortAlleleFrequencyStudyResult model works as expected
 
     Tests that extends property is implemented correctly in the Pydantic models
     """
-    assert "focus" not in CohortAlleleFrequencyStudyResult.model_fields
+    extends_prop = CohortAlleleFrequencyStudyResult.model_fields["focus"]
+    assert extends_prop.annotation == NoneType
+    assert extends_prop.is_required() is False
+    assert extends_prop.default is None
+    assert extends_prop.exclude is True
+    assert extends_prop.repr is False
 
-    caf = CohortAlleleFrequencyStudyResult(
-        focusAllele="allele.json#/1",
-        focusAlleleCount=0,
-        focusAlleleFrequency=0,
-        locusAlleleCount=34086,
-        cohort=StudyGroup(id="ALL", name="Overall"),
-    )
     assert caf.focusAllele.root == "allele.json#/1"
     assert caf.focusAlleleCount == 0
     assert caf.focusAlleleFrequency == 0
@@ -80,7 +93,12 @@ def test_experimental_func_impact_study_result():
 
     Tests that extends property is implemented correctly in the Pydantic models
     """
-    assert "focus" not in ExperimentalVariantFunctionalImpactStudyResult.model_fields
+    extends_prop = ExperimentalVariantFunctionalImpactStudyResult.model_fields["focus"]
+    assert extends_prop.annotation == NoneType
+    assert extends_prop.is_required() is False
+    assert extends_prop.default is None
+    assert extends_prop.exclude is True
+    assert extends_prop.repr is False
 
     experimental_func_impact_study_result = (
         ExperimentalVariantFunctionalImpactStudyResult(focusVariant="allele.json#/1")
@@ -103,3 +121,72 @@ def test_experimental_func_impact_study_result():
         match='"ExperimentalVariantFunctionalImpactStudyResult" object has no field "focus"',
     ):
         experimental_func_impact_study_result.focus = "focus"
+
+
+def test_evidence_line(caf):
+    """Ensure EvidenceLine model works as expected"""
+    el_dict = {
+        "type": "EvidenceLine",
+        "hasEvidenceItems": [
+            {
+                "id": "civic.eid:2997",
+                "type": "Statement",
+                "proposition": {
+                    "type": "VariantTherapeuticResponseProposition",
+                    "subjectVariant": {
+                        "id": "civic.mpid:33",
+                        "type": "CategoricalVariant",
+                        "name": "EGFR L858R",
+                    },
+                    "geneContextQualifier": {
+                        "id": "civic.gid:19",
+                        "conceptType": "Gene",
+                        "name": "EGFR",
+                    },
+                    "alleleOriginQualifier": {"name": "somatic"},
+                    "predicate": "predictsSensitivityTo",
+                    "objectTherapeutic": {
+                        "id": "civic.tid:146",
+                        "conceptType": "Therapy",
+                        "name": "Afatinib",
+                    },
+                    "conditionQualifier": {
+                        "id": "civic.did:8",
+                        "conceptType": "Disease",
+                        "name": "Lung Non-small Cell Carcinoma",
+                    },
+                },
+                "direction": "supports",
+            }
+        ],
+        "directionOfEvidenceProvided": "disputes",
+    }
+    el = EvidenceLine(**el_dict)
+    assert isinstance(el.hasEvidenceItems[0], VariantTherapeuticResponseStudyStatement)
+
+    el_dict = {
+        "type": "EvidenceLine",
+        "hasEvidenceItems": [caf.model_dump(exclude_none=True)],
+        "directionOfEvidenceProvided": "supports",
+    }
+    el = EvidenceLine(**el_dict)
+    assert isinstance(el.hasEvidenceItems[0], StudyResult)
+    assert isinstance(el.hasEvidenceItems[0].root, CohortAlleleFrequencyStudyResult)
+
+    el_dict = {
+        "type": "EvidenceLine",
+        "hasEvidenceItems": [
+            {"type": "EvidenceLine", "directionOfEvidenceProvided": "neutral"}
+        ],
+        "directionOfEvidenceProvided": "supports",
+    }
+    el = EvidenceLine(**el_dict)
+    assert isinstance(el.hasEvidenceItems[0], EvidenceLine)
+
+    el_dict = {
+        "type": "EvidenceLine",
+        "hasEvidenceItems": ["evidence_items.json#/1"],
+        "directionOfEvidenceProvided": "supports",
+    }
+    el = EvidenceLine(**el_dict)
+    assert isinstance(el.hasEvidenceItems[0], iriReference)

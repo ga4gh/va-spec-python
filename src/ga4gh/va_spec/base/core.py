@@ -7,12 +7,13 @@ import inspect
 from abc import ABC
 from datetime import date
 from enum import Enum
-from typing import Annotated, Any, Literal
+from types import NoneType
+from typing import Annotated, Any, Literal, TypeVar
 
 from ga4gh.cat_vrs.models import CategoricalVariant
 from ga4gh.core.models import Entity, MappableConcept, iriReference
 from ga4gh.va_spec.base.domain_entities import Condition, Therapeutic
-from ga4gh.vrs.models import MolecularVariation
+from ga4gh.vrs.models import Allele, MolecularVariation
 from pydantic import (
     ConfigDict,
     Field,
@@ -21,6 +22,8 @@ from pydantic import (
     ValidationError,
     field_validator,
 )
+
+StatementType = TypeVar("StatementType", bound="Statement")
 
 #########################################
 # Abstract Core Classes
@@ -46,7 +49,7 @@ class InformationEntity(Entity):
     )
 
 
-class StudyResult(InformationEntity, ABC):
+class _StudyResult(InformationEntity, ABC):
     """A collection of data items from a single study that pertain to a particular subject
     or experimental unit in the study, along with optional provenance information
     describing how these data items were generated.
@@ -92,12 +95,13 @@ class SubjectVariantProposition(RootModel):
         | VariantPrognosticProposition
         | VariantOncogenicityProposition
         | VariantTherapeuticResponseProposition
-    )
+    ) = Field(discriminator="type")
 
 
-class _SubjectVariantPropositionBase(Entity, ABC):
-    subject: None = Field(
-        None, exclude=True, repr=False
+class _SubjectVariantPropositionBase(Entity):
+    model_config = ConfigDict(extra="forbid")
+    subject: NoneType | None = Field(
+        default=None, exclude=True, repr=False
     )  # extends property in JSON Schema. Should not be used
     subjectVariant: MolecularVariation | CategoricalVariant | iriReference = Field(
         ..., description="A variant that is the subject of the Proposition."
@@ -127,7 +131,7 @@ class ClinicalVariantProposition(_SubjectVariantPropositionBase):
 
     geneContextQualifier: MappableConcept | iriReference | None = Field(
         None,
-        description="Reports a gene impacted by the variant, which may contribute to the association  described in the Proposition.",
+        description="Reports a gene impacted by the variant, which may contribute to the association described in the Proposition.",
     )
     alleleOriginQualifier: MappableConcept | iriReference | None = Field(
         None,
@@ -150,11 +154,11 @@ class ExperimentalVariantFunctionalImpactProposition(_SubjectVariantPropositionB
     )
     objectSequenceFeature: iriReference | MappableConcept = Field(
         ...,
-        description="The sequence feature (typically a gene or gene product) on whose function the impact  of the subject variant is reported.",
+        description="The sequence feature (typically a gene or gene product) on whose function the impact of the subject variant is reported.",
     )
     experimentalContextQualifier: iriReference | Document | dict | None = Field(
         None,
-        description="An assay in which the reported variant functional impact was determined -  providing a specific experimental context in which this effect is asserted to hold.",
+        description="An assay in which the reported variant functional impact was determined - providing a specific experimental context in which this effect is asserted to hold.",
     )
 
 
@@ -208,7 +212,7 @@ class VariantPathogenicityProposition(ClinicalVariantProposition):
     )
     penetranceQualifier: MappableConcept | None = Field(
         None,
-        description="Reports the penetrance of the pathogenic effect - i.e. the extent to which the variant impact is expressed by individuals carrying it as a measure of the proportion of carriers exhibiting the condition. ",
+        description="Reports the penetrance of the pathogenic effect - i.e. the extent to which the variant impact is expressed by individuals carrying it as a measure of the proportion of carriers exhibiting the condition.",
     )
     modeOfInheritanceQualifier: MappableConcept | None = Field(
         None,
@@ -263,7 +267,7 @@ class VariantTherapeuticResponseProposition(ClinicalVariantProposition):
     )
     conditionQualifier: Condition | iriReference = Field(
         ...,
-        description="Reports the disease context in which the variant's association with therapeutic sensitivity or resistance is evaluated. Note that this is a required qualifier in therapeutic response propositions. ",
+        description="Reports the disease context in which the variant's association with therapeutic sensitivity or resistance is evaluated. Note that this is a required qualifier in therapeutic response propositions.",
     )
 
 
@@ -426,7 +430,7 @@ class EvidenceLine(InformationEntity):
         description="The possible fact against which evidence items contained in an Evidence Line were collectively evaluated, in determining the overall strength and direction of support they provide. For example, in an ACMG Guideline-based assessment of variant pathogenicity, the support provided by distinct lines of evidence are assessed against a target proposition that the variant is pathogenic for a specific disease.",
     )
     hasEvidenceItems: (
-        list[StudyResult | Statement | EvidenceLine | iriReference | Any] | None
+        list[StudyResult | StatementType | EvidenceLine | iriReference] | None
     ) = Field(
         None,
         description="An individual piece of information that was evaluated as evidence in building the argument represented by an Evidence Line.",
@@ -449,7 +453,23 @@ class EvidenceLine(InformationEntity):
     )
 
     @field_validator("hasEvidenceItems", mode="before")
-    def validate_has_evidence_items(cls, v: list[StudyResult, Statement, EvidenceLine, iriReference]):
+    def validate_has_evidence_items(
+        cls,  # noqa: N805
+        v: list[StudyResult, StatementType, EvidenceLine, iriReference] | None,
+    ) -> list | None:
+        """Ensure hasEvidenceItems is correct type
+
+        This is needed since Pydantic was unable to determine which model to use
+
+        This only handles cases defined in the VA-Spec.
+
+        :param v: hasEvidenceItems value
+        :raises ValueError: If unable to find valid model for evidence items
+        :return: Evidence items
+        """
+        if not v:
+            return v
+
         evidence_items = []
 
         # Avoid circular imports
@@ -468,22 +488,20 @@ class EvidenceLine(InformationEntity):
         for evidence_item in v:
             if isinstance(evidence_item, dict):
                 found_model = False
-                for option in has_evidence_items_models:
+                for evidence_item_model in has_evidence_items_models:
                     try:
-                        evidence_item = option(**evidence_item)
+                        evidence_item = evidence_item_model(**evidence_item)
                     except ValidationError:
                         pass
                     else:
                         evidence_items.append(evidence_item)
                         found_model = True
                         break
-
                 if not found_model:
                     err_msg = "Unable to find valid model"
-                    raise ValidationError(err_msg)
+                    raise ValueError(err_msg)
             else:
                 evidence_items.append(evidence_item)
-
         return evidence_items
 
 
@@ -501,7 +519,7 @@ class Statement(InformationEntity):
     )
     proposition: Proposition = Field(
         ...,
-        description="A possible fact, the validity of which is assessed and reported by the Statement. A Statement can put forth the proposition as being true, false, or uncertain, and may provide an assessment of the level of confidence/evidence supporting this claim. ",
+        description="A possible fact, the validity of which is assessed and reported by the Statement. A Statement can put forth the proposition as being true, false, or uncertain, and may provide an assessment of the level of confidence/evidence supporting this claim.",
     )
     direction: Direction = Field(
         ...,
@@ -513,7 +531,7 @@ class Statement(InformationEntity):
     )
     score: float | None = Field(
         None,
-        description="A quantitative score that indicates the strength of a Proposition's assessment in the direction indicated (i.e. how strongly supported or disputed the Proposition is believed to be). Depending on its implementation, a score may reflect how *confident* that agent is that the Proposition is true or false, or the *strength of evidence* they believe supports or disputes it. Instructions for how to interpret the menaing of a given score may be gleaned from the method or document referenced in 'specifiedBy' attribute. ",
+        description="A quantitative score that indicates the strength of a Proposition's assessment in the direction indicated (i.e. how strongly supported or disputed the Proposition is believed to be). Depending on its implementation, a score may reflect how *confident* that agent is that the Proposition is true or false, or the *strength of evidence* they believe supports or disputes it. Instructions for how to interpret the menaing of a given score may be gleaned from the method or document referenced in 'specifiedBy' attribute.",
     )
     classification: MappableConcept | None = Field(
         None,
@@ -542,4 +560,150 @@ class StudyGroup(Entity):
     characteristics: list[MappableConcept] | None = Field(
         None,
         description="A feature or role shared by all members of the StudyGroup, representing a criterion for membership in the group.",
+    )
+
+
+class CohortAlleleFrequencyStudyResult(_StudyResult):
+    """A StudyResult that reports measures related to the frequency of an Allele in a cohort"""
+
+    type: Literal["CohortAlleleFrequencyStudyResult"] = Field(
+        "CohortAlleleFrequencyStudyResult",
+        description="MUST be 'CohortAlleleFrequencyStudyResult'.",
+    )
+    sourceDataSet: DataSet | None = Field(
+        None,
+        description="The dataset from which the CohortAlleleFrequencyStudyResult was reported.",
+    )
+    focus: NoneType = Field(
+        None, exclude=True, repr=False
+    )  # extends property in JSON Schema. Should not be used
+    focusAllele: Allele | iriReference = Field(
+        ..., description="The Allele for which frequency results are reported."
+    )
+    focusAlleleCount: int = Field(
+        ..., description="The number of occurrences of the focusAllele in the cohort."
+    )
+    locusAlleleCount: int = Field(
+        ...,
+        description="The number of occurrences of all alleles at the locus in the cohort.",
+    )
+    focusAlleleFrequency: float = Field(
+        ..., description="The frequency of the focusAllele in the cohort."
+    )
+    cohort: StudyGroup = Field(
+        ..., description="The cohort from which the frequency was derived."
+    )
+    subCohortFrequency: list[CohortAlleleFrequencyStudyResult] | None = Field(
+        None,
+        description="A list of CohortAlleleFrequency objects describing subcohorts of the cohort currently being described. Subcohorts can be further subdivided into more subcohorts. This enables, for example, the description of different ancestry groups and sexes among those ancestry groups.",
+    )
+    ancillaryResults: dict | None = None
+    qualityMeasures: dict | None = None
+
+    def __getattribute__(self, name: str) -> Any:  # noqa: ANN401
+        """Retrieve the value of the specified attribute
+
+        :param name: Name of attribute being accessed
+        :return: The value of the specified attribute
+        :raises ValueError: If the attribute being accessed is not already defined in
+            CohortAlleleFrequencyStudyResult or the attribute is `focus`
+        """
+        if name == "focus":
+            err_msg = f"'{type(self).__name__!r}' object has no attribute '{name!r}'"
+            raise AttributeError(err_msg)
+        return super().__getattribute__(name)
+
+    def __setattr__(self, name: str, value: Any) -> None:  # noqa: ANN401
+        """Set the value of the specified attribute
+
+        :param name: Name of attribute being set
+        :return: The value for the specified attribute
+        :raises ValueError: If the attribute being set is not already defined in
+            CohortAlleleFrequency or the attribute is `focus`
+        """
+        if name == "focus":
+            err_msg = f'\'"{type(self).__name__}" object has no field "{name}"\''
+            raise ValueError(err_msg)
+        super().__setattr__(name, value)
+
+    @field_validator("focus", mode="before")
+    def set_focus_to_none(cls, v: Any) -> None:  # noqa: ANN401, N805
+        """Set focus to None"""
+        return
+
+
+class ExperimentalVariantFunctionalImpactStudyResult(_StudyResult):
+    """A StudyResult that reports a functional impact score from a variant functional assay or study."""
+
+    type: Literal["ExperimentalVariantFunctionalImpactStudyResult"] = Field(
+        "ExperimentalVariantFunctionalImpactStudyResult",
+        description="MUST be 'ExperimentalVariantFunctionalImpactStudyResult'.",
+    )
+    focus: NoneType = Field(
+        None, exclude=True, repr=False
+    )  # extends property in JSON Schema. Should not be used
+    focusVariant: MolecularVariation | iriReference = Field(
+        ...,
+        description="The genetic variant for which a functional impact score is generated.",
+    )
+    functionalImpactScore: float | None = Field(
+        None,
+        description="The score of the variant impact measured in the assay or study.",
+    )
+    specifiedBy: Method | iriReference | None = Field(
+        None,
+        description="The assay that was performed to generate the reported functional impact score.",
+    )
+    sourceDataSet: DataSet | None = Field(
+        None,
+        description="The full data set that provided the reported the functional impact score.",
+    )
+
+    def __getattribute__(self, name: str) -> Any:  # noqa: ANN401
+        """Retrieve the value of the specified attribute
+
+        :param name: Name of attribute being accessed
+        :return: The value of the specified attribute
+        :raises ValueError: If the attribute being accessed is not already defined in
+            ExperimentalVariantFunctionalImpactStudyResult or the attribute is `focus`
+        """
+        if name == "focus":
+            err_msg = f"'{type(self).__name__!r}' object has no attribute '{name!r}'"
+            raise AttributeError(err_msg)
+        return super().__getattribute__(name)
+
+    def __setattr__(self, name: str, value: Any) -> None:  # noqa: ANN401
+        """Set the value of the specified attribute
+
+        :param name: Name of attribute being set
+        :return: The value for the specified attribute
+        :raises ValueError: If the attribute being set is not already defined in
+            ExperimentalVariantFunctionalImpactStudyResult or the attribute is `focus`
+        """
+        if name == "focus":
+            err_msg = f'\'"{type(self).__name__}" object has no field "{name}"\''
+            raise ValueError(err_msg)
+        super().__setattr__(name, value)
+
+    @field_validator("focus", mode="before")
+    def set_focus_to_none(cls, v: Any) -> None:  # noqa: ANN401, N805
+        """Set focus to None"""
+        return
+
+
+class StudyResult(RootModel):
+    """A collection of data items from a single study that pertain to a particular subject
+    or experimental unit in the study, along with optional provenance information
+    describing how these data items were generated.
+    """
+
+    root: (
+        CohortAlleleFrequencyStudyResult
+        | ExperimentalVariantFunctionalImpactStudyResult
+    ) = Field(
+        ...,
+        json_schema_extra={
+            "description": "A collection of data items from a single study that pertain to a particular subject or experimental unit in the study, along with optional provenance information describing how these data items were generated."
+        },
+        discriminator="type",
     )

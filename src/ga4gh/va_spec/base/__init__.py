@@ -1,9 +1,9 @@
 """Module to load and init namespace at package level."""
 
-from .caf_study_result import CohortAlleleFrequencyStudyResult
 from .core import (
     Agent,
     ClinicalVariantProposition,
+    CohortAlleleFrequencyStudyResult,
     Contribution,
     CoreType,
     DataSet,
@@ -12,6 +12,7 @@ from .core import (
     Document,
     EvidenceLine,
     ExperimentalVariantFunctionalImpactProposition,
+    ExperimentalVariantFunctionalImpactStudyResult,
     InformationEntity,
     Method,
     PrognosticPredicate,
@@ -28,9 +29,6 @@ from .core import (
     VariantTherapeuticResponseProposition,
 )
 from .domain_entities import Condition, Therapeutic, TherapyGroup, TraitSet
-from .experimental_variant_functional_impact import (
-    ExperimentalVariantFunctionalImpactStudyResult,
-)
 
 __all__ = [
     "CohortAlleleFrequencyStudyResult",
@@ -40,6 +38,7 @@ __all__ = [
     "SubjectVariantProposition",
     "ClinicalVariantProposition",
     "ExperimentalVariantFunctionalImpactProposition",
+    "ExperimentalVariantFunctionalImpactStudyResult",
     "DiagnosticPredicate",
     "VariantDiagnosticProposition",
     "VariantOncogenicityProposition",
