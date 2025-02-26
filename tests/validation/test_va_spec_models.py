@@ -1,7 +1,6 @@
 """Test VA Spec Pydantic model"""
 
 import json
-from types import NoneType
 
 import pytest
 from ga4gh.core.models import iriReference
@@ -53,17 +52,7 @@ def test_agent():
 
 
 def test_caf_study_result(caf):
-    """Ensure CohortAlleleFrequencyStudyResult model works as expected
-
-    Tests that extends property is implemented correctly in the Pydantic models
-    """
-    extends_prop = CohortAlleleFrequencyStudyResult.model_fields["focus"]
-    assert extends_prop.annotation == NoneType
-    assert extends_prop.is_required() is False
-    assert extends_prop.default is None
-    assert extends_prop.exclude is True
-    assert extends_prop.repr is False
-
+    """Ensure CohortAlleleFrequencyStudyResult model works as expected"""
     assert caf.focusAllele.root == "allele.json#/1"
     assert caf.focusAlleleCount == 0
     assert caf.focusAlleleFrequency == 0
@@ -89,17 +78,7 @@ def test_caf_study_result(caf):
 
 
 def test_experimental_func_impact_study_result():
-    """Ensure ExperimentalVariantFunctionalImpactStudyResult model works as expected
-
-    Tests that extends property is implemented correctly in the Pydantic models
-    """
-    extends_prop = ExperimentalVariantFunctionalImpactStudyResult.model_fields["focus"]
-    assert extends_prop.annotation == NoneType
-    assert extends_prop.is_required() is False
-    assert extends_prop.default is None
-    assert extends_prop.exclude is True
-    assert extends_prop.repr is False
-
+    """Ensure ExperimentalVariantFunctionalImpactStudyResult model works as expected"""
     experimental_func_impact_study_result = (
         ExperimentalVariantFunctionalImpactStudyResult(focusVariant="allele.json#/1")
     )
