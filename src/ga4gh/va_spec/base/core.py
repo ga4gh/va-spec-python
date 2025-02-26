@@ -96,7 +96,7 @@ class SubjectVariantProposition(RootModel):
 
 class _SubjectVariantPropositionBase(Entity):
     model_config = ConfigDict(extra="forbid")
-    subject: NoneType | None = Field(
+    subject: NoneType = Field(
         default=None, exclude=True, repr=False
     )  # extends property in JSON Schema. Should not be used
     subjectVariant: MolecularVariation | CategoricalVariant | iriReference = Field(
@@ -115,6 +115,19 @@ class _SubjectVariantPropositionBase(Entity):
             err_msg = f"'{type(self).__name__!r}' object has no attribute '{name!r}'"
             raise AttributeError(err_msg)
         return super().__getattribute__(name)
+
+    def __setattr__(self, name: str, value: Any) -> None:  # noqa: ANN401
+        """Set the value of the specified attribute
+
+        :param name: Name of attribute being set
+        :return: The value for the specified attribute
+        :raises ValueError: If the attribute being set is not already defined in
+            _SubjectVariantPropositionBase or the attribute is `subject`
+        """
+        if name == "subject":
+            err_msg = f'\'"{type(self).__name__}" object has no field "{name}"\''
+            raise ValueError(err_msg)
+        super().__setattr__(name, value)
 
     @field_validator("subject", mode="before")
     def set_subject_to_none(cls, v: Any) -> None:  # noqa: ANN401, N805
