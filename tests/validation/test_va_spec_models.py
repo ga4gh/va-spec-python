@@ -26,10 +26,7 @@ def caf():
 
 
 def test_agent():
-    """Ensure Agent model works as expected
-
-    Tests that extends property is implemented correctly in the Pydantic models
-    """
+    """Ensure Agent model works as expected"""
     agent = Agent(name="Joe")
     assert agent.type == "Agent"
     assert agent.name == "Joe"
