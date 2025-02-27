@@ -99,7 +99,6 @@ def test_schema_class_fields(va_spec_schema, pydantic_models):
     for schema_model in mapping.concrete_classes:
         schema_properties = mapping.schema[schema_model]["properties"]
         pydantic_model = getattr(pydantic_models, schema_model)
-
         assert set(pydantic_model.model_fields) == set(schema_properties), schema_model
 
         required_schema_fields = set(mapping.schema[schema_model]["required"])
