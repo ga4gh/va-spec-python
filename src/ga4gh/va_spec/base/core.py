@@ -93,7 +93,7 @@ class SubjectVariantProposition(RootModel):
     ) = Field(discriminator="type")
 
 
-class _SubjectVariantPropositionBase(Entity):
+class _SubjectVariantPropositionBase(Entity, ABC):
     subjectVariant: MolecularVariation | CategoricalVariant | iriReference = Field(
         ..., description="A variant that is the subject of the Proposition."
     )
