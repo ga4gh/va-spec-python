@@ -11,6 +11,7 @@ from ga4gh.va_spec.base import (
     ExperimentalVariantFunctionalImpactStudyResult,
 )
 from ga4gh.va_spec.base.core import EvidenceLine, StudyGroup, StudyResult
+from pydantic import ValidationError
 
 
 @pytest.fixture(scope="module")
@@ -37,15 +38,8 @@ def test_agent():
     with pytest.raises(ValueError, match='"Agent" object has no field "label"'):
         agent.label = "This is an agent"
 
-    agent = Agent(
-        **{  # noqa: PIE804
-            "name": "Joe",
-            "label": "Jane",
-        }
-    )
-
-    with pytest.raises(AttributeError, match="'Agent' object has no attribute 'label'"):
-        agent.label  # noqa: B018
+    with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
+        Agent(name="Joe", label="Jane")
 
 
 def test_caf_study_result(caf):

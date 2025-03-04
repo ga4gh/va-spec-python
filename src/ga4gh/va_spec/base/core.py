@@ -10,7 +10,12 @@ from enum import Enum
 from typing import Annotated, Literal, TypeVar
 
 from ga4gh.cat_vrs.models import CategoricalVariant
-from ga4gh.core.models import Entity, MappableConcept, iriReference
+from ga4gh.core.models import (
+    BaseModelForbidExtra,
+    Entity,
+    MappableConcept,
+    iriReference,
+)
 from ga4gh.va_spec.base.domain_entities import Condition, Therapeutic
 from ga4gh.vrs.models import Allele, MolecularVariation
 from pydantic import (
@@ -112,7 +117,9 @@ class ClinicalVariantProposition(_SubjectVariantPropositionBase):
     )
 
 
-class ExperimentalVariantFunctionalImpactProposition(_SubjectVariantPropositionBase):
+class ExperimentalVariantFunctionalImpactProposition(
+    _SubjectVariantPropositionBase, BaseModelForbidExtra
+):
     """A Proposition describing the impact of a variant on the function sequence feature
     (typically a gene or gene product).
     """
@@ -142,7 +149,7 @@ class DiagnosticPredicate(str, Enum):
     EXCLUSIVE = "isDiagnosticExclusionCriterionFor"
 
 
-class VariantDiagnosticProposition(ClinicalVariantProposition):
+class VariantDiagnosticProposition(ClinicalVariantProposition, BaseModelForbidExtra):
     """A Proposition about whether a variant is associated with a disease (a diagnostic
     inclusion criterion), or absence of a disease (diagnostic exclusion criterion).
     """
@@ -159,7 +166,7 @@ class VariantDiagnosticProposition(ClinicalVariantProposition):
     )
 
 
-class VariantOncogenicityProposition(ClinicalVariantProposition):
+class VariantOncogenicityProposition(ClinicalVariantProposition, BaseModelForbidExtra):
     """A proposition describing the role of a variant in causing a tumor type."""
 
     type: Literal["VariantOncogenicityProposition"] = Field(
@@ -172,7 +179,7 @@ class VariantOncogenicityProposition(ClinicalVariantProposition):
     )
 
 
-class VariantPathogenicityProposition(ClinicalVariantProposition):
+class VariantPathogenicityProposition(ClinicalVariantProposition, BaseModelForbidExtra):
     """A proposition describing the role of a variant in causing a heritable condition."""
 
     type: Literal["VariantPathogenicityProposition"] = Field(
@@ -200,7 +207,7 @@ class PrognosticPredicate(str, Enum):
     WORSE_OUTCOME = "associatedWithWorseOutcomeFor"
 
 
-class VariantPrognosticProposition(ClinicalVariantProposition):
+class VariantPrognosticProposition(ClinicalVariantProposition, BaseModelForbidExtra):
     """A Proposition about whether a variant is associated with an improved or worse outcome for a disease."""
 
     model_config = ConfigDict(use_enum_values=True)
@@ -222,7 +229,9 @@ class TherapeuticResponsePredicate(str, Enum):
     RESISTANCE = "predictsResistanceTo"
 
 
-class VariantTherapeuticResponseProposition(ClinicalVariantProposition):
+class VariantTherapeuticResponseProposition(
+    ClinicalVariantProposition, BaseModelForbidExtra
+):
     """A Proposition about the role of a variant in modulating the response of a neoplasm to drug
     administration or other therapeutic procedures.
     """
@@ -262,7 +271,7 @@ class CoreType(str, Enum):
     STUDY_GROUP = "StudyGroup"
 
 
-class Method(Entity):
+class Method(Entity, BaseModelForbidExtra):
     """A set of instructions that specify how to achieve some objective."""
 
     type: Literal["Method"] = Field(
@@ -277,7 +286,7 @@ class Method(Entity):
     )
 
 
-class Contribution(Entity):
+class Contribution(Entity, BaseModelForbidExtra):
     """An action taken by an agent in contributing to the creation, modification,
     assessment, or deprecation of a particular entity (e.g. a Statement, EvidenceLine,
     DataSet, Publication, etc.)
@@ -297,7 +306,7 @@ class Contribution(Entity):
     date: date | None
 
 
-class Document(Entity):
+class Document(Entity, BaseModelForbidExtra):
     """A collection of information, usually in a text-based or graphic human-readable
     form, intended to be read and understood together as a whole.
     """
@@ -331,7 +340,7 @@ class Document(Entity):
     )
 
 
-class Agent(Entity):
+class Agent(Entity, BaseModelForbidExtra):
     """An autonomous actor (person, organization, or software agent) that bears some
     form of responsibility for an activity taking place, for the existence of an entity,
     or for another agent's activity.
@@ -357,7 +366,7 @@ class Direction(str, Enum):
     DISPUTES = "disputes"
 
 
-class DataSet(Entity):
+class DataSet(Entity, BaseModelForbidExtra):
     """A collection of related data items or records that are organized together in a
     common format or structure, to enable their computational manipulation as a unit.
     """
@@ -385,7 +394,7 @@ class DataSet(Entity):
     )
 
 
-class EvidenceLine(InformationEntity):
+class EvidenceLine(InformationEntity, BaseModelForbidExtra):
     """An independent, evidence-based argument that may support or refute the validity
     of a specific Proposition. The strength and direction of this argument is based on
     an interpretation of one or more pieces of information as evidence for or against
@@ -478,7 +487,7 @@ class EvidenceLine(InformationEntity):
         return evidence_items
 
 
-class Statement(InformationEntity):
+class Statement(InformationEntity, BaseModelForbidExtra):
     """A claim of purported truth as made by a particular agent, on a particular
     occasion. Statements may be used to put forth a possible fact (i.e. a 'Proposition')
     as true or false, or to provide a more nuanced assessment of the level of confidence
@@ -516,7 +525,7 @@ class Statement(InformationEntity):
     )
 
 
-class StudyGroup(Entity):
+class StudyGroup(Entity, BaseModelForbidExtra):
     """A collection of individuals or specimens from the same taxonomic class, selected
     for analysis in a scientific study based on their exhibiting one or more common
     characteristics  (e.g. species, race, age, gender, disease state, income). May be
@@ -536,7 +545,7 @@ class StudyGroup(Entity):
     )
 
 
-class CohortAlleleFrequencyStudyResult(_StudyResult):
+class CohortAlleleFrequencyStudyResult(_StudyResult, BaseModelForbidExtra):
     """A StudyResult that reports measures related to the frequency of an Allele in a cohort"""
 
     type: Literal["CohortAlleleFrequencyStudyResult"] = Field(
@@ -571,7 +580,9 @@ class CohortAlleleFrequencyStudyResult(_StudyResult):
     qualityMeasures: dict | None = None
 
 
-class ExperimentalVariantFunctionalImpactStudyResult(_StudyResult):
+class ExperimentalVariantFunctionalImpactStudyResult(
+    _StudyResult, BaseModelForbidExtra
+):
     """A StudyResult that reports a functional impact score from a variant functional assay or study."""
 
     type: Literal["ExperimentalVariantFunctionalImpactStudyResult"] = Field(
