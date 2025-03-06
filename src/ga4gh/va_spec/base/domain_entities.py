@@ -1,10 +1,10 @@
 """VA Spec Shared Domain Entity Data Structures"""
 
-from ga4gh.core.models import Element, MappableConcept
+from ga4gh.core.models import BaseModelForbidExtra, Element, MappableConcept
 from pydantic import Field, RootModel
 
 
-class TraitSet(Element):
+class TraitSet(Element, BaseModelForbidExtra):
     """A set of conditions (diseases, phenotypes, traits) that are co-occurring."""
 
     traits: list[MappableConcept] | None = Field(
@@ -27,7 +27,7 @@ class Condition(RootModel):
     )
 
 
-class TherapyGroup(Element):
+class TherapyGroup(Element, BaseModelForbidExtra):
     """A group of therapies that are applied together to treat a condition."""
 
     therapies: list[MappableConcept] | None = Field(
