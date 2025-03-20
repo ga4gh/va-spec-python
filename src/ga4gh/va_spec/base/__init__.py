@@ -28,7 +28,7 @@ from .core import (
     VariantPrognosticProposition,
     VariantTherapeuticResponseProposition,
 )
-from .domain_entities import Condition, Therapeutic, TherapyGroup, TraitSet
+from .domain_entities import Condition, ConditionSet, Therapeutic, TherapyGroup
 
 __all__ = [
     "CohortAlleleFrequencyStudyResult",
@@ -57,7 +57,7 @@ __all__ = [
     "EvidenceLine",
     "Statement",
     "StudyGroup",
-    "TraitSet",
+    "ConditionSet",
     "Condition",
     "TherapyGroup",
     "Therapeutic",

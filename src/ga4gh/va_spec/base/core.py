@@ -5,7 +5,7 @@ from __future__ import annotations
 import importlib
 import inspect
 from abc import ABC
-from datetime import date
+from datetime import date, datetime
 from enum import Enum
 from typing import Annotated, Literal, TypeVar
 
@@ -63,6 +63,14 @@ class _StudyResult(InformationEntity, ABC):
         None,
         description="A larger DataSet from which the data included in the StudyResult was taken or derived.",
     )
+    ancillaryResults: dict | None = Field(
+        None,
+        description="An object in which implementers can define custom fields to capture additional results derived from analysis of primary data items captured in standard attributes in the main body of the Study Result. e.g. in a Cohort Allele Frequency Study Result, this maybe a grpMaxFAF95 calculation, or homozygote/heterozygote calls derived from analyzing raw allele count data.",
+    )
+    qualityMeasures: dict | None = Field(
+        None,
+        description="An object in which implementers can define custom fields to capture metadata about the quality/provenance of the primary data items captured in standard attributes in the main body of the Study Result. e.g. a sequencing coverage metric in a Cohort Allele Frequency Study Result.",
+    )
 
 
 class Proposition(Entity):
@@ -113,7 +121,7 @@ class ClinicalVariantProposition(_SubjectVariantPropositionBase):
     )
     alleleOriginQualifier: MappableConcept | iriReference | None = Field(
         None,
-        description="Reports whether the Proposition should be interpreted in the context of an inherited (germline) variant, an acquired (somatic) mutation, or another more nuanced concept.",
+        description="Reports whether the Proposition should be interpreted in the context of an inherited (germline) variant, an acquired (somatic) mutation, or another more nuanced concept. Consider using terms or codes from community terminologies here, e.g. terms from the 'allele origin' branch of the GENO ontology such as GENO:0000882 (somatic allele origin).",
     )
 
 
@@ -196,7 +204,7 @@ class VariantPathogenicityProposition(ClinicalVariantProposition, BaseModelForbi
     )
     modeOfInheritanceQualifier: MappableConcept | None = Field(
         None,
-        description="Reports a pattern of inheritance expected for the pathogenic effect of the variant. HPO terms within the hierarchy of 'HP:0000005' (mode of inheritance) are recommended to specify.",
+        description="Reports a pattern of inheritance expected for the pathogenic effect of the variant. Consider using terms or codes from community terminologies here - e.g. terms from the 'Mode of inheritance' branch of the Human Phenotype Ontology such as HP:0000006 (autosomal dominant inheritance).",
     )
 
 
@@ -303,7 +311,9 @@ class Contribution(Entity, BaseModelForbidExtra):
         None,
         description="The specific type of activity performed or role played by an agent in making the contribution (e.g. for a publication, agents may contribute as a primary author, editor, figure designer, data generator, etc.). Values of this property may be framed as activities, or as contribution roles (e.g. using terms from the Contribution Role Ontology (CRO)).",
     )
-    date: date | None
+    date: datetime | None = Field(
+        None, description="When the contributing activity was completed."
+    )
 
 
 class Document(Entity, BaseModelForbidExtra):
@@ -576,8 +586,6 @@ class CohortAlleleFrequencyStudyResult(_StudyResult, BaseModelForbidExtra):
         None,
         description="A list of CohortAlleleFrequency objects describing subcohorts of the cohort currently being described. Subcohorts can be further subdivided into more subcohorts. This enables, for example, the description of different ancestry groups and sexes among those ancestry groups.",
     )
-    ancillaryResults: dict | None = None
-    qualityMeasures: dict | None = None
 
 
 class ExperimentalVariantFunctionalImpactStudyResult(
