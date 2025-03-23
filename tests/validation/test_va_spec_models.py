@@ -126,6 +126,30 @@ def test_evidence_line(caf):
                         "name": "Lung Non-small Cell Carcinoma",
                     },
                 },
+                "strength": {
+                    "primaryCoding": {
+                        "system": "AMP/ASCO/CAP (AAC) Guidelines, 2017",
+                        "code": "Level A",
+                    }
+                },
+                "classification": {
+                    "primaryCoding": {
+                        "system": "AMP/ASCO/CAP (AAC) Guidelines, 2017",
+                        "code": "Tier I",
+                    }
+                },
+                "specifiedBy": {
+                    "id": "civic.method:2019",
+                    "name": "CIViC Curation SOP (2019)",
+                    "reportedIn": {
+                        "name": "Danos et al., 2019, Genome Med.",
+                        "title": "Standard operating procedure for curation and clinical interpretation of variants in cancer",
+                        "doi": "10.1186/s13073-019-0687-x",
+                        "pmid": 31779674,
+                        "type": "Document",
+                    },
+                    "type": "Method",
+                },
                 "direction": "supports",
             }
         ],

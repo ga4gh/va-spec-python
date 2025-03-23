@@ -22,11 +22,11 @@ class MembershipOperator(str, Enum):
 class ConditionSet(Element, BaseModelForbidExtra):
     """A set of conditions (diseases, phenotypes, traits).
     A set of two or more conditions that co-occur in the same patient/subject, or are
-    manifest individually in a differnet subset of participants in a research study.
+    manifest individually in a different subset of participants in a research study.
     """
 
-    conditions: list[MappableConcept] | None = Field(
-        None,
+    conditions: list[MappableConcept] = Field(
+        ...,
         min_length=2,
         description="A list of conditions (diseases, phenotypes, traits) that are co-occurring.",
     )
@@ -51,14 +51,14 @@ class Condition(RootModel):
 
 class TherapyGroup(Element, BaseModelForbidExtra):
     """A group of two or more therapies that are applied in combination to a single
-    patient/subject, or applied individually to a differnet subset of participants in a
+    patient/subject, or applied individually to a different subset of participants in a
     research study
     """
 
-    therapies: list[MappableConcept] | None = Field(
-        None,
+    therapies: list[MappableConcept] = Field(
+        ...,
         min_length=2,
-        description="A list of therapies that are applied together to treat a condition.",
+        description="A list of therapies that are applied to treat a condition.",
     )
     membershipOperator: MembershipOperator = Field(
         ...,
