@@ -6,7 +6,6 @@ Cancer Consortium (VICC) 2022 community guidelines for cancer variant interpreta
 from enum import Enum
 
 from ga4gh.core.models import MappableConcept, iriReference
-from ga4gh.va_spec.acmg_2015.models import CLIN_GEN_CLASSIFICATIONS
 from ga4gh.va_spec.base.core import (
     EvidenceLine,
     Method,
@@ -14,6 +13,7 @@ from ga4gh.va_spec.base.core import (
     VariantOncogenicityProposition,
 )
 from ga4gh.va_spec.base.enums import (
+    CLIN_GEN_CLASSIFICATIONS,
     STRENGTH_OF_EVIDENCE_PROVIDED_VALUES,
     STRENGTHS,
     System,

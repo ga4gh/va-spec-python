@@ -8,6 +8,10 @@ import pytest
 from ga4gh.va_spec import aac_2017, acmg_2015, base, ccv_2022
 from pydantic import BaseModel
 
+from tests.conftest import SUBMODULES_DIR
+
+VA_SCHEMA_DIR = SUBMODULES_DIR / "schema" / "va-spec"
+
 
 class VaSpecSchema(str, Enum):
     """Enum for VA-Spec schema"""
@@ -50,13 +54,10 @@ def _update_va_spec_schema_mapping(
 
 
 VA_SPEC_SCHEMA_MAPPING = {schema: VaSpecSchemaMapping() for schema in VaSpecSchema}
-SUBMODULES_DIR = (
-    Path(__file__).parents[2] / "submodules" / "va_spec" / "schema" / "va-spec"
-)
 
 
 # Get core + profiles classes
-for child in SUBMODULES_DIR.iterdir():
+for child in VA_SCHEMA_DIR.iterdir():
     child_str = str(child)
     if child_str.endswith(VaSpecSchema.AAC_2017):
         mapping_key = VaSpecSchema.AAC_2017

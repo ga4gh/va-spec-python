@@ -17,6 +17,11 @@ from ga4gh.core.models import (
     iriReference,
 )
 from ga4gh.va_spec.base.domain_entities import Condition, Therapeutic
+from ga4gh.va_spec.base.enums import (
+    DiagnosticPredicate,
+    PrognosticPredicate,
+    TherapeuticResponsePredicate,
+)
 from ga4gh.vrs.models import Allele, MolecularVariation
 from pydantic import (
     ConfigDict,
@@ -70,6 +75,84 @@ class _StudyResult(InformationEntity, ABC):
     qualityMeasures: dict | None = Field(
         None,
         description="An object in which implementers can define custom fields to capture metadata about the quality/provenance of the primary data items captured in standard attributes in the main body of the Study Result. e.g. a sequencing coverage metric in a Cohort Allele Frequency Study Result.",
+    )
+
+
+class CohortAlleleFrequencyStudyResult(_StudyResult, BaseModelForbidExtra):
+    """A StudyResult that reports measures related to the frequency of an Allele in a cohort"""
+
+    type: Literal["CohortAlleleFrequencyStudyResult"] = Field(
+        "CohortAlleleFrequencyStudyResult",
+        description="MUST be 'CohortAlleleFrequencyStudyResult'.",
+    )
+    sourceDataSet: DataSet | None = Field(
+        None,
+        description="The dataset from which the CohortAlleleFrequencyStudyResult was reported.",
+    )
+    focusAllele: Allele | iriReference = Field(
+        ..., description="The Allele for which frequency results are reported."
+    )
+    focusAlleleCount: int = Field(
+        ..., description="The number of occurrences of the focusAllele in the cohort."
+    )
+    locusAlleleCount: int = Field(
+        ...,
+        description="The number of occurrences of all alleles at the locus in the cohort.",
+    )
+    focusAlleleFrequency: float = Field(
+        ..., description="The frequency of the focusAllele in the cohort."
+    )
+    cohort: StudyGroup = Field(
+        ..., description="The cohort from which the frequency was derived."
+    )
+    subCohortFrequency: list[CohortAlleleFrequencyStudyResult] | None = Field(
+        None,
+        description="A list of CohortAlleleFrequency objects describing subcohorts of the cohort currently being described. Subcohorts can be further subdivided into more subcohorts. This enables, for example, the description of different ancestry groups and sexes among those ancestry groups.",
+    )
+
+
+class ExperimentalVariantFunctionalImpactStudyResult(
+    _StudyResult, BaseModelForbidExtra
+):
+    """A StudyResult that reports a functional impact score from a variant functional assay or study."""
+
+    type: Literal["ExperimentalVariantFunctionalImpactStudyResult"] = Field(
+        "ExperimentalVariantFunctionalImpactStudyResult",
+        description="MUST be 'ExperimentalVariantFunctionalImpactStudyResult'.",
+    )
+    focusVariant: MolecularVariation | iriReference = Field(
+        ...,
+        description="The genetic variant for which a functional impact score is generated.",
+    )
+    functionalImpactScore: float | None = Field(
+        None,
+        description="The score of the variant impact measured in the assay or study.",
+    )
+    specifiedBy: Method | iriReference | None = Field(
+        None,
+        description="The assay that was performed to generate the reported functional impact score.",
+    )
+    sourceDataSet: DataSet | None = Field(
+        None,
+        description="The full data set that provided the reported the functional impact score.",
+    )
+
+
+class StudyResult(RootModel):
+    """A collection of data items from a single study that pertain to a particular subject
+    or experimental unit in the study, along with optional provenance information
+    describing how these data items were generated.
+    """
+
+    root: (
+        CohortAlleleFrequencyStudyResult
+        | ExperimentalVariantFunctionalImpactStudyResult
+    ) = Field(
+        ...,
+        json_schema_extra={
+            "description": "A collection of data items from a single study that pertain to a particular subject or experimental unit in the study, along with optional provenance information describing how these data items were generated."
+        },
+        discriminator="type",
     )
 
 
@@ -150,13 +233,6 @@ class ExperimentalVariantFunctionalImpactProposition(
     )
 
 
-class DiagnosticPredicate(str, Enum):
-    """Define constraints for diagnostic predicate"""
-
-    INCLUSIVE = "isDiagnosticInclusionCriterionFor"
-    EXCLUSIVE = "isDiagnosticExclusionCriterionFor"
-
-
 class VariantDiagnosticProposition(ClinicalVariantProposition, BaseModelForbidExtra):
     """A Proposition about whether a variant is associated with a disease (a diagnostic
     inclusion criterion), or absence of a disease (diagnostic exclusion criterion).
@@ -208,13 +284,6 @@ class VariantPathogenicityProposition(ClinicalVariantProposition, BaseModelForbi
     )
 
 
-class PrognosticPredicate(str, Enum):
-    """Define constraints for prognostic predicate"""
-
-    BETTER_OUTCOME = "associatedWithBetterOutcomeFor"
-    WORSE_OUTCOME = "associatedWithWorseOutcomeFor"
-
-
 class VariantPrognosticProposition(ClinicalVariantProposition, BaseModelForbidExtra):
     """A Proposition about whether a variant is associated with an improved or worse outcome for a disease."""
 
@@ -228,13 +297,6 @@ class VariantPrognosticProposition(ClinicalVariantProposition, BaseModelForbidEx
     objectCondition: Condition | iriReference = Field(
         ..., description="The disease that is evaluated for outcome."
     )
-
-
-class TherapeuticResponsePredicate(str, Enum):
-    """Define constraints for therapeutic response predicate"""
-
-    SENSITIVITY = "predictsSensitivityTo"
-    RESISTANCE = "predictsResistanceTo"
 
 
 class VariantTherapeuticResponseProposition(
@@ -417,7 +479,7 @@ class EvidenceLine(InformationEntity, BaseModelForbidExtra):
         CoreType.EVIDENCE_LINE.value,
         description=f"MUST be '{CoreType.EVIDENCE_LINE.value}'.",
     )
-    targetProposition: Proposition | None = Field(
+    targetProposition: Proposition | SubjectVariantProposition | None = Field(
         None,
         description="The possible fact against which evidence items contained in an Evidence Line were collectively evaluated, in determining the overall strength and direction of support they provide. For example, in an ACMG Guideline-based assessment of variant pathogenicity, the support provided by distinct lines of evidence are assessed against a target proposition that the variant is pathogenic for a specific disease.",
     )
@@ -465,14 +527,23 @@ class EvidenceLine(InformationEntity, BaseModelForbidExtra):
         evidence_items = []
 
         # Avoid circular imports
-        aac_2017_module = importlib.import_module("ga4gh.va_spec.aac_2017.models")
-        has_evidence_items_models = [
-            obj_
-            for _, obj_ in vars(aac_2017_module).items()
-            if inspect.isclass(obj_)
-            and issubclass(obj_, Statement)
-            and obj_ is not Statement
-        ]
+        has_evidence_items_models = []
+        for module in [
+            "ga4gh.va_spec.aac_2017.models",
+            "ga4gh.va_spec.acmg_2015.models",
+            "ga4gh.va_spec.ccv_2022.models",
+        ]:
+            imported_module = importlib.import_module(module)
+            has_evidence_items_models.extend(
+                [
+                    obj_
+                    for _, obj_ in vars(imported_module).items()
+                    if inspect.isclass(obj_)
+                    and issubclass(obj_, Statement)
+                    and obj_ is not Statement
+                ]
+            )
+
         has_evidence_items_models.extend(
             [Statement, StudyResult, EvidenceLine, iriReference]
         )
@@ -552,82 +623,4 @@ class StudyGroup(Entity, BaseModelForbidExtra):
     characteristics: list[MappableConcept] | None = Field(
         None,
         description="A feature or role shared by all members of the StudyGroup, representing a criterion for membership in the group.",
-    )
-
-
-class CohortAlleleFrequencyStudyResult(_StudyResult, BaseModelForbidExtra):
-    """A StudyResult that reports measures related to the frequency of an Allele in a cohort"""
-
-    type: Literal["CohortAlleleFrequencyStudyResult"] = Field(
-        "CohortAlleleFrequencyStudyResult",
-        description="MUST be 'CohortAlleleFrequencyStudyResult'.",
-    )
-    sourceDataSet: DataSet | None = Field(
-        None,
-        description="The dataset from which the CohortAlleleFrequencyStudyResult was reported.",
-    )
-    focusAllele: Allele | iriReference = Field(
-        ..., description="The Allele for which frequency results are reported."
-    )
-    focusAlleleCount: int = Field(
-        ..., description="The number of occurrences of the focusAllele in the cohort."
-    )
-    locusAlleleCount: int = Field(
-        ...,
-        description="The number of occurrences of all alleles at the locus in the cohort.",
-    )
-    focusAlleleFrequency: float = Field(
-        ..., description="The frequency of the focusAllele in the cohort."
-    )
-    cohort: StudyGroup = Field(
-        ..., description="The cohort from which the frequency was derived."
-    )
-    subCohortFrequency: list[CohortAlleleFrequencyStudyResult] | None = Field(
-        None,
-        description="A list of CohortAlleleFrequency objects describing subcohorts of the cohort currently being described. Subcohorts can be further subdivided into more subcohorts. This enables, for example, the description of different ancestry groups and sexes among those ancestry groups.",
-    )
-
-
-class ExperimentalVariantFunctionalImpactStudyResult(
-    _StudyResult, BaseModelForbidExtra
-):
-    """A StudyResult that reports a functional impact score from a variant functional assay or study."""
-
-    type: Literal["ExperimentalVariantFunctionalImpactStudyResult"] = Field(
-        "ExperimentalVariantFunctionalImpactStudyResult",
-        description="MUST be 'ExperimentalVariantFunctionalImpactStudyResult'.",
-    )
-    focusVariant: MolecularVariation | iriReference = Field(
-        ...,
-        description="The genetic variant for which a functional impact score is generated.",
-    )
-    functionalImpactScore: float | None = Field(
-        None,
-        description="The score of the variant impact measured in the assay or study.",
-    )
-    specifiedBy: Method | iriReference | None = Field(
-        None,
-        description="The assay that was performed to generate the reported functional impact score.",
-    )
-    sourceDataSet: DataSet | None = Field(
-        None,
-        description="The full data set that provided the reported the functional impact score.",
-    )
-
-
-class StudyResult(RootModel):
-    """A collection of data items from a single study that pertain to a particular subject
-    or experimental unit in the study, along with optional provenance information
-    describing how these data items were generated.
-    """
-
-    root: (
-        CohortAlleleFrequencyStudyResult
-        | ExperimentalVariantFunctionalImpactStudyResult
-    ) = Field(
-        ...,
-        json_schema_extra={
-            "description": "A collection of data items from a single study that pertain to a particular subject or experimental unit in the study, along with optional provenance information describing how these data items were generated."
-        },
-        discriminator="type",
     )

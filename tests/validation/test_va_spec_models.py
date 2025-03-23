@@ -3,7 +3,9 @@
 import json
 
 import pytest
+import yaml
 from ga4gh.core.models import iriReference
+from ga4gh.va_spec import acmg_2015, base, ccv_2022
 from ga4gh.va_spec.aac_2017.models import VariantTherapeuticResponseStudyStatement
 from ga4gh.va_spec.base import (
     Agent,
@@ -12,6 +14,18 @@ from ga4gh.va_spec.base import (
 )
 from ga4gh.va_spec.base.core import EvidenceLine, StudyGroup, StudyResult
 from pydantic import ValidationError
+
+from tests.conftest import SUBMODULES_DIR
+
+VA_SPEC_TESTS_DIR = SUBMODULES_DIR / "tests"
+VA_SPEC_TEST_FIXTURES = VA_SPEC_TESTS_DIR / "fixtures"
+
+
+@pytest.fixture(scope="module")
+def test_definitions():
+    """Create test fixture for VA Spec test definitions"""
+    with (VA_SPEC_TESTS_DIR / "test_definitions.yaml").open() as f:
+        return yaml.safe_load(f)
 
 
 @pytest.fixture(scope="module")
@@ -184,3 +198,34 @@ def test_evidence_line(caf):
     }
     el = EvidenceLine(**el_dict)
     assert isinstance(el.hasEvidenceItems[0], iriReference)
+
+
+def test_examples(test_definitions):
+    """Test VA Spec examples"""
+    va_spec_schema_mapping = {
+        "va-spec.base": base,
+        "va-spec.acmg-2015": acmg_2015,
+        "va-spec.ccv-2022": ccv_2022,
+    }
+
+    for test in test_definitions["tests"]:
+        with (VA_SPEC_TEST_FIXTURES / test["test_file"]).open() as f:
+            data = yaml.safe_load(f)
+
+        ns = test["namespace"]
+        pydantic_models = va_spec_schema_mapping.get(ns)
+        if not pydantic_models:
+            continue
+
+        schema_model = test["definition"]
+        if schema_model == "Statement":
+            continue
+
+        pydantic_model = getattr(pydantic_models, schema_model, False)
+        assert pydantic_model, schema_model
+
+        try:
+            assert pydantic_model(**data)
+        except ValidationError as e:
+            err_msg = f"ValidationError in {test['test_file']}: {e}"
+            raise AssertionError(err_msg)  # noqa: B904

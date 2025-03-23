@@ -13,6 +13,7 @@ from ga4gh.va_spec.base.core import (
     VariantPathogenicityProposition,
 )
 from ga4gh.va_spec.base.enums import (
+    CLIN_GEN_CLASSIFICATIONS,
     STRENGTH_OF_EVIDENCE_PROVIDED_VALUES,
     STRENGTHS,
     System,
@@ -47,19 +48,6 @@ class AcmgClassification(str, Enum):
 
 
 ACMG_CLASSIFICATIONS = [v.value for v in AcmgClassification.__members__.values()]
-
-
-class ClinGenClassification(str, Enum):
-    """Define constraints for ClinGen classifications"""
-
-    PATHOGENIC_LOW_PEN = "pathogenic, low penetrance"
-    LIKELY_PATHOGENIC_LOW_PEN = "likely pathogenic, low penetrance"
-    ESTABLISHED_RISK_ALLELE = "established risk allele"
-    LIKELY_RISK_ALLELE = "likely risk allele"
-    UNCERTAIN_RISK_ALLELE = "uncertain risk allele"
-
-
-CLIN_GEN_CLASSIFICATIONS = [v.value for v in ClinGenClassification.__members__.values()]
 
 
 class VariantPathogenicityFunctionalImpactEvidenceLine(EvidenceLine):
