@@ -71,19 +71,7 @@ class _ValidatorMixin:
         :raises ValueError: If invalid classification values are provided
         :return: Validated classification value
         """
-        if not v.primaryCoding:
-            err_msg = "`primaryCoding` is required."
-            raise ValueError(err_msg)
-
-        if v.primaryCoding.system != System.AMP_ASCO_CAP:
-            err_msg = f"`primaryCoding.system` must be '{System.AMP_ASCO_CAP.value}'."
-            raise ValueError(err_msg)
-
-        if v.primaryCoding.code.root not in AMP_ASCO_CAP_TIERS:
-            err_msg = f"`primaryCoding.code` should be one of {AMP_ASCO_CAP_TIERS}."
-            raise ValueError(err_msg)
-
-        return v
+        return validate_mappable_concept(v, System.AMP_ASCO_CAP, AMP_ASCO_CAP_TIERS)
 
 
 class VariantDiagnosticStudyStatement(Statement, _ValidatorMixin):
