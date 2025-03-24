@@ -46,6 +46,9 @@ tests = [
     "pytest-cov",
     "pyyaml"
 ]
+notebooks = [
+    "jupyter",
+]
 
 [project.urls]
 Homepage = "https://github.com/ga4gh/va-spec-python"
