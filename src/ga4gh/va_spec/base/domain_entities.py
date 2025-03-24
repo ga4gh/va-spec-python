@@ -2,7 +2,7 @@
 
 from ga4gh.core.models import BaseModelForbidExtra, Element, MappableConcept
 from ga4gh.va_spec.base.enums import MembershipOperator
-from pydantic import Field, RootModel
+from pydantic import ConfigDict, Field, RootModel
 
 
 class ConditionSet(Element, BaseModelForbidExtra):
@@ -10,6 +10,8 @@ class ConditionSet(Element, BaseModelForbidExtra):
     A set of two or more conditions that co-occur in the same patient/subject, or are
     manifest individually in a different subset of participants in a research study.
     """
+
+    model_config = ConfigDict(use_enum_values=True)
 
     conditions: list[MappableConcept] = Field(
         ...,
@@ -40,6 +42,8 @@ class TherapyGroup(Element, BaseModelForbidExtra):
     patient/subject, or applied individually to a different subset of participants in a
     research study
     """
+
+    model_config = ConfigDict(use_enum_values=True)
 
     therapies: list[MappableConcept] = Field(
         ...,
