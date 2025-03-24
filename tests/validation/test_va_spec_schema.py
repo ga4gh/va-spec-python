@@ -5,15 +5,21 @@ from enum import Enum
 from pathlib import Path
 
 import pytest
-from ga4gh.va_spec import aac_2017, base
+from ga4gh.va_spec import aac_2017, acmg_2015, base, ccv_2022
 from pydantic import BaseModel
+
+from tests.conftest import SUBMODULES_DIR
+
+VA_SCHEMA_DIR = SUBMODULES_DIR / "schema" / "va-spec"
 
 
 class VaSpecSchema(str, Enum):
     """Enum for VA-Spec schema"""
 
     AAC_2017 = "aac-2017"
+    ACMG_2015 = "acmg-2015"
     BASE = "base"
+    CCV_2022 = "ccv-2022"
 
 
 class VaSpecSchemaMapping(BaseModel):
@@ -48,18 +54,19 @@ def _update_va_spec_schema_mapping(
 
 
 VA_SPEC_SCHEMA_MAPPING = {schema: VaSpecSchemaMapping() for schema in VaSpecSchema}
-SUBMODULES_DIR = (
-    Path(__file__).parents[2] / "submodules" / "va_spec" / "schema" / "va-spec"
-)
 
 
 # Get core + profiles classes
-for child in SUBMODULES_DIR.iterdir():
+for child in VA_SCHEMA_DIR.iterdir():
     child_str = str(child)
     if child_str.endswith(VaSpecSchema.AAC_2017):
         mapping_key = VaSpecSchema.AAC_2017
+    elif child_str.endswith(VaSpecSchema.ACMG_2015):
+        mapping_key = VaSpecSchema.ACMG_2015
     elif child_str.endswith(VaSpecSchema.BASE):
         mapping_key = VaSpecSchema.BASE
+    elif child_str.endswith(VaSpecSchema.CCV_2022):
+        mapping_key = VaSpecSchema.CCV_2022
     else:
         continue
 
@@ -72,7 +79,9 @@ for child in SUBMODULES_DIR.iterdir():
     ("va_spec_schema", "pydantic_models"),
     [
         (VaSpecSchema.AAC_2017, aac_2017),
+        (VaSpecSchema.ACMG_2015, acmg_2015),
         (VaSpecSchema.BASE, base),
+        (VaSpecSchema.CCV_2022, ccv_2022),
     ],
 )
 def test_schema_models_in_pydantic(va_spec_schema, pydantic_models):
@@ -88,7 +97,9 @@ def test_schema_models_in_pydantic(va_spec_schema, pydantic_models):
     ("va_spec_schema", "pydantic_models"),
     [
         (VaSpecSchema.AAC_2017, aac_2017),
+        (VaSpecSchema.ACMG_2015, acmg_2015),
         (VaSpecSchema.BASE, base),
+        (VaSpecSchema.CCV_2022, ccv_2022),
     ],
 )
 def test_schema_class_fields(va_spec_schema, pydantic_models):
