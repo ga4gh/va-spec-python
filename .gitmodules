@@ -1,5 +1,4 @@
 [submodule "submodules/va_spec"]
 	path = submodules/va_spec
 	url = https://github.com/ga4gh/va-spec
-	branch = prep-for-ballot-release
-	#branch = 1.0.0-ballot.2025-03
+	branch = 1.0.0-ballot.2025-03
