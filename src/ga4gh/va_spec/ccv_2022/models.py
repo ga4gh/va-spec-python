@@ -18,6 +18,7 @@ from ga4gh.va_spec.base.enums import (
     STRENGTHS,
     System,
 )
+from ga4gh.va_spec.base.validators import validate_mappable_concept
 from pydantic import Field, field_validator
 
 
@@ -67,22 +68,9 @@ class VariantOncogenicityFunctionalImpactEvidenceLine(EvidenceLine):
         :raises ValueError: If invalid strengthOfEvidenceProvided values are provided
         :return: Validated strengthOfEvidenceProvided value
         """
-        if not v:
-            return v
-
-        if not v.primaryCoding:
-            err_msg = "`primaryCoding` is required."
-            raise ValueError(err_msg)
-
-        if v.primaryCoding.system != System.CCV:
-            err_msg = f"`primaryCoding.system` must be '{System.CCV.value}'."
-            raise ValueError(err_msg)
-
-        if v.primaryCoding.code.root not in STRENGTH_OF_EVIDENCE_PROVIDED_VALUES:
-            err_msg = f"`primaryCoding.code` must be one of {STRENGTH_OF_EVIDENCE_PROVIDED_VALUES}."
-            raise ValueError(err_msg)
-
-        return v
+        return validate_mappable_concept(
+            v, System.CCV, STRENGTH_OF_EVIDENCE_PROVIDED_VALUES, mc_is_required=False
+        )
 
     @field_validator("evidenceOutcome")
     @classmethod
@@ -95,22 +83,9 @@ class VariantOncogenicityFunctionalImpactEvidenceLine(EvidenceLine):
         :raises ValueError: If invalid evidenceOutcome values are provided
         :return: Validated evidenceOutcome value
         """
-        if not v:
-            return v
-
-        if not v.primaryCoding:
-            err_msg = "`primaryCoding` is required."
-            raise ValueError(err_msg)
-
-        if v.primaryCoding.system != System.CCV:
-            err_msg = f"`primaryCoding.system` must be '{System.CCV.value}'."
-            raise ValueError(err_msg)
-
-        if v.primaryCoding.code.root not in EVIDENCE_OUTCOME_VALUES:
-            err_msg = f"`primaryCoding.code` must be one of {EVIDENCE_OUTCOME_VALUES}."
-            raise ValueError(err_msg)
-
-        return v
+        return validate_mappable_concept(
+            v, System.CCV, EVIDENCE_OUTCOME_VALUES, mc_is_required=False
+        )
 
 
 class VariantOncogenicityStudyStatement(Statement):
@@ -144,21 +119,9 @@ class VariantOncogenicityStudyStatement(Statement):
         :raises ValueError: If invalid strength values are provided
         :return: Validated strength value
         """
-        if not v:
-            return v
-
-        if not v.primaryCoding:
-            err_msg = "`primaryCoding` is required."
-            raise ValueError(err_msg)
-
-        if v.primaryCoding.system != System.CLIN_GEN:
-            err_msg = f"`primaryCoding.system` must be: {System.CLIN_GEN.value}."
-
-        if v.primaryCoding.code.root not in STRENGTHS:
-            err_msg = f"`primaryCoding.code` must be one of {STRENGTHS}."
-            raise ValueError(err_msg)
-
-        return v
+        return validate_mappable_concept(
+            v, System.CLIN_GEN, STRENGTHS, mc_is_required=False
+        )
 
     @field_validator("classification")
     @classmethod
@@ -169,15 +132,6 @@ class VariantOncogenicityStudyStatement(Statement):
         :raises ValueError: If invalid classification values are provided
         :return: Validated classification value
         """
-        if not v.primaryCoding:
-            err_msg = "`primaryCoding` is required."
-            raise ValueError(err_msg)
-
-        if v.primaryCoding.system != System.CLIN_GEN:
-            err_msg = f"`primaryCoding.system` must be one of: {System.CLIN_GEN.value}."
-
-        if v.primaryCoding.code.root not in CLIN_GEN_CLASSIFICATIONS:
-            err_msg = f"`primaryCoding.code` must be one of {CLIN_GEN_CLASSIFICATIONS}."
-            raise ValueError(err_msg)
-
-        return v
+        return validate_mappable_concept(
+            v, System.CLIN_GEN, CLIN_GEN_CLASSIFICATIONS, mc_is_required=True
+        )

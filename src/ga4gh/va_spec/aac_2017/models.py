@@ -15,6 +15,7 @@ from ga4gh.va_spec.base.core import (
     VariantTherapeuticResponseProposition,
 )
 from ga4gh.va_spec.base.enums import System
+from ga4gh.va_spec.base.validators import validate_mappable_concept
 from pydantic import (
     Field,
     field_validator,
@@ -57,22 +58,9 @@ class _ValidatorMixin:
         :raises ValueError: If invalid strength values are provided
         :return: Validated strength value
         """
-        if not v:
-            return v
-
-        if not v.primaryCoding:
-            err_msg = "`primaryCoding` is required."
-            raise ValueError(err_msg)
-
-        if v.primaryCoding.system != System.AMP_ASCO_CAP:
-            err_msg = f"`primaryCoding.system` must be '{System.AMP_ASCO_CAP.value}'."
-            raise ValueError(err_msg)
-
-        if v.primaryCoding.code.root not in AMP_ASCO_CAP_LEVELS:
-            err_msg = f"`primaryCoding.code` should be one of {AMP_ASCO_CAP_LEVELS}."
-            raise ValueError(err_msg)
-
-        return v
+        return validate_mappable_concept(
+            v, System.AMP_ASCO_CAP, AMP_ASCO_CAP_LEVELS, mc_is_required=False
+        )
 
     @field_validator("classification")
     @classmethod

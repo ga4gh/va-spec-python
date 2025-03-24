@@ -18,6 +18,7 @@ from ga4gh.va_spec.base.enums import (
     STRENGTHS,
     System,
 )
+from ga4gh.va_spec.base.validators import validate_mappable_concept
 from pydantic import Field, field_validator
 
 
@@ -80,22 +81,9 @@ class VariantPathogenicityFunctionalImpactEvidenceLine(EvidenceLine):
         :raises ValueError: If invalid strengthOfEvidenceProvided values are provided
         :return: Validated strengthOfEvidenceProvided value
         """
-        if not v:
-            return v
-
-        if not v.primaryCoding:
-            err_msg = "`primaryCoding` is required."
-            raise ValueError(err_msg)
-
-        if v.primaryCoding.system != System.ACMG:
-            err_msg = f"`primaryCoding.system` must be '{System.ACMG.value}'."
-            raise ValueError(err_msg)
-
-        if v.primaryCoding.code.root not in STRENGTH_OF_EVIDENCE_PROVIDED_VALUES:
-            err_msg = f"`primaryCoding.code` must be one of {STRENGTH_OF_EVIDENCE_PROVIDED_VALUES}."
-            raise ValueError(err_msg)
-
-        return v
+        return validate_mappable_concept(
+            v, System.ACMG, STRENGTH_OF_EVIDENCE_PROVIDED_VALUES, mc_is_required=False
+        )
 
     @field_validator("specifiedBy")
     @classmethod
@@ -123,22 +111,9 @@ class VariantPathogenicityFunctionalImpactEvidenceLine(EvidenceLine):
         :raises ValueError: If invalid evidenceOutcome values are provided
         :return: Validated evidenceOutcome value
         """
-        if not v:
-            return v
-
-        if not v.primaryCoding:
-            err_msg = "`primaryCoding` is required."
-            raise ValueError(err_msg)
-
-        if v.primaryCoding.system != System.ACMG:
-            err_msg = f"`primaryCoding.system` must be '{System.ACMG.value}'."
-            raise ValueError(err_msg)
-
-        if v.primaryCoding.code.root not in EVIDENCE_OUTCOME_VALUES:
-            err_msg = f"`primaryCoding.code` must be one of {EVIDENCE_OUTCOME_VALUES}."
-            raise ValueError(err_msg)
-
-        return v
+        return validate_mappable_concept(
+            v, System.ACMG, EVIDENCE_OUTCOME_VALUES, mc_is_required=False
+        )
 
 
 class VariantPathogenicityStatement(Statement):
@@ -170,21 +145,9 @@ class VariantPathogenicityStatement(Statement):
         :raises ValueError: If invalid strength values are provided
         :return: Validated strength value
         """
-        if not v:
-            return v
-
-        if not v.primaryCoding:
-            err_msg = "`primaryCoding` is required."
-            raise ValueError(err_msg)
-
-        if v.primaryCoding.system != System.ACMG:
-            err_msg = f"`primaryCoding.system` must be: {System.ACMG.value}."
-
-        if v.primaryCoding.code.root not in STRENGTHS:
-            err_msg = f"`primaryCoding.code` must be one of {STRENGTHS}."
-            raise ValueError(err_msg)
-
-        return v
+        return validate_mappable_concept(
+            v, System.ACMG, STRENGTHS, mc_is_required=False
+        )
 
     @field_validator("classification")
     @classmethod
