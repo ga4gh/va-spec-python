@@ -4,15 +4,21 @@ import json
 
 import pytest
 import yaml
-from ga4gh.core.models import iriReference
+from ga4gh.core.models import Coding, MappableConcept, code, iriReference
 from ga4gh.va_spec import acmg_2015, base, ccv_2022
 from ga4gh.va_spec.aac_2017.models import VariantTherapeuticResponseStudyStatement
+from ga4gh.va_spec.acmg_2015.models import (
+    VariantPathogenicityFunctionalImpactEvidenceLine,
+)
 from ga4gh.va_spec.base import (
     Agent,
     CohortAlleleFrequencyStudyResult,
     ExperimentalVariantFunctionalImpactStudyResult,
 )
 from ga4gh.va_spec.base.core import EvidenceLine, StudyGroup, StudyResult
+from ga4gh.va_spec.ccv_2022.models import (
+    VariantOncogenicityFunctionalImpactEvidenceLine,
+)
 from pydantic import ValidationError
 
 from tests.conftest import SUBMODULES_DIR
@@ -198,6 +204,66 @@ def test_evidence_line(caf):
     }
     el = EvidenceLine(**el_dict)
     assert isinstance(el.hasEvidenceItems[0], iriReference)
+
+
+def test_variant_pathogenicity_el():
+    """Ensure VariantPathogenicityFunctionalImpactEvidenceLine model works as expected"""
+    vp = VariantPathogenicityFunctionalImpactEvidenceLine(
+        type="EvidenceLine",
+        specifiedBy={
+            "type": "Method",
+            "id": "PS3",
+            "name": "ACMG 2015 PS3 Criterion",
+            "reportedIn": {
+                "type": "Document",
+                "pmid": 25741868,
+                "name": "ACMG Guidelines, 2015",
+            },
+        },
+        directionOfEvidenceProvided="supports",
+        evidenceOutcome={
+            "primaryCoding": {
+                "code": "PS3_supporting",
+                "system": "ACMG Guidelines, 2015",
+            },
+            "name": "ACMG 2015 PS3 Supporting Criterion Met",
+        },
+    )
+    assert vp.evidenceOutcome == MappableConcept(
+        primaryCoding=Coding(
+            code=code(root="PS3_supporting"), system="ACMG Guidelines, 2015"
+        ),
+        name="ACMG 2015 PS3 Supporting Criterion Met",
+    )
+
+
+def test_variant_onco_el():
+    """Ensure VariantOncogenicityFunctionalImpactEvidenceLine model works as expected"""
+    vp = VariantOncogenicityFunctionalImpactEvidenceLine(
+        type="EvidenceLine",
+        specifiedBy={
+            "type": "Method",
+            "reportedIn": {
+                "type": "Document",
+                "pmid": 35101336,
+                "name": "ClinGen/CGC/VICC Guidelines for Oncogenicity, 2022",
+            },
+        },
+        directionOfEvidenceProvided="supports",
+        scoreOfEvidenceProvided=1,
+        evidenceOutcome={
+            "primaryCoding": {
+                "code": "OS2_supporting",
+                "system": "ClinGen/CGC/VICC Guidelines for Oncogenicity, 2022",
+            },
+        },
+    )
+    assert vp.evidenceOutcome == MappableConcept(
+        primaryCoding=Coding(
+            code=code(root="OS2_supporting"),
+            system="ClinGen/CGC/VICC Guidelines for Oncogenicity, 2022",
+        ),
+    )
 
 
 def test_examples(test_definitions):

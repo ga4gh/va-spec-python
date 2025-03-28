@@ -7,9 +7,9 @@ from enum import Enum
 
 from ga4gh.core.models import MappableConcept, iriReference
 from ga4gh.va_spec.base.core import (
-    EvidenceLine,
+    EvidenceLineValidatorMixin,
     Method,
-    Statement,
+    StatementValidatorMixin,
     VariantPathogenicityProposition,
 )
 from ga4gh.va_spec.base.enums import (
@@ -18,8 +18,10 @@ from ga4gh.va_spec.base.enums import (
     STRENGTHS,
     System,
 )
-from ga4gh.va_spec.base.validators import validate_mappable_concept
-from pydantic import Field, field_validator
+from ga4gh.va_spec.base.validators import (
+    validate_mappable_concept,
+)
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 class EvidenceOutcome(str, Enum):
@@ -51,7 +53,9 @@ class AcmgClassification(str, Enum):
 ACMG_CLASSIFICATIONS = [v.value for v in AcmgClassification.__members__.values()]
 
 
-class VariantPathogenicityFunctionalImpactEvidenceLine(EvidenceLine):
+class VariantPathogenicityFunctionalImpactEvidenceLine(
+    BaseModel, EvidenceLineValidatorMixin
+):
     """An Evidence Line that describes how information about the functional impact of a
     variant on a gene or gene product was interpreted as evidence for or against the
     variant's pathogenicity.
@@ -100,23 +104,21 @@ class VariantPathogenicityFunctionalImpactEvidenceLine(EvidenceLine):
 
         return v
 
-    @field_validator("evidenceOutcome")
-    @classmethod
-    def validate_evidence_outcome(
-        cls, v: MappableConcept | None
-    ) -> MappableConcept | None:
-        """Validate evidenceOutcome
+    @model_validator(mode="before")
+    def validate_evidence_outcome(cls, values: dict) -> dict:  # noqa: N805
+        """Validate ``evidenceOutcome`` property if it exists
 
-        :param v: evidenceOutcome
-        :raises ValueError: If invalid evidenceOutcome values are provided
-        :return: Validated evidenceOutcome value
+        :param values: Input values
+        :raises ValueError: If ``evidenceOutcome`` exists and is invalid
+        :return: Validated input values. If ``evidenceOutcome`` exists, then it will be
+            validated and converted to a ``MappableConcept``
         """
-        return validate_mappable_concept(
-            v, System.ACMG, EVIDENCE_OUTCOME_VALUES, mc_is_required=False
+        return cls._validate_evidence_outcome(
+            values, System.ACMG, EVIDENCE_OUTCOME_VALUES
         )
 
 
-class VariantPathogenicityStatement(Statement):
+class VariantPathogenicityStatement(BaseModel, StatementValidatorMixin):
     """A Statement describing the role of a variant in causing an inherited condition."""
 
     proposition: VariantPathogenicityProposition | None = Field(

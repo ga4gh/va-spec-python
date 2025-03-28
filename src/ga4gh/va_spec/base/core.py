@@ -20,19 +20,24 @@ from ga4gh.va_spec.base.domain_entities import Condition, Therapeutic
 from ga4gh.va_spec.base.enums import (
     DiagnosticPredicate,
     PrognosticPredicate,
+    System,
     TherapeuticResponsePredicate,
 )
+from ga4gh.va_spec.base.validators import validate_mappable_concept
 from ga4gh.vrs.models import Allele, MolecularVariation
 from pydantic import (
+    BaseModel,
     ConfigDict,
     Field,
     RootModel,
     StringConstraints,
     ValidationError,
     field_validator,
+    model_validator,
 )
 
-StatementType = TypeVar("StatementType", bound="Statement")
+StatementType = TypeVar("StatementType")
+EvidenceLineType = TypeVar("EvidenceLineType")
 
 #########################################
 # Abstract Core Classes
@@ -484,7 +489,7 @@ class EvidenceLine(InformationEntity, BaseModelForbidExtra):
         description="The possible fact against which evidence items contained in an Evidence Line were collectively evaluated, in determining the overall strength and direction of support they provide. For example, in an ACMG Guideline-based assessment of variant pathogenicity, the support provided by distinct lines of evidence are assessed against a target proposition that the variant is pathogenic for a specific disease.",
     )
     hasEvidenceItems: (
-        list[StudyResult | StatementType | EvidenceLine | iriReference] | None
+        list[StudyResult | StatementType | EvidenceLineType | iriReference] | None
     ) = Field(
         None,
         description="An individual piece of information that was evaluated as evidence in building the argument represented by an Evidence Line.",
@@ -509,7 +514,7 @@ class EvidenceLine(InformationEntity, BaseModelForbidExtra):
     @field_validator("hasEvidenceItems", mode="before")
     def validate_has_evidence_items(
         cls,  # noqa: N805
-        v: list[StudyResult, StatementType, EvidenceLine, iriReference] | None,
+        v: list | None,
     ) -> list | None:
         """Ensure hasEvidenceItems is correct type
 
@@ -539,15 +544,12 @@ class EvidenceLine(InformationEntity, BaseModelForbidExtra):
                     obj_
                     for _, obj_ in vars(imported_module).items()
                     if inspect.isclass(obj_)
-                    and issubclass(obj_, Statement)
-                    and obj_ is not Statement
+                    and issubclass(obj_, BaseModel)
+                    and obj_.__name__.endswith(("Statement", "EvidenceLine"))
                 ]
             )
 
-        has_evidence_items_models.extend(
-            [Statement, StudyResult, EvidenceLine, iriReference]
-        )
-
+        has_evidence_items_models.extend([Statement, StudyResult, EvidenceLine])
         for evidence_item in v:
             if isinstance(evidence_item, dict):
                 found_model = False
@@ -563,6 +565,8 @@ class EvidenceLine(InformationEntity, BaseModelForbidExtra):
                 if not found_model:
                     err_msg = "Unable to find valid model"
                     raise ValueError(err_msg)
+            elif isinstance(evidence_item, str):
+                evidence_items.append(iriReference(root=evidence_item))
             else:
                 evidence_items.append(evidence_item)
         return evidence_items
@@ -580,9 +584,17 @@ class Statement(InformationEntity, BaseModelForbidExtra):
     type: Literal["Statement"] = Field(
         CoreType.STATEMENT.value, description=f"MUST be '{CoreType.STATEMENT.value}'."
     )
-    proposition: Proposition = Field(
+    proposition: (
+        ExperimentalVariantFunctionalImpactProposition
+        | VariantDiagnosticProposition
+        | VariantOncogenicityProposition
+        | VariantPathogenicityProposition
+        | VariantPrognosticProposition
+        | VariantTherapeuticResponseProposition
+    ) = Field(
         ...,
         description="A possible fact, the validity of which is assessed and reported by the Statement. A Statement can put forth the proposition as being true, false, or uncertain, and may provide an assessment of the level of confidence/evidence supporting this claim.",
+        discriminator="type",
     )
     direction: Direction = Field(
         ...,
@@ -624,3 +636,70 @@ class StudyGroup(Entity, BaseModelForbidExtra):
         None,
         description="A feature or role shared by all members of the StudyGroup, representing a criterion for membership in the group.",
     )
+
+
+class StatementValidatorMixin:
+    """Mixin class for reusable Statement model validators
+
+    Should be used with classes that inherit from Pydantic BaseModel
+    """
+
+    model_config = ConfigDict(extra="allow")
+
+    @model_validator(mode="after")
+    def statement_validator(cls, model: BaseModel) -> BaseModel:  # noqa: N805
+        """Validate that the model is a ``Statement``.
+
+        :param model: Pydantic BaseModel to validate
+        :raises ValueError: If ``model`` does not validate against a ``Statement``
+        :return: Validated model
+        """
+        try:
+            Statement(**model.model_dump())
+        except ValidationError as e:
+            err_msg = f"Must be a `Statement`: {e}"
+            raise ValueError(err_msg) from e
+        return model
+
+
+class EvidenceLineValidatorMixin:
+    """Mixin class for reusable EvidenceLine model validators
+
+    Should be used with classes that inherit from Pydantic BaseModel
+    """
+
+    model_config = ConfigDict(extra="allow")
+
+    @staticmethod
+    def _validate_evidence_outcome(
+        values: dict, system: System, codes: list[str]
+    ) -> dict:
+        """Validate ``evidenceOutcome`` property if it exists
+
+        :param values: Input values
+        :param system: System that should be used in ``MappableConcept``
+        :param codes: Codes that should be used in ``MappableConcept``
+        :raises ValueError: If ``evidenceOutcome`` exists and is invalid
+        :return: Validated input values. If ``evidenceOutcome`` exists, then it will be
+            validated and converted to a ``MappableConcept``
+        """
+        if "evidenceOutcome" in values:
+            mc = MappableConcept(**values["evidenceOutcome"])
+            values["evidenceOutcome"] = mc
+            validate_mappable_concept(mc, system, codes, mc_is_required=False)
+        return values
+
+    @model_validator(mode="after")
+    def evidence_line_validator(cls, model: BaseModel) -> BaseModel:  # noqa: N805
+        """Validate that the model is a ``EvidenceLine``.
+
+        :param model: Pydantic BaseModel to validate
+        :raises ValueError: If ``model`` does not validate against a ``EvidenceLine``
+        :return: Validated model
+        """
+        try:
+            EvidenceLine(**model.model_dump())
+        except ValidationError as e:
+            err_msg = f"Must be a `EvidenceLine`: {e}"
+            raise ValueError(err_msg) from e
+        return model
