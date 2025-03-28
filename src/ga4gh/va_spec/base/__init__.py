@@ -27,9 +27,11 @@ from .core import (
 )
 from .domain_entities import Condition, ConditionSet, Therapeutic, TherapyGroup
 from .enums import (
+    CCV_CLASSIFICATIONS,
     CLIN_GEN_CLASSIFICATIONS,
     STRENGTH_OF_EVIDENCE_PROVIDED_VALUES,
     STRENGTHS,
+    CcvClassification,
     ClinGenClassification,
     DiagnosticPredicate,
     MembershipOperator,
@@ -42,7 +44,9 @@ from .enums import (
 
 __all__ = [
     "Agent",
+    "CCV_CLASSIFICATIONS",
     "CLIN_GEN_CLASSIFICATIONS",
+    "CcvClassification",
     "ClinGenClassification",
     "ClinGenClassification",
     "ClinicalVariantProposition",

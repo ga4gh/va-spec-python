@@ -20,6 +20,7 @@ from ga4gh.va_spec.base import (
 from ga4gh.va_spec.base.core import EvidenceLine, Method, StudyGroup, StudyResult
 from ga4gh.va_spec.ccv_2022.models import (
     VariantOncogenicityFunctionalImpactEvidenceLine,
+    VariantOncogenicityStudyStatement,
 )
 from pydantic import ValidationError
 
@@ -297,6 +298,55 @@ def test_variant_pathogenicity_el():
     del invalid_params["specifiedBy"]["reportedIn"]
     with pytest.raises(ValueError, match="`reportedIn` is required"):
         VariantPathogenicityFunctionalImpactEvidenceLine(**invalid_params)
+
+
+def test_variant_onco_stmt():
+    """Ensure VariantOncogenicityStudyStatement model works as expected"""
+    params = {
+        "direction": "neutral",
+        "proposition": {
+            "type": "VariantOncogenicityProposition",
+            "predicate": "isCausalFor",
+            "objectTumorType": "conditions.json#/1",
+            "subjectVariant": "alleles.json#/1",
+        },
+        "classification": {
+            "primaryCoding": {
+                "code": "oncogenic",
+                "system": "ClinGen Low Penetrance and Risk Allele Recommendations, 2024",
+            }
+        },
+        "specifiedBy": "documents.json#/1",
+        "strength": {
+            "primaryCoding": {
+                "code": "definitive",
+                "system": "ClinGen Low Penetrance and Risk Allele Recommendations, 2024",
+            }
+        },
+    }
+    assert VariantOncogenicityStudyStatement(**params)
+
+    invalid_params = deepcopy(params)
+    invalid_params["strength"]["primaryCoding"]["code"] = "oncogenic"
+    with pytest.raises(ValueError, match="`primaryCoding.code` must be one of"):
+        VariantOncogenicityStudyStatement(**invalid_params)
+
+    invalid_params = deepcopy(params)
+    invalid_params["strength"]["primaryCoding"]["system"] = "ACMG Guidelines, 2015"
+    with pytest.raises(ValueError, match="`primaryCoding.system` must be"):
+        VariantOncogenicityStudyStatement(**invalid_params)
+
+    invalid_params = deepcopy(params)
+    invalid_params["classification"]["primaryCoding"]["code"] = "pathogenic"
+    with pytest.raises(ValueError, match="`primaryCoding.code` must be one of"):
+        VariantOncogenicityStudyStatement(**invalid_params)
+
+    invalid_params = deepcopy(params)
+    invalid_params["classification"]["primaryCoding"]["system"] = (
+        "ACMG Guidelines, 2015"
+    )
+    with pytest.raises(ValueError, match="`primaryCoding.system` must be"):
+        VariantOncogenicityStudyStatement(**invalid_params)
 
 
 def test_variant_onco_el():

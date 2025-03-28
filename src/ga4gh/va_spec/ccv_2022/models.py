@@ -13,7 +13,7 @@ from ga4gh.va_spec.base.core import (
     VariantOncogenicityProposition,
 )
 from ga4gh.va_spec.base.enums import (
-    CLIN_GEN_CLASSIFICATIONS,
+    CCV_CLASSIFICATIONS,
     STRENGTH_OF_EVIDENCE_PROVIDED_VALUES,
     STRENGTHS,
     System,
@@ -133,5 +133,5 @@ class VariantOncogenicityStudyStatement(BaseModel, StatementValidatorMixin):
         :return: Validated classification value
         """
         return validate_mappable_concept(
-            v, System.CLIN_GEN, CLIN_GEN_CLASSIFICATIONS, mc_is_required=True
+            v, System.CLIN_GEN, CCV_CLASSIFICATIONS, mc_is_required=True
         )
