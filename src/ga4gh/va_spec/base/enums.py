@@ -75,6 +75,19 @@ class ClinGenClassification(str, Enum):
 CLIN_GEN_CLASSIFICATIONS = [v.value for v in ClinGenClassification.__members__.values()]
 
 
+class CcvClassification(str, Enum):
+    """Define constraints for CCV classifications"""
+
+    ONCOGENIC = "oncogenic"
+    LIKELY_ONCOGENIC = "likely oncogenic"
+    UNCERTAIN_SIGNIFICANCE = "uncertain significance"
+    LIKELY_BENIGN = "likely benign"
+    BENIGN = "benign"
+
+
+CCV_CLASSIFICATIONS = [v.value for v in CcvClassification.__members__.values()]
+
+
 class System(str, Enum):
     """Define constraints for systems"""
 

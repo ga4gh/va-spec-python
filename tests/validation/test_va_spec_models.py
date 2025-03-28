@@ -1,18 +1,27 @@
 """Test VA Spec Pydantic model"""
 
 import json
+from copy import deepcopy
 
 import pytest
 import yaml
-from ga4gh.core.models import iriReference
+from ga4gh.core.models import Coding, MappableConcept, code, iriReference
 from ga4gh.va_spec import acmg_2015, base, ccv_2022
 from ga4gh.va_spec.aac_2017.models import VariantTherapeuticResponseStudyStatement
+from ga4gh.va_spec.acmg_2015.models import (
+    VariantPathogenicityFunctionalImpactEvidenceLine,
+    VariantPathogenicityStatement,
+)
 from ga4gh.va_spec.base import (
     Agent,
     CohortAlleleFrequencyStudyResult,
     ExperimentalVariantFunctionalImpactStudyResult,
 )
-from ga4gh.va_spec.base.core import EvidenceLine, StudyGroup, StudyResult
+from ga4gh.va_spec.base.core import EvidenceLine, Method, StudyGroup, StudyResult
+from ga4gh.va_spec.ccv_2022.models import (
+    VariantOncogenicityFunctionalImpactEvidenceLine,
+    VariantOncogenicityStudyStatement,
+)
 from pydantic import ValidationError
 
 from tests.conftest import SUBMODULES_DIR
@@ -198,6 +207,241 @@ def test_evidence_line(caf):
     }
     el = EvidenceLine(**el_dict)
     assert isinstance(el.hasEvidenceItems[0], iriReference)
+
+    el_dict = {
+        "type": "EvidenceLine",
+        "hasEvidenceItems": None,
+        "directionOfEvidenceProvided": "supports",
+    }
+    assert EvidenceLine(**el_dict)
+
+    invalid_params = {
+        "type": "EvidenceLine",
+        "hasEvidenceItems": [Agent(name="Joe")],
+        "directionOfEvidenceProvided": "supports",
+    }
+    with pytest.raises(
+        ValueError, match="Unable to find valid model for `hasEvidenceItems`"
+    ):
+        EvidenceLine(**invalid_params)
+
+    invalid_params = {
+        "type": "EvidenceLine",
+        "hasEvidenceItems": [{"type": "Statement"}],
+        "directionOfEvidenceProvided": "supports",
+    }
+    with pytest.raises(
+        ValueError, match="Unable to find valid model for `hasEvidenceItems`"
+    ):
+        EvidenceLine(**invalid_params)
+
+
+def test_variant_pathogenicity_stmt():
+    """Ensure VariantPathogenicityStatement model works as expected"""
+    params = {
+        "direction": "supports",
+        "proposition": {
+            "type": "VariantPathogenicityProposition",
+            "predicate": "isCausalFor",
+            "objectCondition": "conditions.json#/1",
+            "subjectVariant": "alleles.json#/1",
+        },
+        "classification": {
+            "primaryCoding": {"code": "pathogenic", "system": "ACMG Guidelines, 2015"}
+        },
+        "specifiedBy": {
+            "reportedIn": {
+                "type": "Document",
+                "pmid": 25741868,
+                "name": "ACMG Guidelines, 2015",
+            }
+        },
+    }
+    assert VariantPathogenicityStatement(**params)
+
+    invalid_params = deepcopy(params)
+    del invalid_params["classification"]["primaryCoding"]
+    invalid_params["classification"]["name"] = "test"
+    with pytest.raises(ValueError, match="`primaryCoding` is required."):
+        VariantPathogenicityStatement(**invalid_params)
+
+    invalid_params = deepcopy(params)
+    invalid_params["classification"]["primaryCoding"]["system"] = (
+        "AMP/ASCO/CAP (AAC) Guidelines, 2017"
+    )
+    with pytest.raises(ValueError, match="`primaryCoding.system` must be one of"):
+        VariantPathogenicityStatement(**invalid_params)
+
+    invalid_params = deepcopy(params)
+    invalid_params["classification"]["primaryCoding"]["code"] = (
+        "pathogenic, low penetrance"
+    )
+    with pytest.raises(ValueError, match="`primaryCoding.code` must be one of"):
+        VariantPathogenicityStatement(**invalid_params)
+
+    invalid_params = deepcopy(params)
+    invalid_params["classification"]["primaryCoding"]["system"] = (
+        "ClinGen Low Penetrance and Risk Allele Recommendations, 2024"
+    )
+    invalid_params["classification"]["primaryCoding"]["code"] = "pathogenic"
+    with pytest.raises(ValueError, match="`primaryCoding.code` must be one of"):
+        VariantPathogenicityStatement(**invalid_params)
+
+    invalid_params = deepcopy(params)
+    del invalid_params["proposition"]  # proposition is required for statement
+    with pytest.raises(ValueError, match="Must be a `Statement`"):
+        VariantPathogenicityStatement(**invalid_params)
+
+
+def test_variant_pathogenicity_el():
+    """Ensure VariantPathogenicityFunctionalImpactEvidenceLine model works as expected"""
+    params = {
+        "type": "EvidenceLine",
+        "specifiedBy": {
+            "type": "Method",
+            "id": "PS3",
+            "name": "ACMG 2015 PS3 Criterion",
+            "reportedIn": {
+                "type": "Document",
+                "pmid": 25741868,
+                "name": "ACMG Guidelines, 2015",
+            },
+        },
+        "directionOfEvidenceProvided": "supports",
+        "evidenceOutcome": {
+            "primaryCoding": {
+                "code": "PS3_supporting",
+                "system": "ACMG Guidelines, 2015",
+            },
+            "name": "ACMG 2015 PS3 Supporting Criterion Met",
+        },
+    }
+    vp = VariantPathogenicityFunctionalImpactEvidenceLine(**params)
+
+    assert isinstance(vp.specifiedBy, Method)
+    assert vp.evidenceOutcome == MappableConcept(
+        primaryCoding=Coding(
+            code=code(root="PS3_supporting"), system="ACMG Guidelines, 2015"
+        ),
+        name="ACMG 2015 PS3 Supporting Criterion Met",
+    )
+
+    valid_params = deepcopy(params)
+    valid_params["strengthOfEvidenceProvided"] = None
+    assert VariantPathogenicityFunctionalImpactEvidenceLine(**valid_params)
+
+    invalid_params = deepcopy(params)
+    del invalid_params["specifiedBy"]["reportedIn"]
+    with pytest.raises(ValueError, match="`reportedIn` is required"):
+        VariantPathogenicityFunctionalImpactEvidenceLine(**invalid_params)
+
+    invalid_params = deepcopy(params)
+    del invalid_params[
+        "directionOfEvidenceProvided"
+    ]  # directionOfEvidenceProvided is required for statement
+    with pytest.raises(ValueError, match="Must be an `EvidenceLine`"):
+        VariantPathogenicityFunctionalImpactEvidenceLine(**invalid_params)
+
+    invalid_params = deepcopy(params)
+    invalid_params["strengthOfEvidenceProvided"] = {"name": "test"}
+    with pytest.raises(ValueError, match="`primaryCoding` is required."):
+        VariantPathogenicityFunctionalImpactEvidenceLine(**invalid_params)
+
+    invalid_params = deepcopy(params)
+    invalid_params["strengthOfEvidenceProvided"] = {
+        "primaryCoding": {
+            "system": "AMP/ASCO/CAP (AAC) Guidelines, 2017",
+            "code": "strong",
+        }
+    }
+    with pytest.raises(ValueError, match="`primaryCoding.system` must be"):
+        VariantPathogenicityFunctionalImpactEvidenceLine(**invalid_params)
+
+    invalid_params = deepcopy(params)
+    invalid_params["strengthOfEvidenceProvided"] = {
+        "primaryCoding": {"system": "ACMG Guidelines, 2015", "code": "PS3"}
+    }
+    with pytest.raises(ValueError, match="`primaryCoding.code` must be"):
+        VariantPathogenicityFunctionalImpactEvidenceLine(**invalid_params)
+
+
+def test_variant_onco_stmt():
+    """Ensure VariantOncogenicityStudyStatement model works as expected"""
+    params = {
+        "direction": "neutral",
+        "proposition": {
+            "type": "VariantOncogenicityProposition",
+            "predicate": "isCausalFor",
+            "objectTumorType": "conditions.json#/1",
+            "subjectVariant": "alleles.json#/1",
+        },
+        "classification": {
+            "primaryCoding": {
+                "code": "oncogenic",
+                "system": "ClinGen/CGC/VICC Guidelines for Oncogenicity, 2022",
+            }
+        },
+        "specifiedBy": "documents.json#/1",
+        "strength": {
+            "primaryCoding": {
+                "code": "definitive",
+                "system": "ClinGen/CGC/VICC Guidelines for Oncogenicity, 2022",
+            }
+        },
+    }
+    assert VariantOncogenicityStudyStatement(**params)
+
+    invalid_params = deepcopy(params)
+    invalid_params["strength"]["primaryCoding"]["code"] = "oncogenic"
+    with pytest.raises(ValueError, match="`primaryCoding.code` must be one of"):
+        VariantOncogenicityStudyStatement(**invalid_params)
+
+    invalid_params = deepcopy(params)
+    invalid_params["strength"]["primaryCoding"]["system"] = "ACMG Guidelines, 2015"
+    with pytest.raises(ValueError, match="`primaryCoding.system` must be"):
+        VariantOncogenicityStudyStatement(**invalid_params)
+
+    invalid_params = deepcopy(params)
+    invalid_params["classification"]["primaryCoding"]["code"] = "pathogenic"
+    with pytest.raises(ValueError, match="`primaryCoding.code` must be one of"):
+        VariantOncogenicityStudyStatement(**invalid_params)
+
+    invalid_params = deepcopy(params)
+    invalid_params["classification"]["primaryCoding"]["system"] = (
+        "ACMG Guidelines, 2015"
+    )
+    with pytest.raises(ValueError, match="`primaryCoding.system` must be"):
+        VariantOncogenicityStudyStatement(**invalid_params)
+
+
+def test_variant_onco_el():
+    """Ensure VariantOncogenicityFunctionalImpactEvidenceLine model works as expected"""
+    vo = VariantOncogenicityFunctionalImpactEvidenceLine(
+        type="EvidenceLine",
+        specifiedBy={
+            "type": "Method",
+            "reportedIn": {
+                "type": "Document",
+                "pmid": 35101336,
+                "name": "ClinGen/CGC/VICC Guidelines for Oncogenicity, 2022",
+            },
+        },
+        directionOfEvidenceProvided="supports",
+        scoreOfEvidenceProvided=1,
+        evidenceOutcome={
+            "primaryCoding": {
+                "code": "OS2_supporting",
+                "system": "ClinGen/CGC/VICC Guidelines for Oncogenicity, 2022",
+            },
+        },
+    )
+    assert isinstance(vo.specifiedBy, Method)
+    assert vo.evidenceOutcome == MappableConcept(
+        primaryCoding=Coding(
+            code=code(root="OS2_supporting"),
+            system="ClinGen/CGC/VICC Guidelines for Oncogenicity, 2022",
+        ),
+    )
 
 
 def test_examples(test_definitions):

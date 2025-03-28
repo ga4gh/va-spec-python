@@ -7,19 +7,19 @@ from enum import Enum
 
 from ga4gh.core.models import MappableConcept, iriReference
 from ga4gh.va_spec.base.core import (
-    EvidenceLine,
+    EvidenceLineValidatorMixin,
     Method,
-    Statement,
+    StatementValidatorMixin,
     VariantOncogenicityProposition,
 )
 from ga4gh.va_spec.base.enums import (
-    CLIN_GEN_CLASSIFICATIONS,
+    CCV_CLASSIFICATIONS,
     STRENGTH_OF_EVIDENCE_PROVIDED_VALUES,
     STRENGTHS,
     System,
 )
 from ga4gh.va_spec.base.validators import validate_mappable_concept
-from pydantic import Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 class EvidenceOutcome(str, Enum):
@@ -38,7 +38,9 @@ class EvidenceOutcome(str, Enum):
 EVIDENCE_OUTCOME_VALUES = [v.value for v in EvidenceOutcome.__members__.values()]
 
 
-class VariantOncogenicityFunctionalImpactEvidenceLine(EvidenceLine):
+class VariantOncogenicityFunctionalImpactEvidenceLine(
+    BaseModel, EvidenceLineValidatorMixin
+):
     """An Evidence Line that describes how information about the functional impact of a
     variant on a gene or gene product was interpreted as evidence for or against the
     variant's oncogenicity.
@@ -72,23 +74,21 @@ class VariantOncogenicityFunctionalImpactEvidenceLine(EvidenceLine):
             v, System.CCV, STRENGTH_OF_EVIDENCE_PROVIDED_VALUES, mc_is_required=False
         )
 
-    @field_validator("evidenceOutcome")
-    @classmethod
-    def validate_evidence_outcome(
-        cls, v: MappableConcept | None
-    ) -> MappableConcept | None:
-        """Validate evidenceOutcome
+    @model_validator(mode="before")
+    def validate_evidence_outcome(cls, values: dict) -> dict:  # noqa: N805
+        """Validate ``evidenceOutcome`` property if it exists
 
-        :param v: evidenceOutcome
-        :raises ValueError: If invalid evidenceOutcome values are provided
-        :return: Validated evidenceOutcome value
+        :param values: Input values
+        :raises ValueError: If ``evidenceOutcome`` exists and is invalid
+        :return: Validated input values. If ``evidenceOutcome`` exists, then it will be
+            validated and converted to a ``MappableConcept``
         """
-        return validate_mappable_concept(
-            v, System.CCV, EVIDENCE_OUTCOME_VALUES, mc_is_required=False
+        return cls._validate_evidence_outcome(
+            values, System.CCV, EVIDENCE_OUTCOME_VALUES
         )
 
 
-class VariantOncogenicityStudyStatement(Statement):
+class VariantOncogenicityStudyStatement(BaseModel, StatementValidatorMixin):
     """A statement reporting a conclusion from a single study about whether a
     variant is associated with oncogenicity (positive or negative) - based on
     interpretation of the study's results.
@@ -119,9 +119,7 @@ class VariantOncogenicityStudyStatement(Statement):
         :raises ValueError: If invalid strength values are provided
         :return: Validated strength value
         """
-        return validate_mappable_concept(
-            v, System.CLIN_GEN, STRENGTHS, mc_is_required=False
-        )
+        return validate_mappable_concept(v, System.CCV, STRENGTHS, mc_is_required=False)
 
     @field_validator("classification")
     @classmethod
@@ -133,5 +131,5 @@ class VariantOncogenicityStudyStatement(Statement):
         :return: Validated classification value
         """
         return validate_mappable_concept(
-            v, System.CLIN_GEN, CLIN_GEN_CLASSIFICATIONS, mc_is_required=True
+            v, System.CCV, CCV_CLASSIFICATIONS, mc_is_required=True
         )
