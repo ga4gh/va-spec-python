@@ -15,7 +15,7 @@ from ga4gh.va_spec.base import (
     CohortAlleleFrequencyStudyResult,
     ExperimentalVariantFunctionalImpactStudyResult,
 )
-from ga4gh.va_spec.base.core import EvidenceLine, StudyGroup, StudyResult
+from ga4gh.va_spec.base.core import EvidenceLine, Method, StudyGroup, StudyResult
 from ga4gh.va_spec.ccv_2022.models import (
     VariantOncogenicityFunctionalImpactEvidenceLine,
 )
@@ -229,6 +229,8 @@ def test_variant_pathogenicity_el():
             "name": "ACMG 2015 PS3 Supporting Criterion Met",
         },
     )
+
+    assert isinstance(vp.specifiedBy, Method)
     assert vp.evidenceOutcome == MappableConcept(
         primaryCoding=Coding(
             code=code(root="PS3_supporting"), system="ACMG Guidelines, 2015"
@@ -258,6 +260,7 @@ def test_variant_onco_el():
             },
         },
     )
+    assert isinstance(vo.specifiedBy, Method)
     assert vo.evidenceOutcome == MappableConcept(
         primaryCoding=Coding(
             code=code(root="OS2_supporting"),
