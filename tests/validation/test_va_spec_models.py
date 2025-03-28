@@ -1,6 +1,7 @@
 """Test VA Spec Pydantic model"""
 
 import json
+from copy import deepcopy
 
 import pytest
 import yaml
@@ -9,6 +10,7 @@ from ga4gh.va_spec import acmg_2015, base, ccv_2022
 from ga4gh.va_spec.aac_2017.models import VariantTherapeuticResponseStudyStatement
 from ga4gh.va_spec.acmg_2015.models import (
     VariantPathogenicityFunctionalImpactEvidenceLine,
+    VariantPathogenicityStatement,
 )
 from ga4gh.va_spec.base import (
     Agent,
@@ -206,11 +208,63 @@ def test_evidence_line(caf):
     assert isinstance(el.hasEvidenceItems[0], iriReference)
 
 
+def test_variant_pathogenicity_stmt():
+    """Ensure VariantPathogenicityStatement model works as expected"""
+    params = {
+        "direction": "supports",
+        "proposition": {
+            "type": "VariantPathogenicityProposition",
+            "predicate": "isCausalFor",
+            "objectCondition": "conditions.json#/1",
+            "subjectVariant": "alleles.json#/1",
+        },
+        "classification": {
+            "primaryCoding": {"code": "pathogenic", "system": "ACMG Guidelines, 2015"}
+        },
+        "specifiedBy": {
+            "reportedIn": {
+                "type": "Document",
+                "pmid": 25741868,
+                "name": "ACMG Guidelines, 2015",
+            }
+        },
+    }
+    assert VariantPathogenicityStatement(**params)
+
+    invalid_params = deepcopy(params)
+    del invalid_params["classification"]["primaryCoding"]
+    invalid_params["classification"]["name"] = "test"
+    with pytest.raises(ValueError, match="`primaryCoding` is required."):
+        VariantPathogenicityStatement(**invalid_params)
+
+    invalid_params = deepcopy(params)
+    invalid_params["classification"]["primaryCoding"]["system"] = (
+        "AMP/ASCO/CAP (AAC) Guidelines, 2017"
+    )
+    with pytest.raises(ValueError, match="`primaryCoding.system` must be one of"):
+        VariantPathogenicityStatement(**invalid_params)
+
+    invalid_params = deepcopy(params)
+    invalid_params["classification"]["primaryCoding"]["code"] = (
+        "pathogenic, low penetrance"
+    )
+    with pytest.raises(ValueError, match="`primaryCoding.code` must be one of"):
+        VariantPathogenicityStatement(**invalid_params)
+
+    invalid_params = deepcopy(params)
+    invalid_params["classification"]["primaryCoding"]["system"] = (
+        "ClinGen Low Penetrance and Risk Allele Recommendations, 2024"
+    )
+    invalid_params["classification"]["primaryCoding"]["code"] = "pathogenic"
+    with pytest.raises(ValueError, match="`primaryCoding.code` must be one of"):
+        VariantPathogenicityStatement(**invalid_params)
+
+
 def test_variant_pathogenicity_el():
     """Ensure VariantPathogenicityFunctionalImpactEvidenceLine model works as expected"""
-    vp = VariantPathogenicityFunctionalImpactEvidenceLine(
-        type="EvidenceLine",
-        specifiedBy={
+    params = {
+        "type": "EvidenceLine",
+        "specifiedBy": {
             "type": "Method",
             "id": "PS3",
             "name": "ACMG 2015 PS3 Criterion",
@@ -220,15 +274,16 @@ def test_variant_pathogenicity_el():
                 "name": "ACMG Guidelines, 2015",
             },
         },
-        directionOfEvidenceProvided="supports",
-        evidenceOutcome={
+        "directionOfEvidenceProvided": "supports",
+        "evidenceOutcome": {
             "primaryCoding": {
                 "code": "PS3_supporting",
                 "system": "ACMG Guidelines, 2015",
             },
             "name": "ACMG 2015 PS3 Supporting Criterion Met",
         },
-    )
+    }
+    vp = VariantPathogenicityFunctionalImpactEvidenceLine(**params)
 
     assert isinstance(vp.specifiedBy, Method)
     assert vp.evidenceOutcome == MappableConcept(
@@ -237,6 +292,11 @@ def test_variant_pathogenicity_el():
         ),
         name="ACMG 2015 PS3 Supporting Criterion Met",
     )
+
+    invalid_params = deepcopy(params)
+    del invalid_params["specifiedBy"]["reportedIn"]
+    with pytest.raises(ValueError, match="`reportedIn` is required"):
+        VariantPathogenicityFunctionalImpactEvidenceLine(**invalid_params)
 
 
 def test_variant_onco_el():

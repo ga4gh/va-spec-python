@@ -164,9 +164,10 @@ class VariantPathogenicityStatement(BaseModel, StatementValidatorMixin):
             err_msg = "`primaryCoding` is required."
             raise ValueError(err_msg)
 
-        supported_systems = [System.ACMG.value, System.ACMG.value]
+        supported_systems = [System.ACMG.value, System.CLIN_GEN.value]
         if v.primaryCoding.system not in supported_systems:
             err_msg = f"`primaryCoding.system` must be one of: {supported_systems}."
+            raise ValueError(err_msg)
 
         if v.primaryCoding.system == System.ACMG:
             if v.primaryCoding.code.root not in ACMG_CLASSIFICATIONS:
