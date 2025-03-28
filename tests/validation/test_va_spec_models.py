@@ -208,6 +208,33 @@ def test_evidence_line(caf):
     el = EvidenceLine(**el_dict)
     assert isinstance(el.hasEvidenceItems[0], iriReference)
 
+    el_dict = {
+        "type": "EvidenceLine",
+        "hasEvidenceItems": None,
+        "directionOfEvidenceProvided": "supports",
+    }
+    assert EvidenceLine(**el_dict)
+
+    invalid_params = {
+        "type": "EvidenceLine",
+        "hasEvidenceItems": [Agent(name="Joe")],
+        "directionOfEvidenceProvided": "supports",
+    }
+    with pytest.raises(
+        ValueError, match="Unable to find valid model for `hasEvidenceItems`"
+    ):
+        EvidenceLine(**invalid_params)
+
+    invalid_params = {
+        "type": "EvidenceLine",
+        "hasEvidenceItems": [{"type": "Statement"}],
+        "directionOfEvidenceProvided": "supports",
+    }
+    with pytest.raises(
+        ValueError, match="Unable to find valid model for `hasEvidenceItems`"
+    ):
+        EvidenceLine(**invalid_params)
+
 
 def test_variant_pathogenicity_stmt():
     """Ensure VariantPathogenicityStatement model works as expected"""
@@ -260,6 +287,11 @@ def test_variant_pathogenicity_stmt():
     with pytest.raises(ValueError, match="`primaryCoding.code` must be one of"):
         VariantPathogenicityStatement(**invalid_params)
 
+    invalid_params = deepcopy(params)
+    del invalid_params["proposition"]  # proposition is required for statement
+    with pytest.raises(ValueError, match="Must be a `Statement`"):
+        VariantPathogenicityStatement(**invalid_params)
+
 
 def test_variant_pathogenicity_el():
     """Ensure VariantPathogenicityFunctionalImpactEvidenceLine model works as expected"""
@@ -294,9 +326,42 @@ def test_variant_pathogenicity_el():
         name="ACMG 2015 PS3 Supporting Criterion Met",
     )
 
+    valid_params = deepcopy(params)
+    valid_params["strengthOfEvidenceProvided"] = None
+    assert VariantPathogenicityFunctionalImpactEvidenceLine(**valid_params)
+
     invalid_params = deepcopy(params)
     del invalid_params["specifiedBy"]["reportedIn"]
     with pytest.raises(ValueError, match="`reportedIn` is required"):
+        VariantPathogenicityFunctionalImpactEvidenceLine(**invalid_params)
+
+    invalid_params = deepcopy(params)
+    del invalid_params[
+        "directionOfEvidenceProvided"
+    ]  # directionOfEvidenceProvided is required for statement
+    with pytest.raises(ValueError, match="Must be an `EvidenceLine`"):
+        VariantPathogenicityFunctionalImpactEvidenceLine(**invalid_params)
+
+    invalid_params = deepcopy(params)
+    invalid_params["strengthOfEvidenceProvided"] = {"name": "test"}
+    with pytest.raises(ValueError, match="`primaryCoding` is required."):
+        VariantPathogenicityFunctionalImpactEvidenceLine(**invalid_params)
+
+    invalid_params = deepcopy(params)
+    invalid_params["strengthOfEvidenceProvided"] = {
+        "primaryCoding": {
+            "system": "AMP/ASCO/CAP (AAC) Guidelines, 2017",
+            "code": "strong",
+        }
+    }
+    with pytest.raises(ValueError, match="`primaryCoding.system` must be"):
+        VariantPathogenicityFunctionalImpactEvidenceLine(**invalid_params)
+
+    invalid_params = deepcopy(params)
+    invalid_params["strengthOfEvidenceProvided"] = {
+        "primaryCoding": {"system": "ACMG Guidelines, 2015", "code": "PS3"}
+    }
+    with pytest.raises(ValueError, match="`primaryCoding.code` must be"):
         VariantPathogenicityFunctionalImpactEvidenceLine(**invalid_params)
 
 

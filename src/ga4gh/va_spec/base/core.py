@@ -563,12 +563,13 @@ class EvidenceLine(InformationEntity, BaseModelForbidExtra):
                         found_model = True
                         break
                 if not found_model:
-                    err_msg = "Unable to find valid model"
+                    err_msg = "Unable to find valid model for `hasEvidenceItems`"
                     raise ValueError(err_msg)
             elif isinstance(evidence_item, str):
                 evidence_items.append(iriReference(root=evidence_item))
             else:
-                evidence_items.append(evidence_item)
+                err_msg = "Unable to find valid model for `hasEvidenceItems`"
+                raise ValueError(err_msg)
         return evidence_items
 
 
