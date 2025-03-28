@@ -239,7 +239,7 @@ def test_variant_pathogenicity_el():
 
 def test_variant_onco_el():
     """Ensure VariantOncogenicityFunctionalImpactEvidenceLine model works as expected"""
-    vp = VariantOncogenicityFunctionalImpactEvidenceLine(
+    vo = VariantOncogenicityFunctionalImpactEvidenceLine(
         type="EvidenceLine",
         specifiedBy={
             "type": "Method",
@@ -258,7 +258,7 @@ def test_variant_onco_el():
             },
         },
     )
-    assert vp.evidenceOutcome == MappableConcept(
+    assert vo.evidenceOutcome == MappableConcept(
         primaryCoding=Coding(
             code=code(root="OS2_supporting"),
             system="ClinGen/CGC/VICC Guidelines for Oncogenicity, 2022",
