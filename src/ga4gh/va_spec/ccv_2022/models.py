@@ -119,9 +119,7 @@ class VariantOncogenicityStudyStatement(BaseModel, StatementValidatorMixin):
         :raises ValueError: If invalid strength values are provided
         :return: Validated strength value
         """
-        return validate_mappable_concept(
-            v, System.CLIN_GEN, STRENGTHS, mc_is_required=False
-        )
+        return validate_mappable_concept(v, System.CCV, STRENGTHS, mc_is_required=False)
 
     @field_validator("classification")
     @classmethod
@@ -133,5 +131,5 @@ class VariantOncogenicityStudyStatement(BaseModel, StatementValidatorMixin):
         :return: Validated classification value
         """
         return validate_mappable_concept(
-            v, System.CLIN_GEN, CCV_CLASSIFICATIONS, mc_is_required=True
+            v, System.CCV, CCV_CLASSIFICATIONS, mc_is_required=True
         )

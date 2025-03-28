@@ -378,14 +378,14 @@ def test_variant_onco_stmt():
         "classification": {
             "primaryCoding": {
                 "code": "oncogenic",
-                "system": "ClinGen Low Penetrance and Risk Allele Recommendations, 2024",
+                "system": "ClinGen/CGC/VICC Guidelines for Oncogenicity, 2022",
             }
         },
         "specifiedBy": "documents.json#/1",
         "strength": {
             "primaryCoding": {
                 "code": "definitive",
-                "system": "ClinGen Low Penetrance and Risk Allele Recommendations, 2024",
+                "system": "ClinGen/CGC/VICC Guidelines for Oncogenicity, 2022",
             }
         },
     }
