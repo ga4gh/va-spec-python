@@ -700,6 +700,6 @@ class EvidenceLineValidatorMixin:
         try:
             EvidenceLine(**model.model_dump())
         except ValidationError as e:
-            err_msg = f"Must be a `EvidenceLine`: {e}"
+            err_msg = f"Must be an `EvidenceLine`: {e}"
             raise ValueError(err_msg) from e
         return model
