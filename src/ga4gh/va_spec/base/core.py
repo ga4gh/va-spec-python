@@ -133,10 +133,10 @@ class TumorVariantFrequencyStudyResult(_StudyResult, BaseModelForbidExtra):
         ...,
         description="The variant for which frequency data is reported in the Study Result",
     )
-    affectedTumorSamples: int = Field(
+    affectedSampleCount: int = Field(
         ..., description="The number of tumor samples that contain the focus variant"
     )
-    totalTumorSamples: int = Field(
+    totalSampleCount: int = Field(
         ...,
         description="The total number of tumor samples included in the dataset",
     )
