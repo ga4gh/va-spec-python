@@ -94,7 +94,7 @@ class CohortAlleleFrequencyStudyResult(_StudyResult, BaseModelForbidExtra):
         None,
         description="The dataset from which the CohortAlleleFrequencyStudyResult was reported.",
     )
-    focusAllele: Allele | CategoricalVariant | iriReference = Field(
+    focusAllele: Allele | iriReference = Field(
         ..., description="The Allele for which frequency results are reported."
     )
     focusAlleleCount: int = Field(
@@ -113,6 +113,44 @@ class CohortAlleleFrequencyStudyResult(_StudyResult, BaseModelForbidExtra):
     subCohortFrequency: list[CohortAlleleFrequencyStudyResult] | None = Field(
         None,
         description="A list of CohortAlleleFrequency objects describing subcohorts of the cohort currently being described. Subcohorts can be further subdivided into more subcohorts. This enables, for example, the description of different ancestry groups and sexes among those ancestry groups.",
+    )
+
+
+class TumorVariantFrequencyStudyResult(_StudyResult, BaseModelForbidExtra):
+    """A Study Result that reports measures related to the frequency of an variant
+    across different tumor types.
+    """
+
+    type: Literal["TumorVariantFrequencyStudyResult"] = Field(
+        "TumorVariantFrequencyStudyResult",
+        description="MUST be 'TumorVariantFrequencyStudyResult'.",
+    )
+    sourceDataSet: DataSet | None = Field(
+        None,
+        description="The dataset from which data in the Tumor Variant Frequency Study Result was taken.",
+    )
+    focusVariant: Allele | CategoricalVariant | iriReference = Field(
+        ...,
+        description="The variant for which frequency data is reported in the Study Result",
+    )
+    affectedTumorSamples: int = Field(
+        ..., description="The number of tumor samples that contain the focus variant"
+    )
+    totalTumorSamples: int = Field(
+        ...,
+        description="The total number of tumor samples included in the dataset",
+    )
+    affectedFrequency: float = Field(
+        ...,
+        description="The frequency of tumor samples that include the focus variant.",
+    )
+    sampleGroup: StudyGroup | None = Field(
+        None,
+        description="The set of samples about which the frequency data was generated.",
+    )
+    subGroupFrequency: list[TumorVariantFrequencyStudyResult] | None = Field(
+        None,
+        description="A list of Tumor Variant Frequency Study Result objects describing subsets of the sample group currently being described. Subgroups can be further subdivided into more subcohorts. This enables, for example, the description of frequency data within samples with a narrower categorical variant than the root focus variant, or samples with a specific tumors type",
     )
 
 
