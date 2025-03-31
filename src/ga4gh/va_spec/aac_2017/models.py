@@ -63,7 +63,10 @@ class AmpAscoCapValidatorMixin(StatementValidatorMixin):
         :return: Validated strength value
         """
         return validate_mappable_concept(
-            v, System.AMP_ASCO_CAP, AMP_ASCO_CAP_LEVELS, mc_is_required=False
+            v,
+            System.AMP_ASCO_CAP,
+            valid_codes=AMP_ASCO_CAP_LEVELS,
+            mc_is_required=False,
         )
 
     @field_validator("classification")
@@ -75,7 +78,9 @@ class AmpAscoCapValidatorMixin(StatementValidatorMixin):
         :raises ValueError: If invalid classification values are provided
         :return: Validated classification value
         """
-        return validate_mappable_concept(v, System.AMP_ASCO_CAP, AMP_ASCO_CAP_TIERS)
+        return validate_mappable_concept(
+            v, System.AMP_ASCO_CAP, valid_codes=AMP_ASCO_CAP_TIERS
+        )
 
 
 class VariantDiagnosticStudyStatement(BaseModel, AmpAscoCapValidatorMixin):

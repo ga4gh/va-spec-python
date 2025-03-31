@@ -22,33 +22,14 @@ from ga4gh.va_spec.base.validators import validate_mappable_concept
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 
-class EvidenceOutcome(str, Enum):
-    """Define constraints for evidence outcome values"""
-
-    OS2 = "OS2"
-    OS2_MODERATE = "OS2_moderate"
-    OS2_SUPPORTING = "OS2_supporting"
-    OS2_NOT_MET = "OS2_not_met"
-    SBS2 = "SBS2"
-    SBS2_MODERATE = "SBS2_moderate"
-    SBS2_SUPPORTING = "SBS2_supporting"
-    SBS2_NOT_MET = "SBS2_not_met"
-
-
-EVIDENCE_OUTCOME_VALUES = [v.value for v in EvidenceOutcome.__members__.values()]
-
-
-class VariantOncogenicityFunctionalImpactEvidenceLine(
-    BaseModel, EvidenceLineValidatorMixin
-):
-    """An Evidence Line that describes how information about the functional impact of a
-    variant on a gene or gene product was interpreted as evidence for or against the
-    variant's oncogenicity.
+class VariantOncogenicityEvidenceLine(BaseModel, EvidenceLineValidatorMixin):
+    """An Evidence Line that describes how information about the specific evidence of a
+    variant was interpreted as evidence for or against the variant's oncogenicity.
     """
 
     targetProposition: VariantOncogenicityProposition | None = Field(
         None,
-        description="A Variant Oncogenicity Proposition against which functional impact information was assessed, in determining the strength and direction of support this information provides as evidence.",
+        description="A Variant Oncogenicity Proposition against which evidence information was assessed, in determining the strength and direction of support this information provides as evidence.",
     )
     strengthOfEvidenceProvided: MappableConcept | None = Field(
         None,
@@ -56,8 +37,29 @@ class VariantOncogenicityFunctionalImpactEvidenceLine(
     )
     specifiedBy: Method | iriReference = Field(
         ...,
-        description="The Clingen/CGC/VICC 2022 criterion that was applied to interpret variant functional impact information as evidence for or against the assessed variant's oncogenicity.",
+        description="The guidelines that were followed to assess the variant information as evidence for or against the assessed variant's oncogenicity.",
     )
+
+    class Criterion(str, Enum):
+        """Define CCV 2022 criterion values"""
+
+        OVS1 = "OVS1"
+        OS1 = "OS1"
+        OS2 = "OS2"
+        OS3 = "OS3"
+        OM1 = "OM1"
+        OM2 = "OM2"
+        OM3 = "OM3"
+        OM4 = "OM4"
+        OP1 = "OP1"
+        OP2 = "OP2"
+        OP3 = "OP3"
+        OP4 = "OP4"
+        SBVS1 = "SBVS1"
+        SBS1 = "SBS1"
+        SBS2 = "SBS2"
+        SBP1 = "SBP1"
+        SBP2 = "SBP2"
 
     @field_validator("strengthOfEvidenceProvided")
     @classmethod
@@ -71,7 +73,10 @@ class VariantOncogenicityFunctionalImpactEvidenceLine(
         :return: Validated strengthOfEvidenceProvided value
         """
         return validate_mappable_concept(
-            v, System.CCV, STRENGTH_OF_EVIDENCE_PROVIDED_VALUES, mc_is_required=False
+            v,
+            System.CCV,
+            valid_codes=STRENGTH_OF_EVIDENCE_PROVIDED_VALUES,
+            mc_is_required=False,
         )
 
     @model_validator(mode="before")
@@ -83,9 +88,8 @@ class VariantOncogenicityFunctionalImpactEvidenceLine(
         :return: Validated input values. If ``evidenceOutcome`` exists, then it will be
             validated and converted to a ``MappableConcept``
         """
-        return cls._validate_evidence_outcome(
-            values, System.CCV, EVIDENCE_OUTCOME_VALUES
-        )
+        ccv_code_pattern = r"^((?:OVS1|SBVS1)(?:_(?:not_met|(?:strong|moderate|supporting)))?|(?:OS[1-3]|SBS[1-2])(?:_(?:not_met|(?:very_strong|moderate|supporting)))?|(?:OM[1-4])(?:_(?:not_met|(?:very_strong|strong|supporting)))?|(OP[1-4]|SBP[1-2])(?:_(?:not_met|very_strong|strong|moderate))?)$"
+        return cls._validate_evidence_outcome(values, System.CCV, ccv_code_pattern)
 
 
 class VariantOncogenicityStudyStatement(BaseModel, StatementValidatorMixin):
@@ -119,7 +123,9 @@ class VariantOncogenicityStudyStatement(BaseModel, StatementValidatorMixin):
         :raises ValueError: If invalid strength values are provided
         :return: Validated strength value
         """
-        return validate_mappable_concept(v, System.CCV, STRENGTHS, mc_is_required=False)
+        return validate_mappable_concept(
+            v, System.CCV, valid_codes=STRENGTHS, mc_is_required=False
+        )
 
     @field_validator("classification")
     @classmethod
@@ -131,5 +137,5 @@ class VariantOncogenicityStudyStatement(BaseModel, StatementValidatorMixin):
         :return: Validated classification value
         """
         return validate_mappable_concept(
-            v, System.CCV, CCV_CLASSIFICATIONS, mc_is_required=True
+            v, System.CCV, valid_codes=CCV_CLASSIFICATIONS, mc_is_required=True
         )

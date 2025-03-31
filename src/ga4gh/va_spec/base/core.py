@@ -390,7 +390,7 @@ class Method(Entity, BaseModelForbidExtra):
     type: Literal["Method"] = Field(
         CoreType.METHOD.value, description=f"MUST be '{CoreType.METHOD.value}'."
     )
-    subtype: MappableConcept | None = Field(
+    methodType: str | None = Field(
         None,
         description="A specific type of method that a Method instance represents (e.g. 'Variant Interpretation Guideline', or 'Experimental Protocol').",
     )
@@ -412,7 +412,7 @@ class Contribution(Entity, BaseModelForbidExtra):
     contributor: Agent | None = Field(
         None, description="The agent that made the contribution."
     )
-    activityType: MappableConcept | None = Field(
+    activityType: str | None = Field(
         None,
         description="The specific type of activity performed or role played by an agent in making the contribution (e.g. for a publication, agents may contribute as a primary author, editor, figure designer, data generator, etc.). Values of this property may be framed as activities, or as contribution roles (e.g. using terms from the Contribution Role Ontology (CRO)).",
     )
@@ -429,7 +429,7 @@ class Document(Entity, BaseModelForbidExtra):
     type: Literal["Document"] = Field(
         CoreType.DOCUMENT.value, description=f"Must be '{CoreType.DOCUMENT.value}'"
     )
-    subtype: MappableConcept | None = Field(
+    documentType: str | None = Field(
         None,
         description="A specific type of document that a Document instance represents (e.g.  'publication', 'patent', 'pathology report')",
     )
@@ -465,7 +465,7 @@ class Agent(Entity, BaseModelForbidExtra):
         CoreType.AGENT.value, description=f"MUST be '{CoreType.AGENT.value}'."
     )
     name: str | None = Field(None, description="The given name of the Agent.")
-    subtype: MappableConcept | None = Field(
+    agentType: str | None = Field(
         None,
         description="A specific type of agent the Agent object represents. Recommended subtypes include codes for `person`, `organization`, or `software`.",
     )
@@ -489,7 +489,7 @@ class DataSet(Entity, BaseModelForbidExtra):
     type: Literal["DataSet"] = Field(
         CoreType.DATA_SET.value, description=f"MUST be '{CoreType.DATA_SET.value}'."
     )
-    subtype: MappableConcept | None = Field(
+    datasetType: str | None = Field(
         None,
         description="A specific type of data set the DataSet instance represents (e.g. a 'clinical data set', a 'sequencing data set', a 'gene expression data set', a 'genome annotation data set')",
     )
@@ -711,13 +711,14 @@ class EvidenceLineValidatorMixin:
 
     @staticmethod
     def _validate_evidence_outcome(
-        values: dict, system: System, codes: list[str]
+        values: dict, system: System, code_pattern: str
     ) -> dict:
         """Validate ``evidenceOutcome`` property if it exists
 
         :param values: Input values
-        :param system: System that should be used in ``MappableConcept``
-        :param codes: Codes that should be used in ``MappableConcept``
+        :param system: System that should be used for ``primaryCoding.system``
+        :param code_pattern: The regex pattern that should be used for
+            ``primaryCoding.code``
         :raises ValueError: If ``evidenceOutcome`` exists and is invalid
         :return: Validated input values. If ``evidenceOutcome`` exists, then it will be
             validated and converted to a ``MappableConcept``
@@ -725,8 +726,28 @@ class EvidenceLineValidatorMixin:
         if "evidenceOutcome" in values:
             mc = MappableConcept(**values["evidenceOutcome"])
             values["evidenceOutcome"] = mc
-            validate_mappable_concept(mc, system, codes, mc_is_required=False)
+            validate_mappable_concept(
+                mc, system, code_pattern=code_pattern, mc_is_required=False
+            )
         return values
+
+    @field_validator("specifiedBy")
+    @classmethod
+    def validate_specified_by(cls, v: Method | iriReference) -> Method | iriReference:
+        """Validate specifiedBy
+
+        :param v: specifiedBy
+        :raises ValueError: If invalid specifiedBy values are provided
+        :return: Validated specifiedBy value
+        """
+        if isinstance(v, Method):
+            if not v.reportedIn:
+                err_msg = "`reportedIn` is required."
+                raise ValueError(err_msg)
+
+            cls.Criterion(v.methodType)
+
+        return v
 
     @model_validator(mode="after")
     def evidence_line_validator(cls, model: BaseModel) -> BaseModel:  # noqa: N805
