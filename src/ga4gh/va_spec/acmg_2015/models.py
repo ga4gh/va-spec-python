@@ -4,6 +4,7 @@ variant pathogenicity.
 """
 
 from enum import Enum
+from typing import ClassVar
 
 from ga4gh.core.models import MappableConcept, iriReference
 from ga4gh.va_spec.base.core import (
@@ -22,22 +23,6 @@ from ga4gh.va_spec.base.validators import (
     validate_mappable_concept,
 )
 from pydantic import BaseModel, Field, field_validator, model_validator
-
-
-class EvidenceOutcome(str, Enum):
-    """Define constraints for evidence outcome values"""
-
-    PS3 = "PS3"
-    PS3_MODERATE = "PS3_moderate"
-    PS3_SUPPORTING = "PS3_supporting"
-    PS3_NOT_MET = "PS3_not_met"
-    BS3 = "BS3"
-    BS3_MODERATE = "BS3_moderate"
-    BS3_SUPPORTING = "BS3_supporting"
-    BS3_NOT_MET = "BS3_not_met"
-
-
-EVIDENCE_OUTCOME_VALUES = [v.value for v in EvidenceOutcome.__members__.values()]
 
 
 class AcmgClassification(str, Enum):
@@ -73,6 +58,22 @@ class VariantPathogenicityFunctionalImpactEvidenceLine(
         ...,
         description="The guidelines that were followed to interpret variant functional impact information as evidence for or against the assessed variant's pathogenicity.",
     )
+
+    class EvidenceOutcome(str, Enum):
+        """Define constraints for evidence outcome values"""
+
+        PS3 = "PS3"
+        PS3_MODERATE = "PS3_moderate"
+        PS3_SUPPORTING = "PS3_supporting"
+        PS3_NOT_MET = "PS3_not_met"
+        BS3 = "BS3"
+        BS3_MODERATE = "BS3_moderate"
+        BS3_SUPPORTING = "BS3_supporting"
+        BS3_NOT_MET = "BS3_not_met"
+
+    EVIDENCE_OUTCOME_VALUES: ClassVar[list[str]] = [
+        v.value for v in EvidenceOutcome.__members__.values()
+    ]
 
     @field_validator("strengthOfEvidenceProvided")
     @classmethod
@@ -114,7 +115,7 @@ class VariantPathogenicityFunctionalImpactEvidenceLine(
             validated and converted to a ``MappableConcept``
         """
         return cls._validate_evidence_outcome(
-            values, System.ACMG, EVIDENCE_OUTCOME_VALUES
+            values, System.ACMG, cls.EVIDENCE_OUTCOME_VALUES
         )
 
 

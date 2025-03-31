@@ -2,9 +2,7 @@
 
 from .models import (
     ACMG_CLASSIFICATIONS,
-    EVIDENCE_OUTCOME_VALUES,
     AcmgClassification,
-    EvidenceOutcome,
     VariantPathogenicityFunctionalImpactEvidenceLine,
     VariantPathogenicityStatement,
 )
