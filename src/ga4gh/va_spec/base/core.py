@@ -94,7 +94,7 @@ class CohortAlleleFrequencyStudyResult(_StudyResult, BaseModelForbidExtra):
         None,
         description="The dataset from which the CohortAlleleFrequencyStudyResult was reported.",
     )
-    focusAllele: Allele | iriReference = Field(
+    focusAllele: Allele | CategoricalVariant | iriReference = Field(
         ..., description="The Allele for which frequency results are reported."
     )
     focusAlleleCount: int = Field(
