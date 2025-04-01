@@ -19,6 +19,7 @@ from .core import (
     StudyGroup,
     StudyResult,
     SubjectVariantProposition,
+    TumorVariantFrequencyStudyResult,
     VariantDiagnosticProposition,
     VariantOncogenicityProposition,
     VariantPathogenicityProposition,
@@ -85,4 +86,5 @@ __all__ = [
     "VariantPathogenicityProposition",
     "VariantPrognosticProposition",
     "VariantTherapeuticResponseProposition",
+    "TumorVariantFrequencyStudyResult",
 ]
