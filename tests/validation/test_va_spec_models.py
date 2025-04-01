@@ -9,7 +9,7 @@ from ga4gh.core.models import Coding, MappableConcept, code, iriReference
 from ga4gh.va_spec import acmg_2015, base, ccv_2022
 from ga4gh.va_spec.aac_2017.models import VariantTherapeuticResponseStudyStatement
 from ga4gh.va_spec.acmg_2015.models import (
-    VariantPathogenicityFunctionalImpactEvidenceLine,
+    VariantPathogenicityEvidenceLine,
     VariantPathogenicityStatement,
 )
 from ga4gh.va_spec.base import (
@@ -19,7 +19,7 @@ from ga4gh.va_spec.base import (
 )
 from ga4gh.va_spec.base.core import EvidenceLine, Method, StudyGroup, StudyResult
 from ga4gh.va_spec.ccv_2022.models import (
-    VariantOncogenicityFunctionalImpactEvidenceLine,
+    VariantOncogenicityEvidenceLine,
     VariantOncogenicityStudyStatement,
 )
 from pydantic import ValidationError
@@ -294,7 +294,7 @@ def test_variant_pathogenicity_stmt():
 
 
 def test_variant_pathogenicity_el():
-    """Ensure VariantPathogenicityFunctionalImpactEvidenceLine model works as expected"""
+    """Ensure VariantPathogenicityEvidenceLine model works as expected"""
     params = {
         "type": "EvidenceLine",
         "specifiedBy": {
@@ -306,6 +306,7 @@ def test_variant_pathogenicity_el():
                 "pmid": 25741868,
                 "name": "ACMG Guidelines, 2015",
             },
+            "methodType": "PS3",
         },
         "directionOfEvidenceProvided": "supports",
         "evidenceOutcome": {
@@ -316,7 +317,7 @@ def test_variant_pathogenicity_el():
             "name": "ACMG 2015 PS3 Supporting Criterion Met",
         },
     }
-    vp = VariantPathogenicityFunctionalImpactEvidenceLine(**params)
+    vp = VariantPathogenicityEvidenceLine(**params)
 
     assert isinstance(vp.specifiedBy, Method)
     assert vp.evidenceOutcome == MappableConcept(
@@ -328,24 +329,24 @@ def test_variant_pathogenicity_el():
 
     valid_params = deepcopy(params)
     valid_params["strengthOfEvidenceProvided"] = None
-    assert VariantPathogenicityFunctionalImpactEvidenceLine(**valid_params)
+    assert VariantPathogenicityEvidenceLine(**valid_params)
 
     invalid_params = deepcopy(params)
     del invalid_params["specifiedBy"]["reportedIn"]
     with pytest.raises(ValueError, match="`reportedIn` is required"):
-        VariantPathogenicityFunctionalImpactEvidenceLine(**invalid_params)
+        VariantPathogenicityEvidenceLine(**invalid_params)
 
     invalid_params = deepcopy(params)
     del invalid_params[
         "directionOfEvidenceProvided"
     ]  # directionOfEvidenceProvided is required for statement
     with pytest.raises(ValueError, match="Must be an `EvidenceLine`"):
-        VariantPathogenicityFunctionalImpactEvidenceLine(**invalid_params)
+        VariantPathogenicityEvidenceLine(**invalid_params)
 
     invalid_params = deepcopy(params)
     invalid_params["strengthOfEvidenceProvided"] = {"name": "test"}
     with pytest.raises(ValueError, match="`primaryCoding` is required."):
-        VariantPathogenicityFunctionalImpactEvidenceLine(**invalid_params)
+        VariantPathogenicityEvidenceLine(**invalid_params)
 
     invalid_params = deepcopy(params)
     invalid_params["strengthOfEvidenceProvided"] = {
@@ -355,14 +356,22 @@ def test_variant_pathogenicity_el():
         }
     }
     with pytest.raises(ValueError, match="`primaryCoding.system` must be"):
-        VariantPathogenicityFunctionalImpactEvidenceLine(**invalid_params)
+        VariantPathogenicityEvidenceLine(**invalid_params)
 
     invalid_params = deepcopy(params)
     invalid_params["strengthOfEvidenceProvided"] = {
         "primaryCoding": {"system": "ACMG Guidelines, 2015", "code": "PS3"}
     }
     with pytest.raises(ValueError, match="`primaryCoding.code` must be"):
-        VariantPathogenicityFunctionalImpactEvidenceLine(**invalid_params)
+        VariantPathogenicityEvidenceLine(**invalid_params)
+
+    invalid_params = deepcopy(params)
+    invalid_params["specifiedBy"]["methodType"] = "OS1"
+    with pytest.raises(
+        ValueError,
+        match="'OS1' is not a valid VariantPathogenicityEvidenceLine.Criterion",
+    ):
+        VariantPathogenicityEvidenceLine(**invalid_params)
 
 
 def test_variant_onco_stmt():
@@ -415,8 +424,8 @@ def test_variant_onco_stmt():
 
 
 def test_variant_onco_el():
-    """Ensure VariantOncogenicityFunctionalImpactEvidenceLine model works as expected"""
-    vo = VariantOncogenicityFunctionalImpactEvidenceLine(
+    """Ensure VariantOncogenicityEvidenceLine model works as expected"""
+    vo = VariantOncogenicityEvidenceLine(
         type="EvidenceLine",
         specifiedBy={
             "type": "Method",
@@ -425,6 +434,7 @@ def test_variant_onco_el():
                 "pmid": 35101336,
                 "name": "ClinGen/CGC/VICC Guidelines for Oncogenicity, 2022",
             },
+            "methodType": "OS2",
         },
         directionOfEvidenceProvided="supports",
         scoreOfEvidenceProvided=1,
@@ -442,6 +452,14 @@ def test_variant_onco_el():
             system="ClinGen/CGC/VICC Guidelines for Oncogenicity, 2022",
         ),
     )
+
+    vo_invalid_params = vo.model_copy(deep=True).model_dump()
+    vo_invalid_params["specifiedBy"]["methodType"] = "PS1"
+    with pytest.raises(
+        ValueError,
+        match="'PS1' is not a valid VariantOncogenicityEvidenceLine.Criterion",
+    ):
+        VariantOncogenicityEvidenceLine(**vo_invalid_params)
 
 
 def test_examples(test_definitions):
