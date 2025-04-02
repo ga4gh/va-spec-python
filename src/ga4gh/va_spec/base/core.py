@@ -587,7 +587,10 @@ class EvidenceLine(InformationEntity, BaseModelForbidExtra):
                 ]
             )
 
-        has_evidence_items_models.extend([Statement, StudyResult, EvidenceLine])
+        has_evidence_items_models.extend(
+            [Statement, StudyResult, EvidenceLine, iriReference]
+        )
+
         for evidence_item in v:
             if isinstance(evidence_item, dict):
                 found_model = False
@@ -605,6 +608,8 @@ class EvidenceLine(InformationEntity, BaseModelForbidExtra):
                     raise ValueError(err_msg)
             elif isinstance(evidence_item, str):
                 evidence_items.append(iriReference(root=evidence_item))
+            elif isinstance(evidence_item, tuple(has_evidence_items_models)):
+                evidence_items.append(evidence_item)
             else:
                 err_msg = "Unable to find valid model for `hasEvidenceItems`"
                 raise ValueError(err_msg)
