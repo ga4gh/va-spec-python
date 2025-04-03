@@ -37,9 +37,74 @@ from pydantic import (
 StatementType = TypeVar("StatementType")
 EvidenceLineType = TypeVar("EvidenceLineType")
 
-#########################################
-# Abstract Core Classes
-#########################################
+
+class CoreType(str, Enum):
+    """Define VA Spec Base Core Types"""
+
+    METHOD = "Method"
+    CONTRIBUTION = "Contribution"
+    DOCUMENT = "Document"
+    AGENT = "Agent"
+    STATEMENT = "Statement"
+    EVIDENCE_LINE = "EvidenceLine"
+    DATA_SET = "DataSet"
+    STUDY_GROUP = "StudyGroup"
+
+
+class Contribution(Entity, BaseModelForbidExtra):
+    """An action taken by an agent in contributing to the creation, modification,
+    assessment, or deprecation of a particular entity (e.g. a Statement, EvidenceLine,
+    DataSet, Publication, etc.)
+    """
+
+    type: Literal["Contribution"] = Field(
+        CoreType.CONTRIBUTION.value,
+        description=f"MUST be '{CoreType.CONTRIBUTION.value}'.",
+    )
+    contributor: Agent | None = Field(
+        None, description="The agent that made the contribution."
+    )
+    activityType: str | None = Field(
+        None,
+        description="The specific type of activity performed or role played by an agent in making the contribution (e.g. for a publication, agents may contribute as a primary author, editor, figure designer, data generator, etc.). Values of this property may be framed as activities, or as contribution roles (e.g. using terms from the Contribution Role Ontology (CRO)).",
+    )
+    date: datetime | None = Field(
+        None, description="When the contributing activity was completed."
+    )
+
+
+class Document(Entity, BaseModelForbidExtra):
+    """A collection of information, usually in a text-based or graphic human-readable
+    form, intended to be read and understood together as a whole.
+    """
+
+    type: Literal["Document"] = Field(
+        CoreType.DOCUMENT.value, description=f"Must be '{CoreType.DOCUMENT.value}'"
+    )
+    documentType: str | None = Field(
+        None,
+        description="A specific type of document that a Document instance represents (e.g.  'publication', 'patent', 'pathology report')",
+    )
+    title: str | None = Field(
+        None, description="The official title given to the document by its authors."
+    )
+    urls: (
+        list[Annotated[str, StringConstraints(pattern=r"^(https?|s?ftp)://")]] | None
+    ) = Field(
+        None,
+        description="One or more URLs from which the content of the Document can be retrieved.",
+    )
+    doi: (
+        Annotated[str, StringConstraints(pattern=r"^10\.(\d+)(\.\d+)*\/[\w\-\.]+")]
+        | None
+    ) = Field(
+        None,
+        description="A [Digital Object Identifier](https://www.doi.org/the-identifier/what-is-a-doi/) for the document.",
+    )
+    pmid: int | None = Field(
+        None,
+        description="A [PubMed unique identifier](https://en.wikipedia.org/wiki/PubMed#PubMed_identifier) for the document.",
+    )
 
 
 class InformationEntity(Entity):
@@ -364,24 +429,6 @@ class VariantTherapeuticResponseProposition(
     )
 
 
-#########################################
-# Concrete Core Classes
-#########################################
-
-
-class CoreType(str, Enum):
-    """Define VA Spec Base Core Types"""
-
-    METHOD = "Method"
-    CONTRIBUTION = "Contribution"
-    DOCUMENT = "Document"
-    AGENT = "Agent"
-    STATEMENT = "Statement"
-    EVIDENCE_LINE = "EvidenceLine"
-    DATA_SET = "DataSet"
-    STUDY_GROUP = "StudyGroup"
-
-
 class Method(Entity, BaseModelForbidExtra):
     """A set of instructions that specify how to achieve some objective."""
 
@@ -394,62 +441,6 @@ class Method(Entity, BaseModelForbidExtra):
     )
     reportedIn: Document | iriReference | None = Field(
         None, description="A document in which the the Method is reported."
-    )
-
-
-class Contribution(Entity, BaseModelForbidExtra):
-    """An action taken by an agent in contributing to the creation, modification,
-    assessment, or deprecation of a particular entity (e.g. a Statement, EvidenceLine,
-    DataSet, Publication, etc.)
-    """
-
-    type: Literal["Contribution"] = Field(
-        CoreType.CONTRIBUTION.value,
-        description=f"MUST be '{CoreType.CONTRIBUTION.value}'.",
-    )
-    contributor: Agent | None = Field(
-        None, description="The agent that made the contribution."
-    )
-    activityType: str | None = Field(
-        None,
-        description="The specific type of activity performed or role played by an agent in making the contribution (e.g. for a publication, agents may contribute as a primary author, editor, figure designer, data generator, etc.). Values of this property may be framed as activities, or as contribution roles (e.g. using terms from the Contribution Role Ontology (CRO)).",
-    )
-    date: datetime | None = Field(
-        None, description="When the contributing activity was completed."
-    )
-
-
-class Document(Entity, BaseModelForbidExtra):
-    """A collection of information, usually in a text-based or graphic human-readable
-    form, intended to be read and understood together as a whole.
-    """
-
-    type: Literal["Document"] = Field(
-        CoreType.DOCUMENT.value, description=f"Must be '{CoreType.DOCUMENT.value}'"
-    )
-    documentType: str | None = Field(
-        None,
-        description="A specific type of document that a Document instance represents (e.g.  'publication', 'patent', 'pathology report')",
-    )
-    title: str | None = Field(
-        None, description="The official title given to the document by its authors."
-    )
-    urls: (
-        list[Annotated[str, StringConstraints(pattern=r"^(https?|s?ftp)://")]] | None
-    ) = Field(
-        None,
-        description="One or more URLs from which the content of the Document can be retrieved.",
-    )
-    doi: (
-        Annotated[str, StringConstraints(pattern=r"^10\.(\d+)(\.\d+)*\/[\w\-\.]+")]
-        | None
-    ) = Field(
-        None,
-        description="A [Digital Object Identifier](https://www.doi.org/the-identifier/what-is-a-doi/) for the document.",
-    )
-    pmid: int | None = Field(
-        None,
-        description="A [PubMed unique identifier](https://en.wikipedia.org/wiki/PubMed#PubMed_identifier) for the document.",
     )
 
 
