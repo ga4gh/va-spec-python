@@ -289,7 +289,7 @@ def test_variant_pathogenicity_stmt():
 
     invalid_params = deepcopy(params)
     del invalid_params["proposition"]  # proposition is required for statement
-    with pytest.raises(ValueError, match="Must be a `Statement`"):
+    with pytest.raises(ValueError, match="Field required"):
         VariantPathogenicityStatement(**invalid_params)
 
 
@@ -340,7 +340,7 @@ def test_variant_pathogenicity_el():
     del invalid_params[
         "directionOfEvidenceProvided"
     ]  # directionOfEvidenceProvided is required for statement
-    with pytest.raises(ValueError, match="Must be an `EvidenceLine`"):
+    with pytest.raises(ValueError, match="Field required"):
         VariantPathogenicityEvidenceLine(**invalid_params)
 
     invalid_params = deepcopy(params)

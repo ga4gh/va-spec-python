@@ -7,9 +7,9 @@ from enum import Enum
 
 from ga4gh.core.models import MappableConcept, iriReference
 from ga4gh.va_spec.base.core import (
-    EvidenceLineValidatorMixin,
+    EvidenceLine,
     Method,
-    StatementValidatorMixin,
+    Statement,
     VariantOncogenicityProposition,
 )
 from ga4gh.va_spec.base.enums import (
@@ -19,10 +19,10 @@ from ga4gh.va_spec.base.enums import (
     System,
 )
 from ga4gh.va_spec.base.validators import validate_mappable_concept
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import Field, field_validator, model_validator
 
 
-class VariantOncogenicityEvidenceLine(BaseModel, EvidenceLineValidatorMixin):
+class VariantOncogenicityEvidenceLine(EvidenceLine):
     """An Evidence Line that describes how information about the specific evidence of a
     variant was interpreted as evidence for or against the variant's oncogenicity.
     """
@@ -92,14 +92,14 @@ class VariantOncogenicityEvidenceLine(BaseModel, EvidenceLineValidatorMixin):
         return cls._validate_evidence_outcome(values, System.CCV, ccv_code_pattern)
 
 
-class VariantOncogenicityStudyStatement(BaseModel, StatementValidatorMixin):
+class VariantOncogenicityStudyStatement(Statement):
     """A statement reporting a conclusion from a single study about whether a
     variant is associated with oncogenicity (positive or negative) - based on
     interpretation of the study's results.
     """
 
-    proposition: VariantOncogenicityProposition | None = Field(
-        None,
+    proposition: VariantOncogenicityProposition = Field(
+        ...,
         description="A proposition about the oncogenicity of a variant, for which the study provides evidence. The validity of this proposition, and the level of confidence/evidence supporting it, may be assessed and reported by the Statement.",
     )
     strength: MappableConcept | None = Field(

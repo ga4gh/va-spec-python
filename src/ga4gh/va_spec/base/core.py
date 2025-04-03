@@ -26,14 +26,12 @@ from ga4gh.va_spec.base.enums import (
 from ga4gh.va_spec.base.validators import validate_mappable_concept
 from ga4gh.vrs.models import Allele, MolecularVariation
 from pydantic import (
-    BaseModel,
     ConfigDict,
     Field,
     RootModel,
     StringConstraints,
     ValidationError,
     field_validator,
-    model_validator,
 )
 
 StatementType = TypeVar("StatementType")
@@ -582,8 +580,9 @@ class EvidenceLine(InformationEntity, BaseModelForbidExtra):
                     obj_
                     for _, obj_ in vars(imported_module).items()
                     if inspect.isclass(obj_)
-                    and issubclass(obj_, BaseModel)
+                    and issubclass(obj_, Statement)
                     and obj_.__name__.endswith(("Statement", "EvidenceLine"))
+                    and obj_ not in (Statement, EvidenceLine)
                 ]
             )
 
@@ -614,6 +613,46 @@ class EvidenceLine(InformationEntity, BaseModelForbidExtra):
                 err_msg = "Unable to find valid model for `hasEvidenceItems`"
                 raise ValueError(err_msg)
         return evidence_items
+
+    @staticmethod
+    def _validate_evidence_outcome(
+        values: dict, system: System, code_pattern: str
+    ) -> dict:
+        """Validate ``evidenceOutcome`` property if it exists
+
+        :param values: Input values
+        :param system: System that should be used for ``primaryCoding.system``
+        :param code_pattern: The regex pattern that should be used for
+            ``primaryCoding.code``
+        :raises ValueError: If ``evidenceOutcome`` exists and is invalid
+        :return: Validated input values. If ``evidenceOutcome`` exists, then it will be
+            validated and converted to a ``MappableConcept``
+        """
+        if "evidenceOutcome" in values:
+            mc = MappableConcept(**values["evidenceOutcome"])
+            values["evidenceOutcome"] = mc
+            validate_mappable_concept(
+                mc, system, code_pattern=code_pattern, mc_is_required=False
+            )
+        return values
+
+    @field_validator("specifiedBy")
+    @classmethod
+    def validate_specified_by(cls, v: Method | iriReference) -> Method | iriReference:
+        """Validate specifiedBy
+
+        :param v: specifiedBy
+        :raises ValueError: If invalid specifiedBy values are provided
+        :return: Validated specifiedBy value
+        """
+        if hasattr(cls, "Criterion") and isinstance(v, Method):
+            if not v.reportedIn:
+                err_msg = "`reportedIn` is required."
+                raise ValueError(err_msg)
+
+            cls.Criterion(v.methodType)
+
+        return v
 
 
 class Statement(InformationEntity, BaseModelForbidExtra):
@@ -680,91 +719,3 @@ class StudyGroup(Entity, BaseModelForbidExtra):
         None,
         description="A feature or role shared by all members of the StudyGroup, representing a criterion for membership in the group.",
     )
-
-
-class StatementValidatorMixin:
-    """Mixin class for reusable Statement model validators
-
-    Should be used with classes that inherit from Pydantic BaseModel
-    """
-
-    model_config = ConfigDict(extra="allow")
-
-    @model_validator(mode="after")
-    def statement_validator(cls, model: BaseModel) -> BaseModel:  # noqa: N805
-        """Validate that the model is a ``Statement``.
-
-        :param model: Pydantic BaseModel to validate
-        :raises ValueError: If ``model`` does not validate against a ``Statement``
-        :return: Validated model
-        """
-        try:
-            Statement(**model.model_dump())
-        except ValidationError as e:
-            err_msg = f"Must be a `Statement`: {e}"
-            raise ValueError(err_msg) from e
-        return model
-
-
-class EvidenceLineValidatorMixin:
-    """Mixin class for reusable EvidenceLine model validators
-
-    Should be used with classes that inherit from Pydantic BaseModel
-    """
-
-    model_config = ConfigDict(extra="allow")
-
-    @staticmethod
-    def _validate_evidence_outcome(
-        values: dict, system: System, code_pattern: str
-    ) -> dict:
-        """Validate ``evidenceOutcome`` property if it exists
-
-        :param values: Input values
-        :param system: System that should be used for ``primaryCoding.system``
-        :param code_pattern: The regex pattern that should be used for
-            ``primaryCoding.code``
-        :raises ValueError: If ``evidenceOutcome`` exists and is invalid
-        :return: Validated input values. If ``evidenceOutcome`` exists, then it will be
-            validated and converted to a ``MappableConcept``
-        """
-        if "evidenceOutcome" in values:
-            mc = MappableConcept(**values["evidenceOutcome"])
-            values["evidenceOutcome"] = mc
-            validate_mappable_concept(
-                mc, system, code_pattern=code_pattern, mc_is_required=False
-            )
-        return values
-
-    @field_validator("specifiedBy")
-    @classmethod
-    def validate_specified_by(cls, v: Method | iriReference) -> Method | iriReference:
-        """Validate specifiedBy
-
-        :param v: specifiedBy
-        :raises ValueError: If invalid specifiedBy values are provided
-        :return: Validated specifiedBy value
-        """
-        if isinstance(v, Method):
-            if not v.reportedIn:
-                err_msg = "`reportedIn` is required."
-                raise ValueError(err_msg)
-
-            cls.Criterion(v.methodType)
-
-        return v
-
-    @model_validator(mode="after")
-    def evidence_line_validator(cls, model: BaseModel) -> BaseModel:  # noqa: N805
-        """Validate that the model is a ``EvidenceLine``.
-
-        :param model: Pydantic BaseModel to validate
-        :raises ValueError: If ``model`` does not validate against a ``EvidenceLine``
-        :return: Validated model
-        """
-        try:
-            EvidenceLine(**model.model_dump())
-        except ValidationError as e:
-            err_msg = f"Must be an `EvidenceLine`: {e}"
-            raise ValueError(err_msg) from e
-        return model

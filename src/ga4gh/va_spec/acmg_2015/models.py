@@ -7,9 +7,9 @@ from enum import Enum
 
 from ga4gh.core.models import MappableConcept, iriReference
 from ga4gh.va_spec.base.core import (
-    EvidenceLineValidatorMixin,
+    EvidenceLine,
     Method,
-    StatementValidatorMixin,
+    Statement,
     VariantPathogenicityProposition,
 )
 from ga4gh.va_spec.base.enums import (
@@ -21,7 +21,7 @@ from ga4gh.va_spec.base.enums import (
 from ga4gh.va_spec.base.validators import (
     validate_mappable_concept,
 )
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import Field, field_validator, model_validator
 
 
 class AcmgClassification(str, Enum):
@@ -37,7 +37,7 @@ class AcmgClassification(str, Enum):
 ACMG_CLASSIFICATIONS = [v.value for v in AcmgClassification.__members__.values()]
 
 
-class VariantPathogenicityEvidenceLine(BaseModel, EvidenceLineValidatorMixin):
+class VariantPathogenicityEvidenceLine(EvidenceLine):
     """An Evidence Line that describes how information about the specific criterion
     evidence for the variant was assessed as evidence for or against the variant's
     pathogenicity.
@@ -119,11 +119,11 @@ class VariantPathogenicityEvidenceLine(BaseModel, EvidenceLineValidatorMixin):
         return cls._validate_evidence_outcome(values, System.ACMG, acmg_code_pattern)
 
 
-class VariantPathogenicityStatement(BaseModel, StatementValidatorMixin):
+class VariantPathogenicityStatement(Statement):
     """A Statement describing the role of a variant in causing an inherited condition."""
 
-    proposition: VariantPathogenicityProposition | None = Field(
-        None,
+    proposition: VariantPathogenicityProposition = Field(
+        ...,
         description="A proposition about the pathogenicity of a varaint, the validity of which is assessed and reported by the Statement. A Statement can put forth the proposition as being true, false, or uncertain, and may provide an assessment of the level of confidence/evidence supporting this claim.",
     )
     strength: MappableConcept | None = Field(

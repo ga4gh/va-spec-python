@@ -9,7 +9,7 @@ from enum import Enum
 from ga4gh.core.models import MappableConcept, iriReference
 from ga4gh.va_spec.base.core import (
     Method,
-    StatementValidatorMixin,
+    Statement,
     VariantDiagnosticProposition,
     VariantPrognosticProposition,
     VariantTherapeuticResponseProposition,
@@ -17,7 +17,6 @@ from ga4gh.va_spec.base.core import (
 from ga4gh.va_spec.base.enums import System
 from ga4gh.va_spec.base.validators import validate_mappable_concept
 from pydantic import (
-    BaseModel,
     Field,
     field_validator,
 )
@@ -47,10 +46,10 @@ class Classification(str, Enum):
 AMP_ASCO_CAP_TIERS = [v.value for v in Classification.__members__.values()]
 
 
-class AmpAscoCapValidatorMixin(StatementValidatorMixin):
+class AmpAscoCapValidatorMixin:
     """Mixin class for reusable AMP/ASCO/CAP field validators
 
-    Should be used with classes that inherit from Pydantic BaseModel
+    Should be used with classes that inherit from Statement
     """
 
     @field_validator("strength")
@@ -83,7 +82,7 @@ class AmpAscoCapValidatorMixin(StatementValidatorMixin):
         )
 
 
-class VariantDiagnosticStudyStatement(BaseModel, AmpAscoCapValidatorMixin):
+class VariantDiagnosticStudyStatement(Statement, AmpAscoCapValidatorMixin):
     """A statement reporting a conclusion from a single study about whether a variant is
     associated with a disease (a diagnostic inclusion criterion), or absence of a
     disease (diagnostic exclusion criterion) - based on interpretation of the study's
@@ -108,7 +107,7 @@ class VariantDiagnosticStudyStatement(BaseModel, AmpAscoCapValidatorMixin):
     )
 
 
-class VariantPrognosticStudyStatement(BaseModel, AmpAscoCapValidatorMixin):
+class VariantPrognosticStudyStatement(Statement, AmpAscoCapValidatorMixin):
     """A statement reporting a conclusion from a single study about whether a variant is
     associated with a disease prognosis - based on interpretation of the study's
     results.
@@ -132,7 +131,7 @@ class VariantPrognosticStudyStatement(BaseModel, AmpAscoCapValidatorMixin):
     )
 
 
-class VariantTherapeuticResponseStudyStatement(BaseModel, AmpAscoCapValidatorMixin):
+class VariantTherapeuticResponseStudyStatement(Statement, AmpAscoCapValidatorMixin):
     """A statement reporting a conclusion from a single study about whether a variant is
     associated with a therapeutic response (positive or negative) - based on
     interpretation of the study's results.
