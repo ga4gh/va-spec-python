@@ -194,18 +194,19 @@ class TumorVariantFrequencyStudyResult(_StudyResult, BaseModelForbidExtra):
     )
     focusVariant: Allele | CategoricalVariant | iriReference = Field(
         ...,
-        description="The variant for which frequency data is reported in the Study Result",
+        description="The variant for which frequency data is reported in the Study Result.",
     )
     affectedSampleCount: int = Field(
-        ..., description="The number of tumor samples that contain the focus variant"
+        ...,
+        description="The number of tumor samples in the sample group that contain the focus variant.",
     )
     totalSampleCount: int = Field(
         ...,
-        description="The total number of tumor samples included in the dataset",
+        description="The total number of tumor samples in the sample group.",
     )
     affectedFrequency: float = Field(
         ...,
-        description="The frequency of tumor samples that include the focus variant.",
+        description="The frequency of tumor samples that include the focus variant in the sample group.",
     )
     sampleGroup: StudyGroup | None = Field(
         None,
@@ -213,7 +214,7 @@ class TumorVariantFrequencyStudyResult(_StudyResult, BaseModelForbidExtra):
     )
     subGroupFrequency: list[TumorVariantFrequencyStudyResult] | None = Field(
         None,
-        description="A list of Tumor Variant Frequency Study Result objects describing subsets of the sample group currently being described. Subgroups can be further subdivided into more subcohorts. This enables, for example, the description of frequency data within samples with a narrower categorical variant than the root focus variant, or samples with a specific tumors type",
+        description="A list of Tumor Variant Frequency Study Result objects describing variant frequency in different subsets of larger sample group described in the root Study Result. Subgroups can be further subdivided into more subgroups. This enables, for example, further breakdown of frequency measures in sample groups with a narrower categorical variant than the root focus variant, or sample groups with a more specific tumor type.",
     )
 
 
