@@ -80,14 +80,17 @@ class VariantOncogenicityEvidenceLine(EvidenceLine):
         )
 
     @model_validator(mode="before")
-    def validate_evidence_outcome(cls, values: dict) -> dict:  # noqa: N805
-        """Validate ``evidenceOutcome`` property if it exists
+    def validate_model(cls, values: dict) -> dict:  # noqa: N805
+        """Validate ``evidenceOutcome`` and ``directionOfEvidenceProvided`` properties
 
         :param values: Input values
         :raises ValueError: If ``evidenceOutcome`` exists and is invalid
         :return: Validated input values. If ``evidenceOutcome`` exists, then it will be
-            validated and converted to a ``MappableConcept``
+            validated and converted to a ``MappableConcept``.
+            Or if ``strengthOfEvidenceProvided`` is not provided when
+            ``directionOfEvidenceProvided`` is supports or disputes
         """
+        cls._validate_direction_of_evidence_provided(values)
         ccv_code_pattern = r"^((?:OVS1|SBVS1)(?:_(?:not_met|(?:strong|moderate|supporting)))?|(?:OS[1-3]|SBS[1-2])(?:_(?:not_met|(?:very_strong|moderate|supporting)))?|(?:OM[1-4])(?:_(?:not_met|(?:very_strong|strong|supporting)))?|(OP[1-4]|SBP[1-2])(?:_(?:not_met|very_strong|strong|moderate))?)$"
         return cls._validate_evidence_outcome(values, System.CCV, ccv_code_pattern)
 

@@ -316,6 +316,12 @@ def test_variant_pathogenicity_el():
             },
             "name": "ACMG 2015 PS3 Supporting Criterion Met",
         },
+        "strengthOfEvidenceProvided": {
+            "primaryCoding": {
+                "system": "ACMG Guidelines, 2015",
+                "code": "supporting",
+            }
+        },
     }
     vp = VariantPathogenicityEvidenceLine(**params)
 
@@ -327,9 +333,18 @@ def test_variant_pathogenicity_el():
         name="ACMG 2015 PS3 Supporting Criterion Met",
     )
 
-    valid_params = deepcopy(params)
-    valid_params["strengthOfEvidenceProvided"] = None
-    assert VariantPathogenicityEvidenceLine(**valid_params)
+    invalid_params = deepcopy(params)
+    invalid_params["strengthOfEvidenceProvided"] = None
+    with pytest.raises(
+        ValueError,
+        match="`strengthOfEvidenceProvided` is required when `directionOfEvidenceProvided` is 'supports' or 'disputes'.",
+    ):
+        VariantPathogenicityEvidenceLine(**invalid_params)
+
+    invalid_params = deepcopy(params)
+    invalid_params["strengthOfEvidenceProvided"]["primaryCoding"]["code"] = "definitive"
+    with pytest.raises(ValueError, match="`primaryCoding.code` must be one of"):
+        VariantPathogenicityEvidenceLine(**invalid_params)
 
     invalid_params = deepcopy(params)
     del invalid_params["specifiedBy"]["reportedIn"]
@@ -370,6 +385,14 @@ def test_variant_pathogenicity_el():
     with pytest.raises(
         ValueError,
         match="'OS1' is not a valid VariantPathogenicityEvidenceLine.Criterion",
+    ):
+        VariantPathogenicityEvidenceLine(**invalid_params)
+
+    invalid_params = deepcopy(params)
+    invalid_params["directionOfEvidenceProvided"] = "neutral"
+    with pytest.raises(
+        ValueError,
+        match="`strengthOfEvidenceProvided` is not allowed when `directionOfEvidenceProvided` is 'neutral'.",
     ):
         VariantPathogenicityEvidenceLine(**invalid_params)
 
@@ -444,6 +467,12 @@ def test_variant_onco_el():
                 "system": "ClinGen/CGC/VICC Guidelines for Oncogenicity, 2022",
             },
         },
+        strengthOfEvidenceProvided={
+            "primaryCoding": {
+                "code": "supporting",
+                "system": "ClinGen/CGC/VICC Guidelines for Oncogenicity, 2022",
+            }
+        },
     )
     assert isinstance(vo.specifiedBy, Method)
     assert vo.evidenceOutcome == MappableConcept(
@@ -460,6 +489,29 @@ def test_variant_onco_el():
         match="'PS1' is not a valid VariantOncogenicityEvidenceLine.Criterion",
     ):
         VariantOncogenicityEvidenceLine(**vo_invalid_params)
+
+    invalid_params = vo.model_copy(deep=True).model_dump()
+    invalid_params["strengthOfEvidenceProvided"]["primaryCoding"]["code"] = "definitive"
+    with pytest.raises(ValueError, match="`primaryCoding.code` must be one of"):
+        VariantOncogenicityEvidenceLine(**invalid_params)
+
+    invalid_params = vo.model_copy(deep=True).model_dump()
+    invalid_params["strengthOfEvidenceProvided"]["primaryCoding"]["system"] = (
+        "ACMG Guidelines, 2015"
+    )
+    with pytest.raises(
+        ValueError,
+        match="`primaryCoding.system` must be 'ClinGen/CGC/VICC Guidelines for Oncogenicity, 2022'.",
+    ):
+        VariantOncogenicityEvidenceLine(**invalid_params)
+
+    invalid_params = vo.model_copy(deep=True).model_dump()
+    invalid_params["directionOfEvidenceProvided"] = "neutral"
+    with pytest.raises(
+        ValueError,
+        match="`strengthOfEvidenceProvided` is not allowed when `directionOfEvidenceProvided` is 'neutral'.",
+    ):
+        VariantOncogenicityEvidenceLine(**invalid_params)
 
 
 def test_examples(test_definitions):

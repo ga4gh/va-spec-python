@@ -628,6 +628,31 @@ class EvidenceLine(InformationEntity, BaseModelForbidExtra):
             )
         return values
 
+    @staticmethod
+    def _validate_direction_of_evidence_provided(values: dict) -> dict:
+        """Validate conditional requirements for ``directionOfEvidenceProvided``
+
+        :param values: Input values
+        :raises ValueError: If ``strengthOfEvidenceProvided`` is not provided when
+            ``directionOfEvidenceProvided`` is supports or disputes
+        :return: Validated input values
+        """
+        direction_of_evidence_provided = values.get("directionOfEvidenceProvided")
+        if (
+            direction_of_evidence_provided in (Direction.SUPPORTS, Direction.DISPUTES)
+            and values.get("strengthOfEvidenceProvided") is None
+        ):
+            err_msg = f"`strengthOfEvidenceProvided` is required when `directionOfEvidenceProvided` is '{Direction.SUPPORTS.value}' or '{Direction.DISPUTES.value}'."
+            raise ValueError(err_msg)
+
+        if direction_of_evidence_provided == Direction.NEUTRAL and values.get(
+            "strengthOfEvidenceProvided"
+        ):
+            err_msg = f"`strengthOfEvidenceProvided` is not allowed when `directionOfEvidenceProvided` is '{Direction.NEUTRAL.value}'."
+            raise ValueError(err_msg)
+
+        return values
+
     @field_validator("specifiedBy")
     @classmethod
     def validate_specified_by(cls, v: Method | iriReference) -> Method | iriReference:
