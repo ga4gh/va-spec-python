@@ -88,7 +88,9 @@ class VariantOncogenicityEvidenceLine(EvidenceLine):
         :return: Validated input values. If ``evidenceOutcome`` exists, then it will be
             validated and converted to a ``MappableConcept``.
             Or if ``strengthOfEvidenceProvided`` is not provided when
-            ``directionOfEvidenceProvided`` is supports or disputes
+            ``directionOfEvidenceProvided`` is supports or disputes or if
+            ``strengthOfEvidenceProvided`` is provided when
+            ``directionOfEvidenceProvided`` is neutral
         """
         cls._validate_direction_of_evidence_provided(values)
         ccv_code_pattern = r"^((?:OVS1|SBVS1)(?:_(?:not_met|(?:strong|moderate|supporting)))?|(?:OS[1-3]|SBS[1-2])(?:_(?:not_met|(?:very_strong|moderate|supporting)))?|(?:OM[1-4])(?:_(?:not_met|(?:very_strong|strong|supporting)))?|(OP[1-4]|SBP[1-2])(?:_(?:not_met|very_strong|strong|moderate))?)$"

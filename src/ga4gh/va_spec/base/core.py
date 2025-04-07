@@ -634,7 +634,9 @@ class EvidenceLine(InformationEntity, BaseModelForbidExtra):
 
         :param values: Input values
         :raises ValueError: If ``strengthOfEvidenceProvided`` is not provided when
-            ``directionOfEvidenceProvided`` is supports or disputes
+            ``directionOfEvidenceProvided`` is supports or disputes or if
+            ``strengthOfEvidenceProvided`` is provided when
+            ``directionOfEvidenceProvided`` is neutral
         :return: Validated input values
         """
         direction_of_evidence_provided = values.get("directionOfEvidenceProvided")

@@ -115,7 +115,9 @@ class VariantPathogenicityEvidenceLine(EvidenceLine):
         :return: Validated input values. If ``evidenceOutcome`` exists, then it will be
             validated and converted to a ``MappableConcept``.
             Or if ``strengthOfEvidenceProvided`` is not provided when
-            ``directionOfEvidenceProvided`` is supports or disputes
+            ``directionOfEvidenceProvided`` is supports or disputes or if
+            ``strengthOfEvidenceProvided`` is provided when
+            ``directionOfEvidenceProvided`` is neutral
         """
         cls._validate_direction_of_evidence_provided(values)
         acmg_code_pattern = r"^((?:PVS1)(?:_(?:not_met|(?:strong|moderate|supporting)))?|(?:PS[1-4]|BS[1-4])(?:_(?:not_met|(?:very_strong|moderate|supporting)))?|BA1(?:_not_met)?|(?:PM[1-6])(?:_(?:not_met|(?:very_strong|strong|supporting)))?|(PP[1-5]|BP[1-7])(?:_(?:not_met|very_strong|strong|moderate))?)$"
