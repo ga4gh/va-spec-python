@@ -42,7 +42,7 @@ def validate_mappable_concept(
     if code_pattern is not None and not re.match(
         code_pattern, mc.primaryCoding.code.root
     ):
-        err_msg = f"`primaryCoding.code` does not match regex pattern {code_pattern}"
+        err_msg = f"`primaryCoding.code` does not match regex pattern {code_pattern}."
         raise ValueError(err_msg)
 
     return mc

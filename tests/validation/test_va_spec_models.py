@@ -121,6 +121,7 @@ def test_evidence_line(caf):
     el_dict = {
         "type": "EvidenceLine",
         "hasEvidenceItems": [
+            iriReference(root="evidence.json#/1"),
             {
                 "id": "civic.eid:2997",
                 "type": "Statement",
@@ -174,12 +175,13 @@ def test_evidence_line(caf):
                     "type": "Method",
                 },
                 "direction": "supports",
-            }
+            },
         ],
         "directionOfEvidenceProvided": "disputes",
     }
     el = EvidenceLine(**el_dict)
-    assert isinstance(el.hasEvidenceItems[0], VariantTherapeuticResponseStudyStatement)
+    assert isinstance(el.hasEvidenceItems[0], iriReference)
+    assert isinstance(el.hasEvidenceItems[1], VariantTherapeuticResponseStudyStatement)
 
     el_dict = {
         "type": "EvidenceLine",
@@ -334,6 +336,14 @@ def test_variant_pathogenicity_el():
     )
 
     invalid_params = deepcopy(params)
+    invalid_params["evidenceOutcome"]["primaryCoding"]["code"] = "PS3 supporting"
+    with pytest.raises(
+        ValueError,
+        match="`primaryCoding.code` does not match regex pattern",
+    ):
+        VariantPathogenicityEvidenceLine(**invalid_params)
+
+    invalid_params = deepcopy(params)
     invalid_params["strengthOfEvidenceProvided"] = None
     with pytest.raises(
         ValueError,
@@ -422,6 +432,10 @@ def test_variant_onco_stmt():
         },
     }
     assert VariantOncogenicityStudyStatement(**params)
+
+    valid_params = deepcopy(params)
+    valid_params["strength"] = None
+    assert VariantOncogenicityStudyStatement(**valid_params)
 
     invalid_params = deepcopy(params)
     invalid_params["strength"]["primaryCoding"]["code"] = "oncogenic"
