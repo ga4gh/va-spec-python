@@ -26,22 +26,85 @@ from ga4gh.va_spec.base.enums import (
 from ga4gh.va_spec.base.validators import validate_mappable_concept
 from ga4gh.vrs.models import Allele, MolecularVariation
 from pydantic import (
-    BaseModel,
     ConfigDict,
     Field,
     RootModel,
     StringConstraints,
     ValidationError,
     field_validator,
-    model_validator,
 )
 
 StatementType = TypeVar("StatementType")
 EvidenceLineType = TypeVar("EvidenceLineType")
 
-#########################################
-# Abstract Core Classes
-#########################################
+
+class CoreType(str, Enum):
+    """Define VA Spec Base Core Types"""
+
+    METHOD = "Method"
+    CONTRIBUTION = "Contribution"
+    DOCUMENT = "Document"
+    AGENT = "Agent"
+    STATEMENT = "Statement"
+    EVIDENCE_LINE = "EvidenceLine"
+    DATA_SET = "DataSet"
+    STUDY_GROUP = "StudyGroup"
+
+
+class Contribution(Entity, BaseModelForbidExtra):
+    """An action taken by an agent in contributing to the creation, modification,
+    assessment, or deprecation of a particular entity (e.g. a Statement, EvidenceLine,
+    DataSet, Publication, etc.)
+    """
+
+    type: Literal["Contribution"] = Field(
+        CoreType.CONTRIBUTION.value,
+        description=f"MUST be '{CoreType.CONTRIBUTION.value}'.",
+    )
+    contributor: Agent | None = Field(
+        None, description="The agent that made the contribution."
+    )
+    activityType: str | None = Field(
+        None,
+        description="The specific type of activity performed or role played by an agent in making the contribution (e.g. for a publication, agents may contribute as a primary author, editor, figure designer, data generator, etc.). Values of this property may be framed as activities, or as contribution roles (e.g. using terms from the Contribution Role Ontology (CRO)).",
+    )
+    date: datetime | None = Field(
+        None, description="When the contributing activity was completed."
+    )
+
+
+class Document(Entity, BaseModelForbidExtra):
+    """A collection of information, usually in a text-based or graphic human-readable
+    form, intended to be read and understood together as a whole.
+    """
+
+    type: Literal["Document"] = Field(
+        CoreType.DOCUMENT.value, description=f"Must be '{CoreType.DOCUMENT.value}'"
+    )
+    documentType: str | None = Field(
+        None,
+        description="A specific type of document that a Document instance represents (e.g.  'publication', 'patent', 'pathology report')",
+    )
+    title: str | None = Field(
+        None, description="The official title given to the document by its authors."
+    )
+    urls: (
+        list[Annotated[str, StringConstraints(pattern=r"^(https?|s?ftp)://")]] | None
+    ) = Field(
+        None,
+        description="One or more URLs from which the content of the Document can be retrieved.",
+    )
+    doi: (
+        Annotated[str, StringConstraints(pattern=r"^10\.(\d+)(\.\d+)*\/[\w\-\.]+")]
+        | None
+    ) = Field(
+        None,
+        description="A [Digital Object Identifier](https://www.doi.org/the-identifier/what-is-a-doi/) for the document.",
+    )
+    pmid: int | None = Field(
+        None,
+        description="A [PubMed unique identifier](https://en.wikipedia.org/wiki/PubMed#PubMed_identifier) for the document.",
+    )
 
 
 class InformationEntity(Entity):
@@ -113,6 +176,45 @@ class CohortAlleleFrequencyStudyResult(_StudyResult, BaseModelForbidExtra):
     subCohortFrequency: list[CohortAlleleFrequencyStudyResult] | None = Field(
         None,
         description="A list of CohortAlleleFrequency objects describing subcohorts of the cohort currently being described. Subcohorts can be further subdivided into more subcohorts. This enables, for example, the description of different ancestry groups and sexes among those ancestry groups.",
+    )
+
+
+class TumorVariantFrequencyStudyResult(_StudyResult, BaseModelForbidExtra):
+    """A Study Result that reports measures related to the frequency of an variant
+    across different tumor types.
+    """
+
+    type: Literal["TumorVariantFrequencyStudyResult"] = Field(
+        "TumorVariantFrequencyStudyResult",
+        description="MUST be 'TumorVariantFrequencyStudyResult'.",
+    )
+    sourceDataSet: DataSet | None = Field(
+        None,
+        description="The dataset from which data in the Tumor Variant Frequency Study Result was taken.",
+    )
+    focusVariant: Allele | CategoricalVariant | iriReference = Field(
+        ...,
+        description="The variant for which frequency data is reported in the Study Result.",
+    )
+    affectedSampleCount: int = Field(
+        ...,
+        description="The number of tumor samples in the sample group that contain the focus variant.",
+    )
+    totalSampleCount: int = Field(
+        ...,
+        description="The total number of tumor samples in the sample group.",
+    )
+    affectedFrequency: float = Field(
+        ...,
+        description="The frequency of tumor samples that include the focus variant in the sample group.",
+    )
+    sampleGroup: StudyGroup | None = Field(
+        None,
+        description="The set of samples about which the frequency data was generated.",
+    )
+    subGroupFrequency: list[TumorVariantFrequencyStudyResult] | None = Field(
+        None,
+        description="A list of Tumor Variant Frequency Study Result objects describing variant frequency in different subsets of larger sample group described in the root Study Result. Subgroups can be further subdivided into more subgroups. This enables, for example, further breakdown of frequency measures in sample groups with a narrower categorical variant than the root focus variant, or sample groups with a more specific tumor type.",
     )
 
 
@@ -328,92 +430,18 @@ class VariantTherapeuticResponseProposition(
     )
 
 
-#########################################
-# Concrete Core Classes
-#########################################
-
-
-class CoreType(str, Enum):
-    """Define VA Spec Base Core Types"""
-
-    METHOD = "Method"
-    CONTRIBUTION = "Contribution"
-    DOCUMENT = "Document"
-    AGENT = "Agent"
-    STATEMENT = "Statement"
-    EVIDENCE_LINE = "EvidenceLine"
-    DATA_SET = "DataSet"
-    STUDY_GROUP = "StudyGroup"
-
-
 class Method(Entity, BaseModelForbidExtra):
     """A set of instructions that specify how to achieve some objective."""
 
     type: Literal["Method"] = Field(
         CoreType.METHOD.value, description=f"MUST be '{CoreType.METHOD.value}'."
     )
-    subtype: MappableConcept | None = Field(
+    methodType: str | None = Field(
         None,
         description="A specific type of method that a Method instance represents (e.g. 'Variant Interpretation Guideline', or 'Experimental Protocol').",
     )
     reportedIn: Document | iriReference | None = Field(
         None, description="A document in which the the Method is reported."
-    )
-
-
-class Contribution(Entity, BaseModelForbidExtra):
-    """An action taken by an agent in contributing to the creation, modification,
-    assessment, or deprecation of a particular entity (e.g. a Statement, EvidenceLine,
-    DataSet, Publication, etc.)
-    """
-
-    type: Literal["Contribution"] = Field(
-        CoreType.CONTRIBUTION.value,
-        description=f"MUST be '{CoreType.CONTRIBUTION.value}'.",
-    )
-    contributor: Agent | None = Field(
-        None, description="The agent that made the contribution."
-    )
-    activityType: MappableConcept | None = Field(
-        None,
-        description="The specific type of activity performed or role played by an agent in making the contribution (e.g. for a publication, agents may contribute as a primary author, editor, figure designer, data generator, etc.). Values of this property may be framed as activities, or as contribution roles (e.g. using terms from the Contribution Role Ontology (CRO)).",
-    )
-    date: datetime | None = Field(
-        None, description="When the contributing activity was completed."
-    )
-
-
-class Document(Entity, BaseModelForbidExtra):
-    """A collection of information, usually in a text-based or graphic human-readable
-    form, intended to be read and understood together as a whole.
-    """
-
-    type: Literal["Document"] = Field(
-        CoreType.DOCUMENT.value, description=f"Must be '{CoreType.DOCUMENT.value}'"
-    )
-    subtype: MappableConcept | None = Field(
-        None,
-        description="A specific type of document that a Document instance represents (e.g.  'publication', 'patent', 'pathology report')",
-    )
-    title: str | None = Field(
-        None, description="The official title given to the document by its authors."
-    )
-    urls: (
-        list[Annotated[str, StringConstraints(pattern=r"^(https?|s?ftp)://")]] | None
-    ) = Field(
-        None,
-        description="One or more URLs from which the content of the Document can be retrieved.",
-    )
-    doi: (
-        Annotated[str, StringConstraints(pattern=r"^10\.(\d+)(\.\d+)*\/[\w\-\.]+")]
-        | None
-    ) = Field(
-        None,
-        description="A [Digital Object Identifier](https://www.doi.org/the-identifier/what-is-a-doi/) for the document.",
-    )
-    pmid: int | None = Field(
-        None,
-        description="A [PubMed unique identifier](https://en.wikipedia.org/wiki/PubMed#PubMed_identifier) for the document.",
     )
 
 
@@ -427,7 +455,7 @@ class Agent(Entity, BaseModelForbidExtra):
         CoreType.AGENT.value, description=f"MUST be '{CoreType.AGENT.value}'."
     )
     name: str | None = Field(None, description="The given name of the Agent.")
-    subtype: MappableConcept | None = Field(
+    agentType: str | None = Field(
         None,
         description="A specific type of agent the Agent object represents. Recommended subtypes include codes for `person`, `organization`, or `software`.",
     )
@@ -451,7 +479,7 @@ class DataSet(Entity, BaseModelForbidExtra):
     type: Literal["DataSet"] = Field(
         CoreType.DATA_SET.value, description=f"MUST be '{CoreType.DATA_SET.value}'."
     )
-    subtype: MappableConcept | None = Field(
+    datasetType: str | None = Field(
         None,
         description="A specific type of data set the DataSet instance represents (e.g. a 'clinical data set', a 'sequencing data set', a 'gene expression data set', a 'genome annotation data set')",
     )
@@ -544,12 +572,16 @@ class EvidenceLine(InformationEntity, BaseModelForbidExtra):
                     obj_
                     for _, obj_ in vars(imported_module).items()
                     if inspect.isclass(obj_)
-                    and issubclass(obj_, BaseModel)
+                    and issubclass(obj_, Statement)
                     and obj_.__name__.endswith(("Statement", "EvidenceLine"))
+                    and obj_ not in (Statement, EvidenceLine)
                 ]
             )
 
-        has_evidence_items_models.extend([Statement, StudyResult, EvidenceLine])
+        has_evidence_items_models.extend(
+            [Statement, StudyResult, EvidenceLine, iriReference]
+        )
+
         for evidence_item in v:
             if isinstance(evidence_item, dict):
                 found_model = False
@@ -567,10 +599,79 @@ class EvidenceLine(InformationEntity, BaseModelForbidExtra):
                     raise ValueError(err_msg)
             elif isinstance(evidence_item, str):
                 evidence_items.append(iriReference(root=evidence_item))
+            elif isinstance(evidence_item, tuple(has_evidence_items_models)):
+                evidence_items.append(evidence_item)
             else:
                 err_msg = "Unable to find valid model for `hasEvidenceItems`"
                 raise ValueError(err_msg)
         return evidence_items
+
+    @staticmethod
+    def _validate_evidence_outcome(
+        values: dict, system: System, code_pattern: str
+    ) -> dict:
+        """Validate ``evidenceOutcome`` property if it exists
+
+        :param values: Input values
+        :param system: System that should be used for ``primaryCoding.system``
+        :param code_pattern: The regex pattern that should be used for
+            ``primaryCoding.code``
+        :raises ValueError: If ``evidenceOutcome`` exists and is invalid
+        :return: Validated input values. If ``evidenceOutcome`` exists, then it will be
+            validated and converted to a ``MappableConcept``
+        """
+        if "evidenceOutcome" in values:
+            mc = MappableConcept(**values["evidenceOutcome"])
+            values["evidenceOutcome"] = mc
+            validate_mappable_concept(
+                mc, system, code_pattern=code_pattern, mc_is_required=False
+            )
+        return values
+
+    @staticmethod
+    def _validate_direction_of_evidence_provided(values: dict) -> dict:
+        """Validate conditional requirements for ``directionOfEvidenceProvided``
+
+        :param values: Input values
+        :raises ValueError: If ``strengthOfEvidenceProvided`` is not provided when
+            ``directionOfEvidenceProvided`` is supports or disputes or if
+            ``strengthOfEvidenceProvided`` is provided when
+            ``directionOfEvidenceProvided`` is neutral
+        :return: Validated input values
+        """
+        direction_of_evidence_provided = values.get("directionOfEvidenceProvided")
+        if (
+            direction_of_evidence_provided in (Direction.SUPPORTS, Direction.DISPUTES)
+            and values.get("strengthOfEvidenceProvided") is None
+        ):
+            err_msg = f"`strengthOfEvidenceProvided` is required when `directionOfEvidenceProvided` is '{Direction.SUPPORTS.value}' or '{Direction.DISPUTES.value}'."
+            raise ValueError(err_msg)
+
+        if direction_of_evidence_provided == Direction.NEUTRAL and values.get(
+            "strengthOfEvidenceProvided"
+        ):
+            err_msg = f"`strengthOfEvidenceProvided` is not allowed when `directionOfEvidenceProvided` is '{Direction.NEUTRAL.value}'."
+            raise ValueError(err_msg)
+
+        return values
+
+    @field_validator("specifiedBy")
+    @classmethod
+    def validate_specified_by(cls, v: Method | iriReference) -> Method | iriReference:
+        """Validate specifiedBy
+
+        :param v: specifiedBy
+        :raises ValueError: If invalid specifiedBy values are provided
+        :return: Validated specifiedBy value
+        """
+        if hasattr(cls, "Criterion") and isinstance(v, Method):
+            if not v.reportedIn:
+                err_msg = "`reportedIn` is required."
+                raise ValueError(err_msg)
+
+            cls.Criterion(v.methodType)
+
+        return v
 
 
 class Statement(InformationEntity, BaseModelForbidExtra):
@@ -637,70 +738,3 @@ class StudyGroup(Entity, BaseModelForbidExtra):
         None,
         description="A feature or role shared by all members of the StudyGroup, representing a criterion for membership in the group.",
     )
-
-
-class StatementValidatorMixin:
-    """Mixin class for reusable Statement model validators
-
-    Should be used with classes that inherit from Pydantic BaseModel
-    """
-
-    model_config = ConfigDict(extra="allow")
-
-    @model_validator(mode="after")
-    def statement_validator(cls, model: BaseModel) -> BaseModel:  # noqa: N805
-        """Validate that the model is a ``Statement``.
-
-        :param model: Pydantic BaseModel to validate
-        :raises ValueError: If ``model`` does not validate against a ``Statement``
-        :return: Validated model
-        """
-        try:
-            Statement(**model.model_dump())
-        except ValidationError as e:
-            err_msg = f"Must be a `Statement`: {e}"
-            raise ValueError(err_msg) from e
-        return model
-
-
-class EvidenceLineValidatorMixin:
-    """Mixin class for reusable EvidenceLine model validators
-
-    Should be used with classes that inherit from Pydantic BaseModel
-    """
-
-    model_config = ConfigDict(extra="allow")
-
-    @staticmethod
-    def _validate_evidence_outcome(
-        values: dict, system: System, codes: list[str]
-    ) -> dict:
-        """Validate ``evidenceOutcome`` property if it exists
-
-        :param values: Input values
-        :param system: System that should be used in ``MappableConcept``
-        :param codes: Codes that should be used in ``MappableConcept``
-        :raises ValueError: If ``evidenceOutcome`` exists and is invalid
-        :return: Validated input values. If ``evidenceOutcome`` exists, then it will be
-            validated and converted to a ``MappableConcept``
-        """
-        if "evidenceOutcome" in values:
-            mc = MappableConcept(**values["evidenceOutcome"])
-            values["evidenceOutcome"] = mc
-            validate_mappable_concept(mc, system, codes, mc_is_required=False)
-        return values
-
-    @model_validator(mode="after")
-    def evidence_line_validator(cls, model: BaseModel) -> BaseModel:  # noqa: N805
-        """Validate that the model is a ``EvidenceLine``.
-
-        :param model: Pydantic BaseModel to validate
-        :raises ValueError: If ``model`` does not validate against a ``EvidenceLine``
-        :return: Validated model
-        """
-        try:
-            EvidenceLine(**model.model_dump())
-        except ValidationError as e:
-            err_msg = f"Must be an `EvidenceLine`: {e}"
-            raise ValueError(err_msg) from e
-        return model

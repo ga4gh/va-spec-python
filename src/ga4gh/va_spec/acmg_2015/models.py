@@ -7,9 +7,9 @@ from enum import Enum
 
 from ga4gh.core.models import MappableConcept, iriReference
 from ga4gh.va_spec.base.core import (
-    EvidenceLineValidatorMixin,
+    EvidenceLine,
     Method,
-    StatementValidatorMixin,
+    Statement,
     VariantPathogenicityProposition,
 )
 from ga4gh.va_spec.base.enums import (
@@ -21,23 +21,7 @@ from ga4gh.va_spec.base.enums import (
 from ga4gh.va_spec.base.validators import (
     validate_mappable_concept,
 )
-from pydantic import BaseModel, Field, field_validator, model_validator
-
-
-class EvidenceOutcome(str, Enum):
-    """Define constraints for evidence outcome values"""
-
-    PS3 = "PS3"
-    PS3_MODERATE = "PS3_moderate"
-    PS3_SUPPORTING = "PS3_supporting"
-    PS3_NOT_MET = "PS3_not_met"
-    BS3 = "BS3"
-    BS3_MODERATE = "BS3_moderate"
-    BS3_SUPPORTING = "BS3_supporting"
-    BS3_NOT_MET = "BS3_not_met"
-
-
-EVIDENCE_OUTCOME_VALUES = [v.value for v in EvidenceOutcome.__members__.values()]
+from pydantic import Field, field_validator, model_validator
 
 
 class AcmgClassification(str, Enum):
@@ -53,17 +37,15 @@ class AcmgClassification(str, Enum):
 ACMG_CLASSIFICATIONS = [v.value for v in AcmgClassification.__members__.values()]
 
 
-class VariantPathogenicityFunctionalImpactEvidenceLine(
-    BaseModel, EvidenceLineValidatorMixin
-):
-    """An Evidence Line that describes how information about the functional impact of a
-    variant on a gene or gene product was interpreted as evidence for or against the
-    variant's pathogenicity.
+class VariantPathogenicityEvidenceLine(EvidenceLine):
+    """An Evidence Line that describes how information about the specific criterion
+    evidence for the variant was assessed as evidence for or against the variant's
+    pathogenicity.
     """
 
     targetProposition: VariantPathogenicityProposition | None = Field(
         None,
-        description="A Variant Pathogenicity Proposition against which functional impact information was assessed, in determining the strength and direction of support this information provides as evidence.",
+        description="A Variant Pathogenicity Proposition against which specific information was assessed, in determining the strength and direction of support this information provides as evidence.",
     )
     strengthOfEvidenceProvided: MappableConcept | None = Field(
         None,
@@ -71,8 +53,40 @@ class VariantPathogenicityFunctionalImpactEvidenceLine(
     )
     specifiedBy: Method | iriReference = Field(
         ...,
-        description="The guidelines that were followed to interpret variant functional impact information as evidence for or against the assessed variant's pathogenicity.",
+        description="The guidelines that were followed to assess variant information as evidence for or against the assessed variant's pathogenicity.",
     )
+
+    class Criterion(str, Enum):
+        """Define ACMG 2015 criterion values"""
+
+        PVS1 = "PVS1"
+        PS1 = "PS1"
+        PS2 = "PS2"
+        PS3 = "PS3"
+        PS4 = "PS4"
+        PM1 = "PM1"
+        PM2 = "PM2"
+        PM3 = "PM3"
+        PM4 = "PM4"
+        PM5 = "PM5"
+        PM6 = "PM6"
+        PP1 = "PP1"
+        PP2 = "PP2"
+        PP3 = "PP3"
+        PP4 = "PP4"
+        PP5 = "PP5"
+        BA1 = "BA1"
+        BS1 = "BS1"
+        BS2 = "BS2"
+        BS3 = "BS3"
+        BS4 = "BS4"
+        BP1 = "BP1"
+        BP2 = "BP2"
+        BP3 = "BP3"
+        BP4 = "BP4"
+        BP5 = "BP5"
+        BP6 = "BP6"
+        BP7 = "BP7"
 
     @field_validator("strengthOfEvidenceProvided")
     @classmethod
@@ -86,43 +100,35 @@ class VariantPathogenicityFunctionalImpactEvidenceLine(
         :return: Validated strengthOfEvidenceProvided value
         """
         return validate_mappable_concept(
-            v, System.ACMG, STRENGTH_OF_EVIDENCE_PROVIDED_VALUES, mc_is_required=False
+            v,
+            System.ACMG,
+            valid_codes=STRENGTH_OF_EVIDENCE_PROVIDED_VALUES,
+            mc_is_required=False,
         )
 
-    @field_validator("specifiedBy")
-    @classmethod
-    def validate_specified_by(cls, v: Method | iriReference) -> Method | iriReference:
-        """Validate specifiedBy
-
-        :param v: specifiedBy
-        :raises ValueError: If invalid specifiedBy values are provided
-        :return: Validated specifiedBy value
-        """
-        if isinstance(v, Method) and not v.reportedIn:
-            err_msg = "`reportedIn` is required."
-            raise ValueError(err_msg)
-
-        return v
-
     @model_validator(mode="before")
-    def validate_evidence_outcome(cls, values: dict) -> dict:  # noqa: N805
-        """Validate ``evidenceOutcome`` property if it exists
+    def validate_model(cls, values: dict) -> dict:  # noqa: N805
+        """Validate ``evidenceOutcome`` and ``directionOfEvidenceProvided`` properties
 
         :param values: Input values
         :raises ValueError: If ``evidenceOutcome`` exists and is invalid
         :return: Validated input values. If ``evidenceOutcome`` exists, then it will be
-            validated and converted to a ``MappableConcept``
+            validated and converted to a ``MappableConcept``.
+            Or if ``strengthOfEvidenceProvided`` is not provided when
+            ``directionOfEvidenceProvided`` is supports or disputes or if
+            ``strengthOfEvidenceProvided`` is provided when
+            ``directionOfEvidenceProvided`` is neutral
         """
-        return cls._validate_evidence_outcome(
-            values, System.ACMG, EVIDENCE_OUTCOME_VALUES
-        )
+        cls._validate_direction_of_evidence_provided(values)
+        acmg_code_pattern = r"^((?:PVS1)(?:_(?:not_met|(?:strong|moderate|supporting)))?|(?:PS[1-4]|BS[1-4])(?:_(?:not_met|(?:very_strong|moderate|supporting)))?|BA1(?:_not_met)?|(?:PM[1-6])(?:_(?:not_met|(?:very_strong|strong|supporting)))?|(PP[1-5]|BP[1-7])(?:_(?:not_met|very_strong|strong|moderate))?)$"
+        return cls._validate_evidence_outcome(values, System.ACMG, acmg_code_pattern)
 
 
-class VariantPathogenicityStatement(BaseModel, StatementValidatorMixin):
+class VariantPathogenicityStatement(Statement):
     """A Statement describing the role of a variant in causing an inherited condition."""
 
-    proposition: VariantPathogenicityProposition | None = Field(
-        None,
+    proposition: VariantPathogenicityProposition = Field(
+        ...,
         description="A proposition about the pathogenicity of a varaint, the validity of which is assessed and reported by the Statement. A Statement can put forth the proposition as being true, false, or uncertain, and may provide an assessment of the level of confidence/evidence supporting this claim.",
     )
     strength: MappableConcept | None = Field(
@@ -148,7 +154,7 @@ class VariantPathogenicityStatement(BaseModel, StatementValidatorMixin):
         :return: Validated strength value
         """
         return validate_mappable_concept(
-            v, System.ACMG, STRENGTHS, mc_is_required=False
+            v, System.ACMG, valid_codes=STRENGTHS, mc_is_required=False
         )
 
     @field_validator("classification")

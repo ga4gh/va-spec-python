@@ -2,18 +2,14 @@
 
 from .models import (
     ACMG_CLASSIFICATIONS,
-    EVIDENCE_OUTCOME_VALUES,
     AcmgClassification,
-    EvidenceOutcome,
-    VariantPathogenicityFunctionalImpactEvidenceLine,
+    VariantPathogenicityEvidenceLine,
     VariantPathogenicityStatement,
 )
 
 __all__ = [
     "ACMG_CLASSIFICATIONS",
-    "EVIDENCE_OUTCOME_VALUES",
     "AcmgClassification",
-    "EvidenceOutcome",
-    "VariantPathogenicityFunctionalImpactEvidenceLine",
+    "VariantPathogenicityEvidenceLine",
     "VariantPathogenicityStatement",
 ]
