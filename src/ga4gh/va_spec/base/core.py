@@ -101,7 +101,7 @@ class Document(Entity, BaseModelForbidExtra):
         None,
         description="A [Digital Object Identifier](https://www.doi.org/the-identifier/what-is-a-doi/) for the document.",
     )
-    pmid: int | None = Field(
+    pmid: str | None = Field(
         None,
         description="A [PubMed unique identifier](https://en.wikipedia.org/wiki/PubMed#PubMed_identifier) for the document.",
     )
@@ -311,7 +311,7 @@ class ClinicalVariantProposition(_SubjectVariantPropositionBase):
     )
     alleleOriginQualifier: MappableConcept | iriReference | None = Field(
         None,
-        description="Reports whether the Proposition should be interpreted in the context of an inherited (germline) variant, an acquired (somatic) mutation, or another more nuanced concept. Consider using terms or codes from community terminologies here, e.g. terms from the 'allele origin' branch of the GENO ontology such as GENO:0000882 (somatic allele origin).",
+        description="Reports whether the Proposition should be interpreted in the context of a heritable 'germline' variant, an acquired 'somatic' variant in a tumor,  post-zygotic 'mosaic' variant. While these are the most commonly reported allele origins, other more nuanced concepts can be captured  (e.g. 'maternal' vs 'paternal' allele origin'). In practice, populating this field may be complicated by the fact that some sources report allele origin based on the type of tissue that was sequenced to identify the variant, and others use it more generally to specify a category of variant for which the proposition holds. The stated intent of this attribute is the latter. However, if an implementer is not sure about which is reported in their data, it may be safer to create an Extension to hold this information, where they can explicitly acknowledge this ambiguity.",
     )
 
 
@@ -326,9 +326,9 @@ class ExperimentalVariantFunctionalImpactProposition(
         "ExperimentalVariantFunctionalImpactProposition",
         description="MUST be 'ExperimentalVariantFunctionalImpactProposition'.",
     )
-    predicate: str = Field(
+    predicate: Literal["impactsFunctionOf"] = Field(
         "impactsFunctionOf",
-        description="The relationship the Proposition describes between the subject variant and object sequence feature whose function it may alter.",
+        description="The relationship the Proposition describes between the subject variant and object sequence feature whose function it may alter. MUST be 'impactsFunctionOf'.",
     )
     objectSequenceFeature: iriReference | MappableConcept = Field(
         ...,
@@ -351,7 +351,10 @@ class VariantDiagnosticProposition(ClinicalVariantProposition, BaseModelForbidEx
         "VariantDiagnosticProposition",
         description="MUST be 'VariantDiagnosticProposition'.",
     )
-    predicate: DiagnosticPredicate
+    predicate: DiagnosticPredicate = Field(
+        ...,
+        description="The relationship the Proposition describes between the subject variant and object Condition. MUST be one of 'isDiagnosticInclusionCriterionFor' or 'isDiagnosticExclusionCriterionFor'.",
+    )
     objectCondition: Condition | iriReference = Field(
         ..., description="The disease that is evaluated for diagnosis."
     )
@@ -364,7 +367,10 @@ class VariantOncogenicityProposition(ClinicalVariantProposition, BaseModelForbid
         "VariantOncogenicityProposition",
         description="MUST be 'VariantOncogenicityProposition'.",
     )
-    predicate: str = "isCausalFor"
+    predicate: Literal["isOncogenicFor"] = Field(
+        "isOncogenicFor",
+        description="The relationship the Proposition describes between the subject variant and object tumor type. MUST be 'isOncogenicFor'.",
+    )
     objectTumorType: Condition | iriReference = Field(
         ..., description="The tumor type for which the variant impact is evaluated."
     )
@@ -377,7 +383,10 @@ class VariantPathogenicityProposition(ClinicalVariantProposition, BaseModelForbi
         "VariantPathogenicityProposition",
         description="Must be 'VariantPathogenicityProposition'",
     )
-    predicate: str = "isCausalFor"
+    predicate: Literal["isCausalFor"] = Field(
+        "isCausalFor",
+        description="The relationship the Proposition describes between the subject variant and object condition. MUST be 'isCausalFor'.",
+    )
     objectCondition: Condition | iriReference = Field(
         ..., description="The Condition for which the variant impact is stated."
     )
@@ -400,7 +409,10 @@ class VariantPrognosticProposition(ClinicalVariantProposition, BaseModelForbidEx
         "VariantPrognosticProposition",
         description="MUST be 'VariantPrognosticProposition'.",
     )
-    predicate: PrognosticPredicate
+    predicate: PrognosticPredicate = Field(
+        ...,
+        description="The relationship the Proposition describes between the subject variant and object Condition. MUST be one of 'associatedWithBetterOutcomeFor' or 'associatedWithWorseOutcomeFor'.",
+    )
     objectCondition: Condition | iriReference = Field(
         ..., description="The disease that is evaluated for outcome."
     )
@@ -419,7 +431,10 @@ class VariantTherapeuticResponseProposition(
         "VariantTherapeuticResponseProposition",
         description="MUST be 'VariantTherapeuticResponseProposition'.",
     )
-    predicate: TherapeuticResponsePredicate
+    predicate: TherapeuticResponsePredicate = Field(
+        ...,
+        description="The relationship the Proposition describes between the subject variant and object theapeutic. MUST be one of 'predictsSensitivityTo' or 'predictsResistanceTo'.",
+    )
     objectTherapeutic: Therapeutic | iriReference = Field(
         ...,
         description="A drug administration or other therapeutic procedure that the neoplasm is intended to respond to.",

@@ -38,9 +38,11 @@ ACMG_CLASSIFICATIONS = [v.value for v in AcmgClassification.__members__.values()
 
 
 class VariantPathogenicityEvidenceLine(EvidenceLine):
-    """An Evidence Line that describes how information about the specific criterion
-    evidence for the variant was assessed as evidence for or against the variant's
-    pathogenicity.
+    """An Evidence Line that describes how a specific type of information was
+    interpreted as evidence for or againtst a variant's pathogenicity. In the ACMG
+    Framework, evidence is assessed by determining if a specific criterion (e.g. 'PM2')
+    with a default strength (e.g. 'moderate') is 'met' or 'not met', and in some cases
+    adjusting the default strength based on the quality and abundance of evidence.
     """
 
     targetProposition: VariantPathogenicityProposition | None = Field(
@@ -129,7 +131,7 @@ class VariantPathogenicityStatement(Statement):
 
     proposition: VariantPathogenicityProposition = Field(
         ...,
-        description="A proposition about the pathogenicity of a varaint, the validity of which is assessed and reported by the Statement. A Statement can put forth the proposition as being true, false, or uncertain, and may provide an assessment of the level of confidence/evidence supporting this claim.",
+        description="A proposition about the pathogenicity of a variant, the validity of which is assessed and reported by the Statement. A Statement can put forth the proposition as being true, false, or uncertain, and may provide an assessment of the level of confidence/evidence supporting this claim.",
     )
     strength: MappableConcept | None = Field(
         None,
@@ -137,7 +139,7 @@ class VariantPathogenicityStatement(Statement):
     )
     classification: MappableConcept = Field(
         ...,
-        description="The classification of the variant's pathogenicity, based on the ACMG 2015 guidelines. These classifications must coincide with the direction and strength values as follows: 'pathogenic' with supports-strong, 'likely pathogenic' with supports-moderate, 'benign' with disputes-strong, 'likely benign' with disputes-moderate 'uncertain significance' can be one of three possibilities... supports-weak, disputes-weak or neutral for uncertain significance (favoring pathogenic), uncertain significance (favoring benign) or uncertain significance (favoring neither pathogenic nor benign). The 'low penetrance' and 'risk allele' versions of pathogenicity classifications would be applied based on whether the variant proposition was defined to have a 'penetrance' of 'low' or 'risk' respectively.",
+        description="The classification of the variant's pathogenicity, based on the ACMG 2015 guidelines. These classifications should coincide with the direction and strength values as follows: 'pathogenic' with supports-strong, 'likely pathogenic' with supports-moderate, 'benign' with disputes-strong, 'likely benign' with disputes-moderate 'uncertain significance' can be one of three possibilities... supports-weak, disputes-weak or neutral for uncertain significance (favoring pathogenic), uncertain significance (favoring benign) or uncertain significance (favoring neither pathogenic nor benign). The 'low penetrance' and 'risk allele' versions of pathogenicity classifications would be applied based on whether the variant proposition was defined to have a 'penetrance' of 'low' or 'risk' respectively.",
     )
     specifiedBy: Method | iriReference = Field(
         ...,
