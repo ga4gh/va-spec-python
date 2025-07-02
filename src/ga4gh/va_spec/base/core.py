@@ -107,6 +107,21 @@ class Document(Entity, BaseModelForbidExtra):
     )
 
 
+class Method(Entity, BaseModelForbidExtra):
+    """A set of instructions that specify how to achieve some objective."""
+
+    type: Literal["Method"] = Field(
+        CoreType.METHOD.value, description=f"MUST be '{CoreType.METHOD.value}'."
+    )
+    methodType: str | None = Field(
+        None,
+        description="A specific type of method that a Method instance represents (e.g. 'Variant Interpretation Guideline', or 'Experimental Protocol').",
+    )
+    reportedIn: Document | iriReference | None = Field(
+        None, description="A document in which the the Method is reported."
+    )
+
+
 class InformationEntity(Entity):
     """An abstract (non-physical) entity that represents 'information content' carried by
     physical or digital information artifacts such as books, web pages, data sets, or
@@ -442,21 +457,6 @@ class VariantTherapeuticResponseProposition(
     conditionQualifier: Condition | iriReference = Field(
         ...,
         description="Reports the disease context in which the variant's association with therapeutic sensitivity or resistance is evaluated. Note that this is a required qualifier in therapeutic response propositions.",
-    )
-
-
-class Method(Entity, BaseModelForbidExtra):
-    """A set of instructions that specify how to achieve some objective."""
-
-    type: Literal["Method"] = Field(
-        CoreType.METHOD.value, description=f"MUST be '{CoreType.METHOD.value}'."
-    )
-    methodType: str | None = Field(
-        None,
-        description="A specific type of method that a Method instance represents (e.g. 'Variant Interpretation Guideline', or 'Experimental Protocol').",
-    )
-    reportedIn: Document | iriReference | None = Field(
-        None, description="A document in which the the Method is reported."
     )
 
 
