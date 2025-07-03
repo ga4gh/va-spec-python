@@ -169,7 +169,7 @@ def test_evidence_line(caf):
                         "name": "Danos et al., 2019, Genome Med.",
                         "title": "Standard operating procedure for curation and clinical interpretation of variants in cancer",
                         "doi": "10.1186/s13073-019-0687-x",
-                        "pmid": 31779674,
+                        "pmid": "31779674",
                         "type": "Document",
                     },
                     "type": "Method",
@@ -254,7 +254,7 @@ def test_variant_pathogenicity_stmt():
         "specifiedBy": {
             "reportedIn": {
                 "type": "Document",
-                "pmid": 25741868,
+                "pmid": "25741868",
                 "name": "ACMG Guidelines, 2015",
             }
         },
@@ -305,7 +305,7 @@ def test_variant_pathogenicity_el():
             "name": "ACMG 2015 PS3 Criterion",
             "reportedIn": {
                 "type": "Document",
-                "pmid": 25741868,
+                "pmid": "25741868",
                 "name": "ACMG Guidelines, 2015",
             },
             "methodType": "PS3",
@@ -413,7 +413,7 @@ def test_variant_onco_stmt():
         "direction": "neutral",
         "proposition": {
             "type": "VariantOncogenicityProposition",
-            "predicate": "isCausalFor",
+            "predicate": "isOncogenicFor",
             "objectTumorType": "conditions.json#/1",
             "subjectVariant": "alleles.json#/1",
         },
@@ -468,7 +468,7 @@ def test_variant_onco_el():
             "type": "Method",
             "reportedIn": {
                 "type": "Document",
-                "pmid": 35101336,
+                "pmid": "35101336",
                 "name": "ClinGen/CGC/VICC Guidelines for Oncogenicity, 2022",
             },
             "methodType": "OS2",

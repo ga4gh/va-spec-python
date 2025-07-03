@@ -28,7 +28,7 @@ class VaSpecSchemaMapping(BaseModel):
     base_classes: set = set()
     concrete_classes: set = set()
     primitives: set = set()
-    schema: dict = {}
+    va_spec_schema: dict = {}
 
 
 def _update_va_spec_schema_mapping(
@@ -43,7 +43,7 @@ def _update_va_spec_schema_mapping(
         cls_def = json.load(rf)
 
     spec_class = cls_def["title"]
-    va_spec_schema_mapping.schema[spec_class] = cls_def
+    va_spec_schema_mapping.va_spec_schema[spec_class] = cls_def
 
     if "properties" in cls_def:
         va_spec_schema_mapping.concrete_classes.add(spec_class)
@@ -108,11 +108,11 @@ def test_schema_class_fields(va_spec_schema, pydantic_models):
     """
     mapping = VA_SPEC_SCHEMA_MAPPING[va_spec_schema]
     for schema_model in mapping.concrete_classes:
-        schema_properties = mapping.schema[schema_model]["properties"]
+        schema_properties = mapping.va_spec_schema[schema_model]["properties"]
         pydantic_model = getattr(pydantic_models, schema_model)
         assert set(pydantic_model.model_fields) == set(schema_properties), schema_model
 
-        required_schema_fields = set(mapping.schema[schema_model]["required"])
+        required_schema_fields = set(mapping.va_spec_schema[schema_model]["required"])
 
         for prop, property_def in schema_properties.items():
             pydantic_model_field_info = pydantic_model.model_fields[prop]
