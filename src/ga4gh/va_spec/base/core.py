@@ -136,7 +136,7 @@ class InformationEntity(Entity):
         None,
         description="Specific actions taken by an Agent toward the creation, modification, validation, or deprecation of an Information Entity.",
     )
-    reportedIn: list[Document] | list[iriReference] | None = Field(
+    reportedIn: list[Document | iriReference] | None = Field(
         None, description="A document in which the the Information Entity is reported."
     )
 
