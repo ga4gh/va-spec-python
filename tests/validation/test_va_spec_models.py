@@ -18,6 +18,7 @@ from ga4gh.va_spec.base import (
     ExperimentalVariantFunctionalImpactStudyResult,
 )
 from ga4gh.va_spec.base.core import EvidenceLine, Method, StudyGroup, StudyResult
+from ga4gh.va_spec.base.domain_entities import ConditionSet
 from ga4gh.va_spec.ccv_2022.models import (
     VariantOncogenicityEvidenceLine,
     VariantOncogenicityStudyStatement,
@@ -47,6 +48,86 @@ def caf():
         locusAlleleCount=34086,
         cohort=StudyGroup(id="ALL", name="Overall"),
     )
+
+
+def test_condition_set():
+    """Ensure ConditionSet model works as expected"""
+    condition_set_dict = {
+        "membershipOperator": "AND",
+        "conditions": [
+            {
+                "conceptType": "Disease",
+                "id": "civic.did:3387",
+                "mappings": [
+                    {
+                        "coding": {
+                            "code": "DOID:0081279",
+                            "system": "https://disease-ontology.org/?id=",
+                        },
+                        "relation": "exactMatch",
+                    }
+                ],
+                "name": "Diffuse Astrocytoma, MYB- Or MYBL1-altered",
+            },
+            {
+                "conditions": [
+                    {
+                        "conceptType": "Phenotype",
+                        "id": "civic.phenotype:8121",
+                        "mappings": [
+                            {
+                                "coding": {
+                                    "code": "HP:0011463",
+                                    "system": "https://hpo.jax.org/browse/term/",
+                                },
+                                "relation": "exactMatch",
+                            }
+                        ],
+                        "name": "Childhood onset",
+                    },
+                    {
+                        "conceptType": "Phenotype",
+                        "id": "civic.phenotype:2656",
+                        "mappings": [
+                            {
+                                "coding": {
+                                    "code": "HP:0003621",
+                                    "id": "HP:0003621",
+                                    "system": "https://hpo.jax.org/browse/term/",
+                                },
+                                "relation": "exactMatch",
+                            }
+                        ],
+                        "name": "Juvenile onset",
+                    },
+                    {
+                        "conceptType": "Phenotype",
+                        "id": "civic.phenotype:2643",
+                        "mappings": [
+                            {
+                                "coding": {
+                                    "code": "HP:0003581",
+                                    "system": "https://hpo.jax.org/browse/term/",
+                                },
+                                "relation": "exactMatch",
+                            }
+                        ],
+                        "name": "Adult onset",
+                    },
+                ],
+                "membershipOperator": "OR",
+            },
+        ],
+    }
+    assert ConditionSet(**condition_set_dict)
+
+    invalid_params = deepcopy(condition_set_dict)
+    invalid_params["conditions"].pop()
+
+    with pytest.raises(
+        ValidationError, match="List should have at least 2 items after validation"
+    ):
+        ConditionSet(**invalid_params)
 
 
 def test_agent():

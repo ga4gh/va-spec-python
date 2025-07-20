@@ -1,5 +1,7 @@
 """VA Spec Shared Domain Entity Data Structures"""
 
+from __future__ import annotations
+
 from ga4gh.core.models import BaseModelForbidExtra, Element, MappableConcept
 from ga4gh.va_spec.base.enums import MembershipOperator
 from pydantic import ConfigDict, Field, RootModel
@@ -13,7 +15,7 @@ class ConditionSet(Element, BaseModelForbidExtra):
 
     model_config = ConfigDict(use_enum_values=True)
 
-    conditions: list[MappableConcept] = Field(
+    conditions: list[MappableConcept | ConditionSet] = Field(
         ...,
         min_length=2,
         description="A list of conditions (diseases, phenotypes, traits) that are co-occurring.",
