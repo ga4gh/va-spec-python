@@ -1,25 +1,19 @@
 """Test that VA-Spec Python Pydantic models match corresponding JSON schemas"""
 
 import json
-from enum import Enum
 from pathlib import Path
 
 import pytest
 from ga4gh.va_spec import aac_2017, acmg_2015, base, ccv_2022
 from pydantic import BaseModel
 
-from tests.conftest import SUBMODULES_DIR
+from tests.conftest import (
+    SUBMODULES_DIR,
+    VaSpecSchema,
+    get_va_spec_schema,
+)
 
 VA_SCHEMA_DIR = SUBMODULES_DIR / "schema" / "va-spec"
-
-
-class VaSpecSchema(str, Enum):
-    """Enum for VA-Spec schema"""
-
-    AAC_2017 = "aac-2017"
-    ACMG_2015 = "acmg-2015"
-    BASE = "base"
-    CCV_2022 = "ccv-2022"
 
 
 class VaSpecSchemaMapping(BaseModel):
@@ -59,15 +53,8 @@ VA_SPEC_SCHEMA_MAPPING = {schema: VaSpecSchemaMapping() for schema in VaSpecSche
 # Get core + profiles classes
 for child in VA_SCHEMA_DIR.iterdir():
     child_str = str(child)
-    if child_str.endswith(VaSpecSchema.AAC_2017):
-        mapping_key = VaSpecSchema.AAC_2017
-    elif child_str.endswith(VaSpecSchema.ACMG_2015):
-        mapping_key = VaSpecSchema.ACMG_2015
-    elif child_str.endswith(VaSpecSchema.BASE):
-        mapping_key = VaSpecSchema.BASE
-    elif child_str.endswith(VaSpecSchema.CCV_2022):
-        mapping_key = VaSpecSchema.CCV_2022
-    else:
+    mapping_key = get_va_spec_schema(child_str)
+    if not mapping_key:
         continue
 
     mapping = VA_SPEC_SCHEMA_MAPPING[mapping_key]
