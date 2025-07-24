@@ -1,22 +1,25 @@
 """VA Spec Shared Domain Entity Data Structures"""
 
+from __future__ import annotations
+
 from ga4gh.core.models import BaseModelForbidExtra, Element, MappableConcept
 from ga4gh.va_spec.base.enums import MembershipOperator
 from pydantic import ConfigDict, Field, RootModel
 
 
 class ConditionSet(Element, BaseModelForbidExtra):
-    """A set of conditions (diseases, phenotypes, traits).
-    A set of two or more conditions that co-occur in the same patient/subject, or are
-    manifest individually in a different subset of participants in a research study.
+    """A set of conditions (diseases, phenotypes, traits) that occur together or are
+    related, depending on the membership operator, and may manifest together in the
+    same patient or individually in a different subset of participants in a research
+    study.
     """
 
     model_config = ConfigDict(use_enum_values=True)
 
-    conditions: list[MappableConcept] = Field(
+    conditions: list[MappableConcept | ConditionSet] = Field(
         ...,
         min_length=2,
-        description="A list of conditions (diseases, phenotypes, traits) that are co-occurring.",
+        description="A list of conditions (diseases, phenotypes, traits) that are co-occurring or related, depending on the membership operator.",
     )
     membershipOperator: MembershipOperator = Field(
         ...,
