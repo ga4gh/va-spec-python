@@ -14,7 +14,7 @@ the [GA4GH Variant Annotation Specification (VA-Spec)](https://github.com/ga4gh/
 ## Development
 
 [![action status](https://github.com/ga4gh/va-spec-python/actions/workflows/python-cqa.yaml/badge.svg)](https://github.com/ga4gh/va-spec-python/actions/workflows/python-cqa.yaml) [![issues](https://img.shields.io/github/issues-raw/ga4gh/va-spec-python.svg)](https://github.com/ga4gh/va-spec-python/issues)
-[![GitHub Open Pull Requests](https://img.shields.io/github/issues-pr/ga4gh/va-spec-python.svg)](https://github.com/ga4gh/va-spec-python/pull/) [![GitHub license](https://img.shields.io/github/contributors/ga4gh/va-spec-python.svg)](https://github.com/ga4gh/va-spec-python/graphs/contributors/) [![GitHub stars](https://img.shields.io/github/stars/ga4gh/va-spec-python.svg?style=social&label=Stars)](https://github.com/ga4gh/va-spec-python/stargazers) [![GitHub forks](https://img.shields.io/github/forks/ga4gh/va-spec-python.svg?style=social&label=Forks)](https://github.com/ga4gh/va-spec-python/network)
+[![GitHub Open Pull Requests](https://img.shields.io/github/issues-pr/ga4gh/va-spec-python.svg)](https://github.com/ga4gh/va-spec-python/pull/) [![GitHub license](https://img.shields.io/github/contributors/ga4gh/va-spec-python.svg)](https://github.com/ga4gh/va-spec-python/graphs/contributors/) [![GitHub stars](https://img.shields.io/github/stars/ga4gh/va-spec-python.svg?style=social&label=Stars)](https://github.com/ga4gh/va-spec-python/stargazers) [![GitHub forks](https://img.shields.io/github/forks/ga4gh/va-spec-python.svg?style=social&label=Forks)](https://github.com/ga4gh/va-spec-python/forks)
 
 ## Features
 
