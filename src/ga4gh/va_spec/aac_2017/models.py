@@ -94,7 +94,7 @@ class VariantDiagnosticStudyStatement(Statement, AmpAscoCapValidatorMixin):
         description="A proposition about a diagnostic association between a variant and condition, for which the study provides evidence. The validity of this proposition, and the level of confidence/evidence supporting it, may be assessed and reported by the Statement.",
     )
     strength: MappableConcept | None = Field(
-        None,
+        default=None,
         description="The strength of support that the Statement is determined to provide for or against the Diagnostic Proposition for the assessed variant, based on the curation and reporting conventions of the AMP/ASCO/CAP (AAC) 2017 Guidelines.",
     )
     classification: MappableConcept = Field(
@@ -118,7 +118,7 @@ class VariantPrognosticStudyStatement(Statement, AmpAscoCapValidatorMixin):
         description="A proposition about a prognostic association between a variant and condition, for which the study provides evidence. The validity of this proposition, and the level of confidence/evidence supporting it, may be assessed and reported by the Statement.",
     )
     strength: MappableConcept | None = Field(
-        None,
+        default=None,
         description="The strength of support that the Statement is determined to provide for or against the Prognostic Proposition for the assessed variant, based on the curation and reporting conventions of the AMP/ASCO/CAP (AAC) 2017 Guidelines.",
     )
     classification: MappableConcept = Field(
@@ -142,7 +142,7 @@ class VariantTherapeuticResponseStudyStatement(Statement, AmpAscoCapValidatorMix
         description="A proposition about the therapeutic response associated with a variant, for which the study provides evidence. The validity of this proposition, and the level of confidence/evidence supporting it, may be assessed and reported by the Statement.",
     )
     strength: MappableConcept | None = Field(
-        None,
+        default=None,
         description="The strength of support that the Statement is determined to provide for or against the Therapeutic Response Proposition for the assessed variant, based on the curation and reporting conventions of the AMP/ASCO/CAP (AAC) 2017 Guidelines.",
     )
     classification: MappableConcept = Field(

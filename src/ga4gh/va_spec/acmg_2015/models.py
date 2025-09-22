@@ -46,11 +46,11 @@ class VariantPathogenicityEvidenceLine(EvidenceLine):
     """
 
     targetProposition: VariantPathogenicityProposition | None = Field(
-        None,
+        default=None,
         description="A Variant Pathogenicity Proposition against which specific information was assessed, in determining the strength and direction of support this information provides as evidence.",
     )
     strengthOfEvidenceProvided: MappableConcept | None = Field(
-        None,
+        default=None,
         description="The strength of support that an Evidence Line is determined to provide for or against the proposed pathogenicity of the assessed variant. Strength is evaluated relative to the direction indicated by the 'directionOfEvidenceProvided' attribute. The indicated enumeration constrains the nested MappableConcept.primaryCoding > Coding.code attribute when capturing evidence strength. Conditional requirement: if directionOfEvidenceProvided is either 'supports' or 'disputes', then this attribute is required. If it is 'none', then this attribute is not allowed.",
     )
     specifiedBy: Method | iriReference = Field(
@@ -134,7 +134,7 @@ class VariantPathogenicityStatement(Statement):
         description="A proposition about the pathogenicity of a variant, the validity of which is assessed and reported by the Statement. A Statement can put forth the proposition as being true, false, or uncertain, and may provide an assessment of the level of confidence/evidence supporting this claim.",
     )
     strength: MappableConcept | None = Field(
-        None,
+        default=None,
         description="The strength of support that an ACMG 2015 Variant Pathogenicity statement is determined to provide for or against the proposed pathogenicity of the assessed variant. Strength is evaluated relative to the direction indicated by the 'direction' attribute. The indicated enumeration constrains the nested MappableConcept.primaryCoding > Coding.code attribute when capturing evidence strength.",
     )
     classification: MappableConcept = Field(
