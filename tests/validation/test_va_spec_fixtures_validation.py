@@ -1,9 +1,9 @@
 """Ensure that VA-Spec test fixtures validate against Pydantic models"""
 
 import yaml
-from ga4gh.va_spec import aac_2017, acmg_2015, base, ccv_2022
-
 from tests.conftest import SUBMODULES_DIR, VaSpecSchema, get_va_spec_schema
+
+from ga4gh.va_spec import aac_2017, acmg_2015, base, ccv_2022
 
 VA_SPEC_TESTS_DIR = SUBMODULES_DIR / "tests"
 
