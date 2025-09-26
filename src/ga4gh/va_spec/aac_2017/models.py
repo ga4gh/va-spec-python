@@ -6,6 +6,11 @@ sequence variants in cancer.
 
 from enum import Enum
 
+from pydantic import (
+    Field,
+    field_validator,
+)
+
 from ga4gh.core.models import MappableConcept, iriReference
 from ga4gh.va_spec.base.core import (
     Method,
@@ -16,10 +21,6 @@ from ga4gh.va_spec.base.core import (
 )
 from ga4gh.va_spec.base.enums import System
 from ga4gh.va_spec.base.validators import validate_mappable_concept
-from pydantic import (
-    Field,
-    field_validator,
-)
 
 
 class Strength(str, Enum):

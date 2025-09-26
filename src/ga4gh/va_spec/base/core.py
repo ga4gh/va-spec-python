@@ -9,6 +9,15 @@ from datetime import date, datetime
 from enum import Enum
 from typing import Annotated, Literal, TypeVar
 
+from pydantic import (
+    ConfigDict,
+    Field,
+    RootModel,
+    StringConstraints,
+    ValidationError,
+    field_validator,
+)
+
 from ga4gh.cat_vrs.models import CategoricalVariant
 from ga4gh.core.models import (
     BaseModelForbidExtra,
@@ -25,14 +34,6 @@ from ga4gh.va_spec.base.enums import (
 )
 from ga4gh.va_spec.base.validators import validate_mappable_concept
 from ga4gh.vrs.models import Allele, MolecularVariation
-from pydantic import (
-    ConfigDict,
-    Field,
-    RootModel,
-    StringConstraints,
-    ValidationError,
-    field_validator,
-)
 
 StatementType = TypeVar("StatementType")
 EvidenceLineType = TypeVar("EvidenceLineType")

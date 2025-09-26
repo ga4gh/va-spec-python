@@ -4,14 +4,14 @@ import json
 from pathlib import Path
 
 import pytest
-from ga4gh.va_spec import aac_2017, acmg_2015, base, ccv_2022
 from pydantic import BaseModel
-
 from tests.conftest import (
     SUBMODULES_DIR,
     VaSpecSchema,
     get_va_spec_schema,
 )
+
+from ga4gh.va_spec import aac_2017, acmg_2015, base, ccv_2022
 
 VA_SCHEMA_DIR = SUBMODULES_DIR / "schema" / "va-spec"
 

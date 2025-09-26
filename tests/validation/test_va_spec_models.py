@@ -5,6 +5,9 @@ from copy import deepcopy
 
 import pytest
 import yaml
+from pydantic import ValidationError
+from tests.conftest import SUBMODULES_DIR
+
 from ga4gh.core.models import Coding, MappableConcept, code, iriReference
 from ga4gh.va_spec import acmg_2015, base, ccv_2022
 from ga4gh.va_spec.aac_2017.models import VariantTherapeuticResponseStudyStatement
@@ -23,9 +26,6 @@ from ga4gh.va_spec.ccv_2022.models import (
     VariantOncogenicityEvidenceLine,
     VariantOncogenicityStudyStatement,
 )
-from pydantic import ValidationError
-
-from tests.conftest import SUBMODULES_DIR
 
 VA_SPEC_TESTS_DIR = SUBMODULES_DIR / "tests"
 VA_SPEC_TEST_FIXTURES = VA_SPEC_TESTS_DIR / "fixtures"
