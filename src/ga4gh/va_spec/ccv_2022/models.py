@@ -29,11 +29,11 @@ class VariantOncogenicityEvidenceLine(EvidenceLine):
     """
 
     targetProposition: VariantOncogenicityProposition | None = Field(
-        None,
+        default=None,
         description="A Variant Oncogenicity Proposition against which evidence information was assessed, in determining the strength and direction of support this information provides as evidence.",
     )
     strengthOfEvidenceProvided: MappableConcept | None = Field(
-        None,
+        default=None,
         description="The strength of support that an Evidence Line is determined to provide for or against the proposed pathogenicity of the assessed variant. Strength is evaluated relative to the direction indicated by the 'directionOfEvidenceProvided' attribute. The indicated enumeration constrains the nested MappableConcept.primaryCoding > Coding.code attribute when capturing evidence strength.",
     )
     specifiedBy: Method | iriReference = Field(
@@ -109,7 +109,7 @@ class VariantOncogenicityStudyStatement(Statement):
         description="A proposition about the oncogenicity of a variant, for which the study provides evidence. The validity of this proposition, and the level of confidence/evidence supporting it, may be assessed and reported by the Statement.",
     )
     strength: MappableConcept | None = Field(
-        None,
+        default=None,
         description="The strength of support that an CCV 2022 Oncogenicity statement is determined to provide for or against the proposed oncogenicity of the assessed variant. Strength is evaluated relative to the direction indicated by the 'direction' attribute. The indicated enumeration constrains the nested MappableConcept.primaryCoding > Coding.code attribute when capturing evidence strength.",
     )
     classification: MappableConcept = Field(

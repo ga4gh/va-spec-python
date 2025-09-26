@@ -59,18 +59,18 @@ class Contribution(Entity, BaseModelForbidExtra):
     """
 
     type: Literal["Contribution"] = Field(
-        CoreType.CONTRIBUTION.value,
+        default=CoreType.CONTRIBUTION.value,
         description=f"MUST be '{CoreType.CONTRIBUTION.value}'.",
     )
     contributor: Agent | None = Field(
-        None, description="The agent that made the contribution."
+        default=None, description="The agent that made the contribution."
     )
     activityType: str | None = Field(
-        None,
+        default=None,
         description="The specific type of activity performed or role played by an agent in making the contribution (e.g. for a publication, agents may contribute as a primary author, editor, figure designer, data generator, etc.). Values of this property may be framed as activities, or as contribution roles (e.g. using terms from the Contribution Role Ontology (CRO)).",
     )
     date: datetime | None = Field(
-        None, description="When the contributing activity was completed."
+        default=None, description="When the contributing activity was completed."
     )
 
 
@@ -80,30 +80,32 @@ class Document(Entity, BaseModelForbidExtra):
     """
 
     type: Literal["Document"] = Field(
-        CoreType.DOCUMENT.value, description=f"Must be '{CoreType.DOCUMENT.value}'"
+        default=CoreType.DOCUMENT.value,
+        description=f"Must be '{CoreType.DOCUMENT.value}'",
     )
     documentType: str | None = Field(
-        None,
+        default=None,
         description="A specific type of document that a Document instance represents (e.g.  'publication', 'patent', 'pathology report')",
     )
     title: str | None = Field(
-        None, description="The official title given to the document by its authors."
+        default=None,
+        description="The official title given to the document by its authors.",
     )
     urls: (
         list[Annotated[str, StringConstraints(pattern=r"^(https?|s?ftp)://")]] | None
     ) = Field(
-        None,
+        default=None,
         description="One or more URLs from which the content of the Document can be retrieved.",
     )
     doi: (
         Annotated[str, StringConstraints(pattern=r"^10\.(\d+)(\.\d+)*\/[\w\-\.]+")]
         | None
     ) = Field(
-        None,
+        default=None,
         description="A [Digital Object Identifier](https://www.doi.org/the-identifier/what-is-a-doi/) for the document.",
     )
     pmid: str | None = Field(
-        None,
+        default=None,
         description="A [PubMed unique identifier](https://en.wikipedia.org/wiki/PubMed#PubMed_identifier) for the document.",
     )
 
@@ -112,14 +114,14 @@ class Method(Entity, BaseModelForbidExtra):
     """A set of instructions that specify how to achieve some objective."""
 
     type: Literal["Method"] = Field(
-        CoreType.METHOD.value, description=f"MUST be '{CoreType.METHOD.value}'."
+        default=CoreType.METHOD.value, description=f"MUST be '{CoreType.METHOD.value}'."
     )
     methodType: str | None = Field(
-        None,
+        default=None,
         description="A specific type of method that a Method instance represents (e.g. 'Variant Interpretation Guideline', or 'Experimental Protocol').",
     )
     reportedIn: Document | iriReference | None = Field(
-        None, description="A document in which the the Method is reported."
+        default=None, description="A document in which the the Method is reported."
     )
 
 
@@ -130,15 +132,16 @@ class InformationEntity(Entity):
     """
 
     specifiedBy: Method | iriReference | None = Field(
-        None,
+        default=None,
         description="A specification that describes all or part of the process that led to creation of the Information Entity",
     )
     contributions: list[Contribution] | None = Field(
-        None,
+        default=None,
         description="Specific actions taken by an Agent toward the creation, modification, validation, or deprecation of an Information Entity.",
     )
     reportedIn: list[Document | iriReference] | None = Field(
-        None, description="A document in which the the Information Entity is reported."
+        default=None,
+        description="A document in which the the Information Entity is reported.",
     )
 
 
@@ -149,15 +152,15 @@ class _StudyResult(InformationEntity, ABC):
     """
 
     sourceDataSet: DataSet | None = Field(
-        None,
+        default=None,
         description="A larger DataSet from which the data included in the StudyResult was taken or derived.",
     )
     ancillaryResults: dict | None = Field(
-        None,
+        default=None,
         description="An object in which implementers can define custom fields to capture additional results derived from analysis of primary data items captured in standard attributes in the main body of the Study Result. e.g. in a Cohort Allele Frequency Study Result, this maybe a grpMaxFAF95 calculation, or homozygote/heterozygote calls derived from analyzing raw allele count data.",
     )
     qualityMeasures: dict | None = Field(
-        None,
+        default=None,
         description="An object in which implementers can define custom fields to capture metadata about the quality/provenance of the primary data items captured in standard attributes in the main body of the Study Result. e.g. a sequencing coverage metric in a Cohort Allele Frequency Study Result.",
     )
 
@@ -166,11 +169,11 @@ class CohortAlleleFrequencyStudyResult(_StudyResult, BaseModelForbidExtra):
     """A StudyResult that reports measures related to the frequency of an Allele in a cohort"""
 
     type: Literal["CohortAlleleFrequencyStudyResult"] = Field(
-        "CohortAlleleFrequencyStudyResult",
+        default="CohortAlleleFrequencyStudyResult",
         description="MUST be 'CohortAlleleFrequencyStudyResult'.",
     )
     sourceDataSet: DataSet | None = Field(
-        None,
+        default=None,
         description="The dataset from which the CohortAlleleFrequencyStudyResult was reported.",
     )
     focusAllele: Allele | iriReference = Field(
@@ -190,7 +193,7 @@ class CohortAlleleFrequencyStudyResult(_StudyResult, BaseModelForbidExtra):
         ..., description="The cohort from which the frequency was derived."
     )
     subCohortFrequency: list[CohortAlleleFrequencyStudyResult] | None = Field(
-        None,
+        default=None,
         description="A list of CohortAlleleFrequency objects describing subcohorts of the cohort currently being described. Subcohorts can be further subdivided into more subcohorts. This enables, for example, the description of different ancestry groups and sexes among those ancestry groups.",
     )
 
@@ -201,11 +204,11 @@ class TumorVariantFrequencyStudyResult(_StudyResult, BaseModelForbidExtra):
     """
 
     type: Literal["TumorVariantFrequencyStudyResult"] = Field(
-        "TumorVariantFrequencyStudyResult",
+        default="TumorVariantFrequencyStudyResult",
         description="MUST be 'TumorVariantFrequencyStudyResult'.",
     )
     sourceDataSet: DataSet | None = Field(
-        None,
+        default=None,
         description="The dataset from which data in the Tumor Variant Frequency Study Result was taken.",
     )
     focusVariant: Allele | CategoricalVariant | iriReference = Field(
@@ -225,11 +228,11 @@ class TumorVariantFrequencyStudyResult(_StudyResult, BaseModelForbidExtra):
         description="The frequency of tumor samples that include the focus variant in the sample group.",
     )
     sampleGroup: StudyGroup | None = Field(
-        None,
+        default=None,
         description="The set of samples about which the frequency data was generated.",
     )
     subGroupFrequency: list[TumorVariantFrequencyStudyResult] | None = Field(
-        None,
+        default=None,
         description="A list of Tumor Variant Frequency Study Result objects describing variant frequency in different subsets of larger sample group described in the root Study Result. Subgroups can be further subdivided into more subgroups. This enables, for example, further breakdown of frequency measures in sample groups with a narrower categorical variant than the root focus variant, or sample groups with a more specific tumor type.",
     )
 
@@ -240,7 +243,7 @@ class ExperimentalVariantFunctionalImpactStudyResult(
     """A StudyResult that reports a functional impact score from a variant functional assay or study."""
 
     type: Literal["ExperimentalVariantFunctionalImpactStudyResult"] = Field(
-        "ExperimentalVariantFunctionalImpactStudyResult",
+        default="ExperimentalVariantFunctionalImpactStudyResult",
         description="MUST be 'ExperimentalVariantFunctionalImpactStudyResult'.",
     )
     focusVariant: MolecularVariation | iriReference = Field(
@@ -248,15 +251,15 @@ class ExperimentalVariantFunctionalImpactStudyResult(
         description="The genetic variant for which a functional impact score is generated.",
     )
     functionalImpactScore: float | None = Field(
-        None,
+        default=None,
         description="The score of the variant impact measured in the assay or study.",
     )
     specifiedBy: Method | iriReference | None = Field(
-        None,
+        default=None,
         description="The assay that was performed to generate the reported functional impact score.",
     )
     sourceDataSet: DataSet | None = Field(
-        None,
+        default=None,
         description="The full data set that provided the reported the functional impact score.",
     )
 
@@ -322,11 +325,11 @@ class ClinicalVariantProposition(_SubjectVariantPropositionBase):
     """A proposition for use in describing the effect of variants in human subjects."""
 
     geneContextQualifier: MappableConcept | iriReference | None = Field(
-        None,
+        default=None,
         description="Reports a gene impacted by the variant, which may contribute to the association described in the Proposition.",
     )
     alleleOriginQualifier: MappableConcept | iriReference | None = Field(
-        None,
+        default=None,
         description="Reports whether the Proposition should be interpreted in the context of a heritable 'germline' variant, an acquired 'somatic' variant in a tumor,  post-zygotic 'mosaic' variant. While these are the most commonly reported allele origins, other more nuanced concepts can be captured  (e.g. 'maternal' vs 'paternal' allele origin'). In practice, populating this field may be complicated by the fact that some sources report allele origin based on the type of tissue that was sequenced to identify the variant, and others use it more generally to specify a category of variant for which the proposition holds. The stated intent of this attribute is the latter. However, if an implementer is not sure about which is reported in their data, it may be safer to create an Extension to hold this information, where they can explicitly acknowledge this ambiguity.",
     )
 
@@ -339,11 +342,11 @@ class ExperimentalVariantFunctionalImpactProposition(
     """
 
     type: Literal["ExperimentalVariantFunctionalImpactProposition"] = Field(
-        "ExperimentalVariantFunctionalImpactProposition",
+        default="ExperimentalVariantFunctionalImpactProposition",
         description="MUST be 'ExperimentalVariantFunctionalImpactProposition'.",
     )
     predicate: Literal["impactsFunctionOf"] = Field(
-        "impactsFunctionOf",
+        default="impactsFunctionOf",
         description="The relationship the Proposition describes between the subject variant and object sequence feature whose function it may alter. MUST be 'impactsFunctionOf'.",
     )
     objectSequenceFeature: iriReference | MappableConcept = Field(
@@ -351,7 +354,7 @@ class ExperimentalVariantFunctionalImpactProposition(
         description="The sequence feature (typically a gene or gene product) on whose function the impact of the subject variant is reported.",
     )
     experimentalContextQualifier: iriReference | Document | dict | None = Field(
-        None,
+        default=None,
         description="An assay in which the reported variant functional impact was determined - providing a specific experimental context in which this effect is asserted to hold.",
     )
 
@@ -364,7 +367,7 @@ class VariantDiagnosticProposition(ClinicalVariantProposition, BaseModelForbidEx
     model_config = ConfigDict(use_enum_values=True)
 
     type: Literal["VariantDiagnosticProposition"] = Field(
-        "VariantDiagnosticProposition",
+        default="VariantDiagnosticProposition",
         description="MUST be 'VariantDiagnosticProposition'.",
     )
     predicate: DiagnosticPredicate = Field(
@@ -380,11 +383,11 @@ class VariantOncogenicityProposition(ClinicalVariantProposition, BaseModelForbid
     """A proposition describing the role of a variant in causing a tumor type."""
 
     type: Literal["VariantOncogenicityProposition"] = Field(
-        "VariantOncogenicityProposition",
+        default="VariantOncogenicityProposition",
         description="MUST be 'VariantOncogenicityProposition'.",
     )
     predicate: Literal["isOncogenicFor"] = Field(
-        "isOncogenicFor",
+        default="isOncogenicFor",
         description="The relationship the Proposition describes between the subject variant and object tumor type. MUST be 'isOncogenicFor'.",
     )
     objectTumorType: Condition | iriReference = Field(
@@ -396,22 +399,22 @@ class VariantPathogenicityProposition(ClinicalVariantProposition, BaseModelForbi
     """A proposition describing the role of a variant in causing a heritable condition."""
 
     type: Literal["VariantPathogenicityProposition"] = Field(
-        "VariantPathogenicityProposition",
+        default="VariantPathogenicityProposition",
         description="Must be 'VariantPathogenicityProposition'",
     )
     predicate: Literal["isCausalFor"] = Field(
-        "isCausalFor",
+        default="isCausalFor",
         description="The relationship the Proposition describes between the subject variant and object condition. MUST be 'isCausalFor'.",
     )
     objectCondition: Condition | iriReference = Field(
         ..., description="The Condition for which the variant impact is stated."
     )
     penetranceQualifier: MappableConcept | None = Field(
-        None,
+        default=None,
         description="Reports the penetrance of the pathogenic effect - i.e. the extent to which the variant impact is expressed by individuals carrying it as a measure of the proportion of carriers exhibiting the condition.",
     )
     modeOfInheritanceQualifier: MappableConcept | None = Field(
-        None,
+        default=None,
         description="Reports a pattern of inheritance expected for the pathogenic effect of the variant. Consider using terms or codes from community terminologies here - e.g. terms from the 'Mode of inheritance' branch of the Human Phenotype Ontology such as HP:0000006 (autosomal dominant inheritance).",
     )
 
@@ -422,7 +425,7 @@ class VariantPrognosticProposition(ClinicalVariantProposition, BaseModelForbidEx
     model_config = ConfigDict(use_enum_values=True)
 
     type: Literal["VariantPrognosticProposition"] = Field(
-        "VariantPrognosticProposition",
+        default="VariantPrognosticProposition",
         description="MUST be 'VariantPrognosticProposition'.",
     )
     predicate: PrognosticPredicate = Field(
@@ -444,7 +447,7 @@ class VariantTherapeuticResponseProposition(
     model_config = ConfigDict(use_enum_values=True)
 
     type: Literal["VariantTherapeuticResponseProposition"] = Field(
-        "VariantTherapeuticResponseProposition",
+        default="VariantTherapeuticResponseProposition",
         description="MUST be 'VariantTherapeuticResponseProposition'.",
     )
     predicate: TherapeuticResponsePredicate = Field(
@@ -468,11 +471,11 @@ class Agent(Entity, BaseModelForbidExtra):
     """
 
     type: Literal["Agent"] = Field(
-        CoreType.AGENT.value, description=f"MUST be '{CoreType.AGENT.value}'."
+        default=CoreType.AGENT.value, description=f"MUST be '{CoreType.AGENT.value}'."
     )
-    name: str | None = Field(None, description="The given name of the Agent.")
+    name: str | None = Field(default=None, description="The given name of the Agent.")
     agentType: str | None = Field(
-        None,
+        default=None,
         description="A specific type of agent the Agent object represents. Recommended subtypes include codes for `person`, `organization`, or `software`.",
     )
 
@@ -493,24 +496,26 @@ class DataSet(Entity, BaseModelForbidExtra):
     """
 
     type: Literal["DataSet"] = Field(
-        CoreType.DATA_SET.value, description=f"MUST be '{CoreType.DATA_SET.value}'."
+        default=CoreType.DATA_SET.value,
+        description=f"MUST be '{CoreType.DATA_SET.value}'.",
     )
     datasetType: str | None = Field(
-        None,
+        default=None,
         description="A specific type of data set the DataSet instance represents (e.g. a 'clinical data set', a 'sequencing data set', a 'gene expression data set', a 'genome annotation data set')",
     )
     reportedIn: Document | iriReference | None = Field(
-        None, description="A document in which the the Method is reported."
+        default=None, description="A document in which the the Method is reported."
     )
     releaseDate: date | None = Field(
-        None,
+        default=None,
         description="Indicates the date a version of a DataSet was formally released.",
     )
     version: str | None = Field(
-        None, description="The version of the DataSet, as assigned by its creator."
+        default=None,
+        description="The version of the DataSet, as assigned by its creator.",
     )
     license: MappableConcept | None = Field(
-        None,
+        default=None,
         description="A specific license that dictates legal permissions for how a data set can be used (by whom, where, for what purposes, with what additional requirements, etc.)",
     )
 
@@ -525,17 +530,17 @@ class EvidenceLine(InformationEntity, BaseModelForbidExtra):
     model_config = ConfigDict(use_enum_values=True)
 
     type: Literal["EvidenceLine"] = Field(
-        CoreType.EVIDENCE_LINE.value,
+        default=CoreType.EVIDENCE_LINE.value,
         description=f"MUST be '{CoreType.EVIDENCE_LINE.value}'.",
     )
     targetProposition: Proposition | SubjectVariantProposition | None = Field(
-        None,
+        default=None,
         description="The possible fact against which evidence items contained in an Evidence Line were collectively evaluated, in determining the overall strength and direction of support they provide. For example, in an ACMG Guideline-based assessment of variant pathogenicity, the support provided by distinct lines of evidence are assessed against a target proposition that the variant is pathogenic for a specific disease.",
     )
     hasEvidenceItems: (
         list[StudyResult | StatementType | EvidenceLineType | iriReference] | None
     ) = Field(
-        None,
+        default=None,
         description="An individual piece of information that was evaluated as evidence in building the argument represented by an Evidence Line.",
     )
     directionOfEvidenceProvided: Direction = Field(
@@ -543,15 +548,15 @@ class EvidenceLine(InformationEntity, BaseModelForbidExtra):
         description="The direction of support that the Evidence Line is determined to provide toward its target Proposition (supports, disputes, neutral)",
     )
     strengthOfEvidenceProvided: MappableConcept | None = Field(
-        None,
+        default=None,
         description="The strength of support that an Evidence Line is determined to provide for or against its target Proposition, evaluated relative to the direction indicated by the directionOfEvidenceProvided value.",
     )
     scoreOfEvidenceProvided: float | None = Field(
-        None,
+        default=None,
         description="A quantitative score indicating the strength of support that an Evidence Line is determined to provide for or against its target Proposition, evaluated relative to the direction indicated by the directionOfEvidenceProvided value.",
     )
     evidenceOutcome: MappableConcept | None = Field(
-        None,
+        default=None,
         description="A term summarizing the overall outcome of the evidence assessment represented by the Evidence Line, in terms of the direction and strength of support it provides for or against the target Proposition.",
     )
 
@@ -700,7 +705,8 @@ class Statement(InformationEntity, BaseModelForbidExtra):
     model_config = ConfigDict(use_enum_values=True)
 
     type: Literal["Statement"] = Field(
-        CoreType.STATEMENT.value, description=f"MUST be '{CoreType.STATEMENT.value}'."
+        default=CoreType.STATEMENT.value,
+        description=f"MUST be '{CoreType.STATEMENT.value}'.",
     )
     proposition: (
         ExperimentalVariantFunctionalImpactProposition
@@ -719,19 +725,19 @@ class Statement(InformationEntity, BaseModelForbidExtra):
         description="A term indicating whether the Statement supports, disputes, or remains neutral w.r.t. the validity of the Proposition it evaluates.",
     )
     strength: MappableConcept | None = Field(
-        None,
+        default=None,
         description="A term used to report the strength of a Proposition's assessment in the direction indicated (i.e. how strongly supported or disputed the Proposition is believed to be).  Implementers may choose to frame a strength assessment in terms of how *confident* an agent is that the Proposition is true or false, or in terms of the *strength of all evidence* they believe supports or disputes it.",
     )
     score: float | None = Field(
-        None,
+        default=None,
         description="A quantitative score that indicates the strength of a Proposition's assessment in the direction indicated (i.e. how strongly supported or disputed the Proposition is believed to be). Depending on its implementation, a score may reflect how *confident* that agent is that the Proposition is true or false, or the *strength of evidence* they believe supports or disputes it. Instructions for how to interpret the meaning of a given score may be gleaned from the method or document referenced in 'specifiedBy' attribute.",
     )
     classification: MappableConcept | None = Field(
-        None,
+        default=None,
         description="A single term or phrase summarizing the outcome of direction and strength assessments of a Statement's Proposition, in terms of a classification of its subject.",
     )
     hasEvidenceLines: list[EvidenceLine | iriReference] | None = Field(
-        None,
+        default=None,
         description="An evidence-based argument that supports or disputes the validity of the proposition that a Statement assesses or puts forth as true. The strength and direction of this argument (whether it supports or disputes the proposition, and how strongly) is based on an interpretation of one or more pieces of information as evidence (i.e. 'Evidence Items).",
     )
 
@@ -744,13 +750,14 @@ class StudyGroup(Entity, BaseModelForbidExtra):
     """
 
     type: Literal["StudyGroup"] = Field(
-        CoreType.STUDY_GROUP.value,
+        default=CoreType.STUDY_GROUP.value,
         description=f"Must be '{CoreType.STUDY_GROUP.value}'",
     )
     memberCount: int | None = Field(
-        None, description="The total number of individual members in the StudyGroup."
+        default=None,
+        description="The total number of individual members in the StudyGroup.",
     )
     characteristics: list[MappableConcept] | None = Field(
-        None,
+        default=None,
         description="A feature or role shared by all members of the StudyGroup, representing a criterion for membership in the group.",
     )
