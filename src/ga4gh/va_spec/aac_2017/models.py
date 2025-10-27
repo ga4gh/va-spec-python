@@ -66,7 +66,7 @@ class AmpAscoCapConfig:
     strength: AsmpAscoCapStrengthCode | None
 
 
-CLASSIFICATION_POLICY_MAP = MappingProxyType(
+AMP_ASCO_CAP_CLASSIFICATION_MAP = MappingProxyType(
     {
         AmpAscoCapClassificationCode.TIER_1: AmpAscoCapConfig(
             name=AmpAscoCapClassificationName.TIER_1,
@@ -106,7 +106,7 @@ class _AmpAscoCapStatement(Statement, ABC):
             strength_code: MappableConcept | None,
         ) -> None:
             """Validate that classificati"""
-            expected_config = CLASSIFICATION_POLICY_MAP[classification_code]
+            expected_config = AMP_ASCO_CAP_CLASSIFICATION_MAP[classification_code]
             actual_strength = (
                 strength_code.primaryCoding.code.root
                 if strength_code
