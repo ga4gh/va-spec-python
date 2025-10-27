@@ -3,6 +3,7 @@
 from .models import (
     AMP_ASCO_CAP_STRENGTHS,
     AMP_ASCO_CAP_TIERS,
+    CLASSIFICATION_POLICY_MAP,
     Classification,
     Strength,
     VariantDiagnosticStatement,
@@ -13,6 +14,7 @@ from .models import (
 __all__ = [
     "AMP_ASCO_CAP_STRENGTHS",
     "AMP_ASCO_CAP_TIERS",
+    "CLASSIFICATION_POLICY_MAP",
     "Classification",
     "Strength",
     "VariantDiagnosticStatement",
