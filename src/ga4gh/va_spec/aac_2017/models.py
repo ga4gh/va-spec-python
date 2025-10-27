@@ -6,6 +6,7 @@ sequence variants in cancer.
 
 from abc import ABC
 from enum import Enum
+from types import MappingProxyType
 from typing import Self
 
 from pydantic import Field, model_validator
@@ -66,24 +67,26 @@ class AmpAscoCapConfig:
     strength: Strength | None
 
 
-CLASSIFICATION_POLICY_MAP = {
-    Classification.TIER_1: AmpAscoCapConfig(
-        name=ClassificationName.TIER_1,
-        direction=Direction.SUPPORTS,
-        strength=Strength.STRONG,
-    ),
-    Classification.TIER_2: AmpAscoCapConfig(
-        name=ClassificationName.TIER_2,
-        direction=Direction.SUPPORTS,
-        strength=Strength.POTENTIAL,
-    ),
-    Classification.TIER_3: AmpAscoCapConfig(
-        name=ClassificationName.TIER_3, direction=Direction.NEUTRAL, strength=None
-    ),
-    Classification.TIER_4: AmpAscoCapConfig(
-        name=ClassificationName.TIER_4, direction=Direction.DISPUTES, strength=None
-    ),
-}
+CLASSIFICATION_POLICY_MAP = MappingProxyType(
+    {
+        Classification.TIER_1: AmpAscoCapConfig(
+            name=ClassificationName.TIER_1,
+            direction=Direction.SUPPORTS,
+            strength=Strength.STRONG,
+        ),
+        Classification.TIER_2: AmpAscoCapConfig(
+            name=ClassificationName.TIER_2,
+            direction=Direction.SUPPORTS,
+            strength=Strength.POTENTIAL,
+        ),
+        Classification.TIER_3: AmpAscoCapConfig(
+            name=ClassificationName.TIER_3, direction=Direction.NEUTRAL, strength=None
+        ),
+        Classification.TIER_4: AmpAscoCapConfig(
+            name=ClassificationName.TIER_4, direction=Direction.DISPUTES, strength=None
+        ),
+    }
+)
 
 
 class _AmpAscoCapStatement(Statement, ABC):
@@ -97,11 +100,16 @@ class _AmpAscoCapStatement(Statement, ABC):
             classification_code: Classification,
             classification_name: str,
             direction: str,
-            strength_code: str | None,
+            strength_code: MappableConcept | None,
         ) -> None:
             """Validate that classificati"""
             expected_config = CLASSIFICATION_POLICY_MAP[classification_code]
-            if strength_code != expected_config.strength:
+            actual_strength = (
+                strength_code.primaryCoding.code.root
+                if strength_code
+                else strength_code
+            )
+            if actual_strength != expected_config.strength:
                 expected_strength = (
                     expected_config.strength.value
                     if expected_config.strength
@@ -136,7 +144,7 @@ class _AmpAscoCapStatement(Statement, ABC):
             Classification(self.classification.primaryCoding.code.root),
             self.classification.name,
             self.direction,
-            self.strength.primaryCoding.code.root,
+            self.strength,
         )
 
         # Validate hasEvidenceLines
