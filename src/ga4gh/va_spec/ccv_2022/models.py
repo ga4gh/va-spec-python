@@ -16,8 +16,8 @@ from ga4gh.va_spec.base.core import (
 )
 from ga4gh.va_spec.base.enums import (
     CCV_CLASSIFICATIONS,
+    STRENGTH_CODES,
     STRENGTH_OF_EVIDENCE_PROVIDED_VALUES,
-    STRENGTHS,
     System,
 )
 from ga4gh.va_spec.base.validators import validate_mappable_concept
@@ -130,7 +130,7 @@ class VariantOncogenicityStatement(Statement):
         :return: Validated strength value
         """
         return validate_mappable_concept(
-            v, System.CCV, valid_codes=STRENGTHS, mc_is_required=False
+            v, System.CCV, valid_codes=STRENGTH_CODES, mc_is_required=False
         )
 
     @field_validator("classification")

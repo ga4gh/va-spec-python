@@ -52,14 +52,17 @@ STRENGTH_OF_EVIDENCE_PROVIDED_VALUES = [
 ]
 
 
-class Strength(str, Enum):
-    """Define constrains for strength"""
+class StrengthCode(str, Enum):
+    """Define constrains for strength
+
+    Used in ACMG 2015 and CCV 2022
+    """
 
     DEFINITIVE = "definitive"
     LIKELY = "likely"
 
 
-STRENGTHS = [v.value for v in Strength.__members__.values()]
+STRENGTH_CODES = [v.value for v in StrengthCode.__members__.values()]
 
 
 class ClinGenClassification(str, Enum):

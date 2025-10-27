@@ -27,17 +27,14 @@ from ga4gh.va_spec.base.enums import System
 from ga4gh.va_spec.base.validators import validate_mappable_concept
 
 
-class Strength(str, Enum):
+class AsmpAscoCapStrengthCode(str, Enum):
     """Define constraints for AMP/ASCO/CAP strength coding"""
 
     STRONG = "strong"
     POTENTIAL = "potential"
 
 
-AMP_ASCO_CAP_STRENGTHS = [v.value for v in Strength.__members__.values()]
-
-
-class Classification(str, Enum):
+class AmpAscoCapClassificationCode(str, Enum):
     """Define constraints for AMP/ASCO/CAP classification coding"""
 
     TIER_1 = "tier 1"
@@ -46,10 +43,12 @@ class Classification(str, Enum):
     TIER_4 = "tier 4"
 
 
-AMP_ASCO_CAP_TIERS = [v.value for v in Classification.__members__.values()]
+AMP_ASCO_CAP_CLASSIFICATION_CODES = [
+    v.value for v in AmpAscoCapClassificationCode.__members__.values()
+]
 
 
-class ClassificationName(str, Enum):
+class AmpAscoCapClassificationName(str, Enum):
     """Define constraints for AMP/ASCO/CAP classification name"""
 
     TIER_1 = "Tier I"
@@ -62,28 +61,32 @@ class ClassificationName(str, Enum):
 class AmpAscoCapConfig:
     """AMP/ASCO/CAP config for expected values"""
 
-    name: ClassificationName
+    name: AmpAscoCapClassificationName
     direction: Direction
-    strength: Strength | None
+    strength: AsmpAscoCapStrengthCode | None
 
 
 CLASSIFICATION_POLICY_MAP = MappingProxyType(
     {
-        Classification.TIER_1: AmpAscoCapConfig(
-            name=ClassificationName.TIER_1,
+        AmpAscoCapClassificationCode.TIER_1: AmpAscoCapConfig(
+            name=AmpAscoCapClassificationName.TIER_1,
             direction=Direction.SUPPORTS,
-            strength=Strength.STRONG,
+            strength=AsmpAscoCapStrengthCode.STRONG,
         ),
-        Classification.TIER_2: AmpAscoCapConfig(
-            name=ClassificationName.TIER_2,
+        AmpAscoCapClassificationCode.TIER_2: AmpAscoCapConfig(
+            name=AmpAscoCapClassificationName.TIER_2,
             direction=Direction.SUPPORTS,
-            strength=Strength.POTENTIAL,
+            strength=AsmpAscoCapStrengthCode.POTENTIAL,
         ),
-        Classification.TIER_3: AmpAscoCapConfig(
-            name=ClassificationName.TIER_3, direction=Direction.NEUTRAL, strength=None
+        AmpAscoCapClassificationCode.TIER_3: AmpAscoCapConfig(
+            name=AmpAscoCapClassificationName.TIER_3,
+            direction=Direction.NEUTRAL,
+            strength=None,
         ),
-        Classification.TIER_4: AmpAscoCapConfig(
-            name=ClassificationName.TIER_4, direction=Direction.DISPUTES, strength=None
+        AmpAscoCapClassificationCode.TIER_4: AmpAscoCapConfig(
+            name=AmpAscoCapClassificationName.TIER_4,
+            direction=Direction.DISPUTES,
+            strength=None,
         ),
     }
 )
@@ -97,7 +100,7 @@ class _AmpAscoCapStatement(Statement, ABC):
         """Validate AMP/ASCO/CAP statements"""
 
         def _validate_classification_config(
-            classification_code: Classification,
+            classification_code: AmpAscoCapClassificationCode,
             classification_name: str,
             direction: str,
             strength_code: MappableConcept | None,
@@ -137,11 +140,11 @@ class _AmpAscoCapStatement(Statement, ABC):
         validate_mappable_concept(
             self.classification,
             System.AMP_ASCO_CAP,
-            valid_codes=AMP_ASCO_CAP_TIERS,
+            valid_codes=AMP_ASCO_CAP_CLASSIFICATION_CODES,
             mc_is_required=True,
         )
         _validate_classification_config(
-            Classification(self.classification.primaryCoding.code.root),
+            AmpAscoCapClassificationCode(self.classification.primaryCoding.code.root),
             self.classification.name,
             self.direction,
             self.strength,
