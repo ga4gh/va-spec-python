@@ -7,10 +7,10 @@ sequence variants in cancer.
 from abc import ABC
 from enum import Enum
 from types import MappingProxyType
-from typing import Self
 
 from pydantic import Field, model_validator
 from pydantic.dataclasses import dataclass
+from typing_extensions import Self
 
 from ga4gh.core.models import MappableConcept, iriReference
 from ga4gh.va_spec.base.core import (
