@@ -2,10 +2,10 @@
 
 from .models import (
     VariantOncogenicityEvidenceLine,
-    VariantOncogenicityStudyStatement,
+    VariantOncogenicityStatement,
 )
 
 __all__ = [
     "VariantOncogenicityEvidenceLine",
-    "VariantOncogenicityStudyStatement",
+    "VariantOncogenicityStatement",
 ]

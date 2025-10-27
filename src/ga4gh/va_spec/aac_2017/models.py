@@ -4,17 +4,20 @@ American Pathologists (CAP) 2017 guidelines for the interpretation and reporting
 sequence variants in cancer.
 """
 
+from abc import ABC
 from enum import Enum
+from typing import Self
 
-from pydantic import (
-    Field,
-    field_validator,
-)
+from pydantic import Field, model_validator
+from pydantic.dataclasses import dataclass
 
 from ga4gh.core.models import MappableConcept, iriReference
 from ga4gh.va_spec.base.core import (
+    Direction,
+    EvidenceLine,
     Method,
     Statement,
+    VariantClinicalSignificanceProposition,
     VariantDiagnosticProposition,
     VariantPrognosticProposition,
     VariantTherapeuticResponseProposition,
@@ -26,71 +29,140 @@ from ga4gh.va_spec.base.validators import validate_mappable_concept
 class Strength(str, Enum):
     """Define constraints for AMP/ASCO/CAP strength coding"""
 
-    LEVEL_A = "Level A"
-    LEVEL_B = "Level B"
-    LEVEL_C = "Level C"
-    LEVEL_D = "Level D"
+    STRONG = "strong"
+    POTENTIAL = "potential"
 
 
-AMP_ASCO_CAP_LEVELS = [v.value for v in Strength.__members__.values()]
+AMP_ASCO_CAP_STRENGTHS = [v.value for v in Strength.__members__.values()]
 
 
 class Classification(str, Enum):
     """Define constraints for AMP/ASCO/CAP classification coding"""
 
-    TIER_I = "Tier I"
-    TIER_II = "Tier II"
-    TIER_III = "Tier III"
-    TIER_IV = "Tier IV"
+    TIER_1 = "tier 1"
+    TIER_2 = "tier 2"
+    TIER_3 = "tier 3"
+    TIER_4 = "tier 4"
 
 
 AMP_ASCO_CAP_TIERS = [v.value for v in Classification.__members__.values()]
 
 
-class AmpAscoCapValidatorMixin:
-    """Mixin class for reusable AMP/ASCO/CAP field validators
+class ClassificationName(str, Enum):
+    """Define constraints for AMP/ASCO/CAP classification name"""
 
-    Should be used with classes that inherit from Statement
-    """
+    TIER_1 = "Tier I"
+    TIER_2 = "Tier II"
+    TIER_3 = "Tier III"
+    TIER_4 = "Tier IV"
 
-    @field_validator("strength")
-    @classmethod
-    def validate_strength(cls, v: MappableConcept | None) -> MappableConcept | None:
-        """Validate strength
 
-        :param v: Strength
-        :raises ValueError: If invalid strength values are provided
-        :return: Validated strength value
-        """
-        return validate_mappable_concept(
-            v,
+@dataclass
+class AmpAscoCapConfig:
+    """AMP/ASCO/CAP config for expected values"""
+
+    name: ClassificationName
+    direction: Direction
+    strength: Strength | None
+
+
+CLASSIFICATION_POLICY_MAP = {
+    Classification.TIER_1: AmpAscoCapConfig(
+        name=ClassificationName.TIER_1,
+        direction=Direction.SUPPORTS,
+        strength=Strength.STRONG,
+    ),
+    Classification.TIER_2: AmpAscoCapConfig(
+        name=ClassificationName.TIER_2,
+        direction=Direction.SUPPORTS,
+        strength=Strength.POTENTIAL,
+    ),
+    Classification.TIER_3: AmpAscoCapConfig(
+        name=ClassificationName.TIER_3, direction=Direction.NEUTRAL, strength=None
+    ),
+    Classification.TIER_4: AmpAscoCapConfig(
+        name=ClassificationName.TIER_4, direction=Direction.DISPUTES, strength=None
+    ),
+}
+
+
+class _AmpAscoCapStatement(Statement, ABC):
+    """Abstract base class for AAC 2017 statements"""
+
+    @model_validator(mode="after")
+    def validate_aac_statement(self) -> Self:
+        """Validate AMP/ASCO/CAP statements"""
+
+        def _validate_classification_config(
+            classification_code: Classification,
+            classification_name: str,
+            direction: str,
+            strength_code: str | None,
+        ) -> None:
+            """Validate that classificati"""
+            expected_config = CLASSIFICATION_POLICY_MAP[classification_code]
+            if strength_code != expected_config.strength:
+                expected_strength = (
+                    expected_config.strength.value
+                    if expected_config.strength
+                    else expected_config.strength
+                )
+                msg = f"`strength` must be: {expected_strength}"
+                raise ValueError(msg)
+
+            if classification_name != expected_config.name:
+                msg = f"`classification.name` must be: {expected_config.name.value}"
+                raise ValueError(msg)
+
+            if direction != expected_config.direction:
+                msg = f"`direction` must be: {expected_config.direction.value}"
+                raise ValueError(msg)
+
+        # Validate strength
+        validate_mappable_concept(
+            self.strength,
             System.AMP_ASCO_CAP,
-            valid_codes=AMP_ASCO_CAP_LEVELS,
             mc_is_required=False,
         )
 
-    @field_validator("classification")
-    @classmethod
-    def validate_classification(cls, v: MappableConcept) -> MappableConcept:
-        """Validate classification
-
-        :param v: Classification
-        :raises ValueError: If invalid classification values are provided
-        :return: Validated classification value
-        """
-        return validate_mappable_concept(
-            v, System.AMP_ASCO_CAP, valid_codes=AMP_ASCO_CAP_TIERS
+        # Validate classification
+        validate_mappable_concept(
+            self.classification,
+            System.AMP_ASCO_CAP,
+            valid_codes=AMP_ASCO_CAP_TIERS,
+            mc_is_required=True,
+        )
+        _validate_classification_config(
+            Classification(self.classification.primaryCoding.code.root),
+            self.classification.name,
+            self.direction,
+            self.strength.primaryCoding.code.root,
         )
 
+        # Validate hasEvidenceLines
+        for evidence_line in self.hasEvidenceLines or []:
+            if isinstance(evidence_line, EvidenceLine):
+                target_proposition = evidence_line.targetProposition
+                if target_proposition and not isinstance(
+                    target_proposition,
+                    VariantDiagnosticProposition
+                    | VariantPrognosticProposition
+                    | VariantTherapeuticResponseProposition,
+                ):
+                    msg = "`targetProposition` must be one of: `VariantDiagnosticProposition`, `VariantPrognosticProposition`, `VariantTherapeuticResponseProposition`"
+                    raise ValueError(msg)
 
-class VariantDiagnosticStudyStatement(Statement, AmpAscoCapValidatorMixin):
+        return self
+
+
+class VariantDiagnosticStatement(_AmpAscoCapStatement):
     """A statement reporting a conclusion from a single study about whether a variant is
     associated with a disease (a diagnostic inclusion criterion), or absence of a
     disease (diagnostic exclusion criterion) - based on interpretation of the study's
     results.
     """
 
-    proposition: VariantDiagnosticProposition = Field(
+    proposition: VariantClinicalSignificanceProposition = Field(
         ...,
         description="A proposition about a diagnostic association between a variant and condition, for which the study provides evidence. The validity of this proposition, and the level of confidence/evidence supporting it, may be assessed and reported by the Statement.",
     )
@@ -108,13 +180,13 @@ class VariantDiagnosticStudyStatement(Statement, AmpAscoCapValidatorMixin):
     )
 
 
-class VariantPrognosticStudyStatement(Statement, AmpAscoCapValidatorMixin):
+class VariantPrognosticStatement(_AmpAscoCapStatement):
     """A statement reporting a conclusion from a single study about whether a variant is
     associated with a disease prognosis - based on interpretation of the study's
     results.
     """
 
-    proposition: VariantPrognosticProposition = Field(
+    proposition: VariantClinicalSignificanceProposition = Field(
         ...,
         description="A proposition about a prognostic association between a variant and condition, for which the study provides evidence. The validity of this proposition, and the level of confidence/evidence supporting it, may be assessed and reported by the Statement.",
     )
@@ -132,13 +204,13 @@ class VariantPrognosticStudyStatement(Statement, AmpAscoCapValidatorMixin):
     )
 
 
-class VariantTherapeuticResponseStudyStatement(Statement, AmpAscoCapValidatorMixin):
+class VariantTherapeuticResponseStatement(_AmpAscoCapStatement):
     """A statement reporting a conclusion from a single study about whether a variant is
     associated with a therapeutic response (positive or negative) - based on
     interpretation of the study's results.
     """
 
-    proposition: VariantTherapeuticResponseProposition = Field(
+    proposition: VariantClinicalSignificanceProposition = Field(
         ...,
         description="A proposition about the therapeutic response associated with a variant, for which the study provides evidence. The validity of this proposition, and the level of confidence/evidence supporting it, may be assessed and reported by the Statement.",
     )

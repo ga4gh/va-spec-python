@@ -2,19 +2,16 @@
 
 from __future__ import annotations
 
-import importlib
-import inspect
 from abc import ABC
 from datetime import date, datetime
 from enum import Enum
-from typing import Annotated, Literal, TypeVar
+from typing import Annotated, Literal
 
 from pydantic import (
     ConfigDict,
     Field,
     RootModel,
     StringConstraints,
-    ValidationError,
     field_validator,
 )
 
@@ -35,9 +32,6 @@ from ga4gh.va_spec.base.enums import (
 from ga4gh.va_spec.base.validators import validate_mappable_concept
 from ga4gh.vrs.models import Allele, MolecularVariation
 
-StatementType = TypeVar("StatementType")
-EvidenceLineType = TypeVar("EvidenceLineType")
-
 
 class CoreType(str, Enum):
     """Define VA Spec Base Core Types"""
@@ -50,6 +44,22 @@ class CoreType(str, Enum):
     EVIDENCE_LINE = "EvidenceLine"
     DATA_SET = "DataSet"
     STUDY_GROUP = "StudyGroup"
+
+
+class Agent(Entity, BaseModelForbidExtra):
+    """An autonomous actor (person, organization, or software agent) that bears some
+    form of responsibility for an activity taking place, for the existence of an entity,
+    or for another agent's activity.
+    """
+
+    type: Literal["Agent"] = Field(
+        default=CoreType.AGENT.value, description=f"MUST be '{CoreType.AGENT.value}'."
+    )
+    name: str | None = Field(default=None, description="The given name of the Agent.")
+    agentType: str | None = Field(
+        default=None,
+        description="A specific type of agent the Agent object represents. Recommended subtypes include codes for `person`, `organization`, or `software`.",
+    )
 
 
 class Contribution(Entity, BaseModelForbidExtra):
@@ -142,6 +152,57 @@ class InformationEntity(Entity):
     reportedIn: list[Document | iriReference] | None = Field(
         default=None,
         description="A document in which the the Information Entity is reported.",
+    )
+
+
+class StudyGroup(Entity, BaseModelForbidExtra):
+    """A collection of individuals or specimens from the same taxonomic class, selected
+    for analysis in a scientific study based on their exhibiting one or more common
+    characteristics  (e.g. species, race, age, gender, disease state, income). May be
+    referred to as a 'cohort' or 'population' in specific research settings.
+    """
+
+    type: Literal["StudyGroup"] = Field(
+        default=CoreType.STUDY_GROUP.value,
+        description=f"Must be '{CoreType.STUDY_GROUP.value}'",
+    )
+    memberCount: int | None = Field(
+        default=None,
+        description="The total number of individual members in the StudyGroup.",
+    )
+    characteristics: list[MappableConcept] | None = Field(
+        default=None,
+        description="A feature or role shared by all members of the StudyGroup, representing a criterion for membership in the group.",
+    )
+
+
+class DataSet(Entity, BaseModelForbidExtra):
+    """A collection of related data items or records that are organized together in a
+    common format or structure, to enable their computational manipulation as a unit.
+    """
+
+    type: Literal["DataSet"] = Field(
+        default=CoreType.DATA_SET.value,
+        description=f"MUST be '{CoreType.DATA_SET.value}'.",
+    )
+    datasetType: str | None = Field(
+        default=None,
+        description="A specific type of data set the DataSet instance represents (e.g. a 'clinical data set', a 'sequencing data set', a 'gene expression data set', a 'genome annotation data set')",
+    )
+    reportedIn: Document | iriReference | None = Field(
+        default=None, description="A document in which the the Method is reported."
+    )
+    releaseDate: date | None = Field(
+        default=None,
+        description="Indicates the date a version of a DataSet was formally released.",
+    )
+    version: str | None = Field(
+        default=None,
+        description="The version of the DataSet, as assigned by its creator.",
+    )
+    license: MappableConcept | None = Field(
+        default=None,
+        description="A specific license that dictates legal permissions for how a data set can be used (by whom, where, for what purposes, with what additional requirements, etc.)",
     )
 
 
@@ -312,6 +373,7 @@ class SubjectVariantProposition(RootModel):
         | VariantPrognosticProposition
         | VariantOncogenicityProposition
         | VariantTherapeuticResponseProposition
+        | VariantTherapeuticResponseProposition
     ) = Field(discriminator="type")
 
 
@@ -356,6 +418,27 @@ class ExperimentalVariantFunctionalImpactProposition(
     experimentalContextQualifier: iriReference | Document | dict | None = Field(
         default=None,
         description="An assay in which the reported variant functional impact was determined - providing a specific experimental context in which this effect is asserted to hold.",
+    )
+
+
+class VariantClinicalSignificanceProposition(
+    ClinicalVariantProposition, BaseModelForbidExtra
+):
+    """A Proposition describing the clinical significance of a variant with respect to a
+    condition.
+    """
+
+    model_config = ConfigDict(use_enum_values=True)
+    type: Literal["VariantClinicalSignificanceProposition"] = Field(
+        default="VariantClinicalSignificanceProposition",
+        description="MUST be 'VariantClinicalSignificanceProposition'.",
+    )
+    predicate: Literal["hasClinicalSignificanceFor"] = Field(
+        default="hasClinicalSignificanceFor",
+        description="The predicate associating the subject variant to clinical significance for the object Condition. MUST be 'hasClinicalSignificanceFor'.",
+    )
+    objectCondition: Condition | iriReference = Field(
+        ..., description="The disease that is evaluated."
     )
 
 
@@ -464,22 +547,6 @@ class VariantTherapeuticResponseProposition(
     )
 
 
-class Agent(Entity, BaseModelForbidExtra):
-    """An autonomous actor (person, organization, or software agent) that bears some
-    form of responsibility for an activity taking place, for the existence of an entity,
-    or for another agent's activity.
-    """
-
-    type: Literal["Agent"] = Field(
-        default=CoreType.AGENT.value, description=f"MUST be '{CoreType.AGENT.value}'."
-    )
-    name: str | None = Field(default=None, description="The given name of the Agent.")
-    agentType: str | None = Field(
-        default=None,
-        description="A specific type of agent the Agent object represents. Recommended subtypes include codes for `person`, `organization`, or `software`.",
-    )
-
-
 class Direction(str, Enum):
     """A term indicating whether the Statement supports, disputes, or remains neutral
     w.r.t. the validity of the Proposition it evaluates.
@@ -488,36 +555,6 @@ class Direction(str, Enum):
     SUPPORTS = "supports"
     NEUTRAL = "neutral"
     DISPUTES = "disputes"
-
-
-class DataSet(Entity, BaseModelForbidExtra):
-    """A collection of related data items or records that are organized together in a
-    common format or structure, to enable their computational manipulation as a unit.
-    """
-
-    type: Literal["DataSet"] = Field(
-        default=CoreType.DATA_SET.value,
-        description=f"MUST be '{CoreType.DATA_SET.value}'.",
-    )
-    datasetType: str | None = Field(
-        default=None,
-        description="A specific type of data set the DataSet instance represents (e.g. a 'clinical data set', a 'sequencing data set', a 'gene expression data set', a 'genome annotation data set')",
-    )
-    reportedIn: Document | iriReference | None = Field(
-        default=None, description="A document in which the the Method is reported."
-    )
-    releaseDate: date | None = Field(
-        default=None,
-        description="Indicates the date a version of a DataSet was formally released.",
-    )
-    version: str | None = Field(
-        default=None,
-        description="The version of the DataSet, as assigned by its creator.",
-    )
-    license: MappableConcept | None = Field(
-        default=None,
-        description="A specific license that dictates legal permissions for how a data set can be used (by whom, where, for what purposes, with what additional requirements, etc.)",
-    )
 
 
 class EvidenceLine(InformationEntity, BaseModelForbidExtra):
@@ -533,12 +570,21 @@ class EvidenceLine(InformationEntity, BaseModelForbidExtra):
         default=CoreType.EVIDENCE_LINE.value,
         description=f"MUST be '{CoreType.EVIDENCE_LINE.value}'.",
     )
-    targetProposition: Proposition | SubjectVariantProposition | None = Field(
+    targetProposition: (
+        ExperimentalVariantFunctionalImpactProposition
+        | VariantClinicalSignificanceProposition
+        | VariantDiagnosticProposition
+        | VariantOncogenicityProposition
+        | VariantPathogenicityProposition
+        | VariantPrognosticProposition
+        | VariantTherapeuticResponseProposition
+        | None
+    ) = Field(
         default=None,
         description="The possible fact against which evidence items contained in an Evidence Line were collectively evaluated, in determining the overall strength and direction of support they provide. For example, in an ACMG Guideline-based assessment of variant pathogenicity, the support provided by distinct lines of evidence are assessed against a target proposition that the variant is pathogenic for a specific disease.",
     )
     hasEvidenceItems: (
-        list[StudyResult | StatementType | EvidenceLineType | iriReference] | None
+        list[StudyResult | Statement | EvidenceLine | iriReference] | None
     ) = Field(
         default=None,
         description="An individual piece of information that was evaluated as evidence in building the argument represented by an Evidence Line.",
@@ -559,73 +605,6 @@ class EvidenceLine(InformationEntity, BaseModelForbidExtra):
         default=None,
         description="A term summarizing the overall outcome of the evidence assessment represented by the Evidence Line, in terms of the direction and strength of support it provides for or against the target Proposition.",
     )
-
-    @field_validator("hasEvidenceItems", mode="before")
-    def validate_has_evidence_items(
-        cls,  # noqa: N805
-        v: list | None,
-    ) -> list | None:
-        """Ensure hasEvidenceItems is correct type
-
-        This is needed since Pydantic was unable to determine which model to use
-
-        This only handles cases defined in the VA-Spec.
-
-        :param v: hasEvidenceItems value
-        :raises ValueError: If unable to find valid model for evidence items
-        :return: Evidence items
-        """
-        if not v:
-            return v
-
-        evidence_items = []
-
-        # Avoid circular imports
-        has_evidence_items_models = []
-        for module in [
-            "ga4gh.va_spec.aac_2017.models",
-            "ga4gh.va_spec.acmg_2015.models",
-            "ga4gh.va_spec.ccv_2022.models",
-        ]:
-            imported_module = importlib.import_module(module)
-            has_evidence_items_models.extend(
-                [
-                    obj_
-                    for _, obj_ in vars(imported_module).items()
-                    if inspect.isclass(obj_)
-                    and issubclass(obj_, Statement)
-                    and obj_.__name__.endswith(("Statement", "EvidenceLine"))
-                    and obj_ not in (Statement, EvidenceLine)
-                ]
-            )
-
-        has_evidence_items_models.extend(
-            [Statement, StudyResult, EvidenceLine, iriReference]
-        )
-
-        for evidence_item in v:
-            if isinstance(evidence_item, dict):
-                found_model = False
-                for evidence_item_model in has_evidence_items_models:
-                    try:
-                        evidence_item = evidence_item_model(**evidence_item)
-                    except ValidationError:
-                        pass
-                    else:
-                        evidence_items.append(evidence_item)
-                        found_model = True
-                        break
-                if not found_model:
-                    err_msg = "Unable to find valid model for `hasEvidenceItems`"
-                    raise ValueError(err_msg)
-            elif isinstance(evidence_item, str):
-                evidence_items.append(iriReference(root=evidence_item))
-            elif isinstance(evidence_item, tuple(has_evidence_items_models)):
-                evidence_items.append(evidence_item)
-            else:
-                err_msg = "Unable to find valid model for `hasEvidenceItems`"
-                raise ValueError(err_msg)
-        return evidence_items
 
     @staticmethod
     def _validate_evidence_outcome(
@@ -742,22 +721,5 @@ class Statement(InformationEntity, BaseModelForbidExtra):
     )
 
 
-class StudyGroup(Entity, BaseModelForbidExtra):
-    """A collection of individuals or specimens from the same taxonomic class, selected
-    for analysis in a scientific study based on their exhibiting one or more common
-    characteristics  (e.g. species, race, age, gender, disease state, income). May be
-    referred to as a 'cohort' or 'population' in specific research settings.
-    """
-
-    type: Literal["StudyGroup"] = Field(
-        default=CoreType.STUDY_GROUP.value,
-        description=f"Must be '{CoreType.STUDY_GROUP.value}'",
-    )
-    memberCount: int | None = Field(
-        default=None,
-        description="The total number of individual members in the StudyGroup.",
-    )
-    characteristics: list[MappableConcept] | None = Field(
-        default=None,
-        description="A feature or role shared by all members of the StudyGroup, representing a criterion for membership in the group.",
-    )
+EvidenceLine.model_rebuild()
+Statement.model_rebuild()

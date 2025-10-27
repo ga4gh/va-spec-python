@@ -98,7 +98,7 @@ class VariantOncogenicityEvidenceLine(EvidenceLine):
         return cls._validate_evidence_outcome(values, System.CCV, ccv_code_pattern)
 
 
-class VariantOncogenicityStudyStatement(Statement):
+class VariantOncogenicityStatement(Statement):
     """A statement reporting a conclusion from a single study about whether a
     variant is associated with oncogenicity (positive or negative) - based on
     interpretation of the study's results.
