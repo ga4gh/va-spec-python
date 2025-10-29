@@ -57,6 +57,20 @@ class AmpAscoCapClassificationName(str, Enum):
     TIER_4 = "Tier IV"
 
 
+class AmpAscoCapEvidenceLineStrength(str, Enum):
+    """Define constraints for AMP/ASCO/CAP `EvidenceLine.strengthOfEvidenceProvided`"""
+
+    A = "A"
+    B = "B"
+    C = "C"
+    D = "D"
+
+
+AMP_ASCO_CAP_EVIDENCE_LINE_STRENGTHS = [
+    v.value for v in AmpAscoCapEvidenceLineStrength.__members__.values()
+]
+
+
 @dataclass
 class AmpAscoCapConfig:
     """AMP/ASCO/CAP config for expected values"""
@@ -162,6 +176,13 @@ class _AmpAscoCapStatement(Statement, ABC):
                 ):
                     msg = "`targetProposition` must be one of: `VariantDiagnosticProposition`, `VariantPrognosticProposition`, `VariantTherapeuticResponseProposition`"
                     raise ValueError(msg)
+
+                validate_mappable_concept(
+                    evidence_line.strengthOfEvidenceProvided,
+                    System.AMP_ASCO_CAP,
+                    valid_codes=AMP_ASCO_CAP_EVIDENCE_LINE_STRENGTHS,
+                    mc_is_required=False,
+                )
 
         return self
 

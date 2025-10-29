@@ -95,6 +95,6 @@ class System(str, Enum):
     """Define constraints for systems"""
 
     ACMG = "ACMG Guidelines, 2015"
-    AMP_ASCO_CAP = "AMP/ASCO/CAP (AAC) Guidelines, 2017"
+    AMP_ASCO_CAP = "AMP/ASCO/CAP Guidelines, 2017"
     CLIN_GEN = "ClinGen Low Penetrance and Risk Allele Recommendations, 2024"
     CCV = "ClinGen/CGC/VICC Guidelines for Oncogenicity, 2022"

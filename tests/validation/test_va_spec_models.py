@@ -239,13 +239,13 @@ def test_evidence_line(caf):
                 },
                 "strength": {
                     "primaryCoding": {
-                        "system": "AMP/ASCO/CAP (AAC) Guidelines, 2017",
+                        "system": "AMP/ASCO/CAP Guidelines, 2017",
                         "code": "strong",
                     }
                 },
                 "classification": {
                     "primaryCoding": {
-                        "system": "AMP/ASCO/CAP (AAC) Guidelines, 2017",
+                        "system": "AMP/ASCO/CAP Guidelines, 2017",
                         "code": "tier 1",
                     }
                 },
@@ -352,7 +352,7 @@ def test_variant_pathogenicity_stmt():
 
     invalid_params = deepcopy(params)
     invalid_params["classification"]["primaryCoding"]["system"] = (
-        "AMP/ASCO/CAP (AAC) Guidelines, 2017"
+        "AMP/ASCO/CAP Guidelines, 2017"
     )
     with pytest.raises(ValueError, match="`primaryCoding.system` must be one of"):
         VariantPathogenicityStatement(**invalid_params)
@@ -459,7 +459,7 @@ def test_variant_pathogenicity_el():
     invalid_params = deepcopy(params)
     invalid_params["strengthOfEvidenceProvided"] = {
         "primaryCoding": {
-            "system": "AMP/ASCO/CAP (AAC) Guidelines, 2017",
+            "system": "AMP/ASCO/CAP Guidelines, 2017",
             "code": "strong",
         }
     }
@@ -624,7 +624,7 @@ def test_aac_statement():
         "strength": {
             "primaryCoding": {
                 "code": "strong",
-                "system": "AMP/ASCO/CAP (AAC) Guidelines, 2017",
+                "system": "AMP/ASCO/CAP Guidelines, 2017",
             }
         },
         "specifiedBy": "documents.json#/1",
@@ -632,7 +632,7 @@ def test_aac_statement():
             "name": "Tier I",
             "primaryCoding": {
                 "code": "tier 1",
-                "system": "AMP/ASCO/CAP (AAC) Guidelines, 2017",
+                "system": "AMP/ASCO/CAP Guidelines, 2017",
             },
         },
         "hasEvidenceLines": [
@@ -640,8 +640,8 @@ def test_aac_statement():
                 "directionOfEvidenceProvided": "supports",
                 "strengthOfEvidenceProvided": {
                     "primaryCoding": {
-                        "code": "Level A",
-                        "system": "AMP/ASCO/CAP (AAC) Guidelines, 2017",
+                        "code": "A",
+                        "system": "AMP/ASCO/CAP Guidelines, 2017",
                     }
                 },
                 "hasEvidenceItems": [
@@ -668,6 +668,13 @@ def test_aac_statement():
         ],
     }
     assert VariantTherapeuticResponseStatement(**params)
+
+    # No strengthOfEvidenceProvided
+    no_evidence_line_strength_params = deepcopy(params)
+    no_evidence_line_strength_params["hasEvidenceLines"][0].pop(
+        "strengthOfEvidenceProvided"
+    )
+    assert VariantTherapeuticResponseStatement(**no_evidence_line_strength_params)
 
     # Invalid strength
     invalid_params = deepcopy(params)
