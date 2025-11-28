@@ -10,7 +10,7 @@ from tests.conftest import SUBMODULES_DIR
 
 from ga4gh.core.models import Coding, MappableConcept, code, iriReference
 from ga4gh.va_spec import acmg_2015, base, ccv_2022
-from ga4gh.va_spec.aac_2017.models import VariantTherapeuticResponseStatement
+from ga4gh.va_spec.aac_2017.models import VariantClinicalSignificanceStatement
 from ga4gh.va_spec.acmg_2015.models import (
     VariantPathogenicityEvidenceLine,
     VariantPathogenicityStatement,
@@ -246,7 +246,7 @@ def test_evidence_line(caf):
                 "classification": {
                     "primaryCoding": {
                         "system": "AMP/ASCO/CAP Guidelines, 2017",
-                        "code": "tier 1",
+                        "code": "tier i",
                     }
                 },
                 "specifiedBy": {
@@ -613,6 +613,12 @@ def test_variant_onco_el():
 
 def test_aac_statement():
     """Test that AMP/ASCO/CAP statement model validators work correctly"""
+    prop = {
+        "type": "VariantDiagnosticProposition",
+        "predicate": "isDiagnosticExclusionCriterionFor",
+        "objectCondition": "conditions.json#/1",
+        "subjectVariant": "alleles.json#/1",
+    }
     params = {
         "direction": "supports",
         "proposition": {
@@ -631,12 +637,13 @@ def test_aac_statement():
         "classification": {
             "name": "Tier I",
             "primaryCoding": {
-                "code": "tier 1",
+                "code": "tier i",
                 "system": "AMP/ASCO/CAP Guidelines, 2017",
             },
         },
         "hasEvidenceLines": [
             {
+                "targetProposition": prop,
                 "directionOfEvidenceProvided": "supports",
                 "strengthOfEvidenceProvided": {
                     "primaryCoding": {
@@ -649,12 +656,7 @@ def test_aac_statement():
                     {
                         "type": "Statement",
                         "direction": "supports",
-                        "proposition": {
-                            "type": "VariantDiagnosticProposition",
-                            "predicate": "isDiagnosticExclusionCriterionFor",
-                            "objectCondition": "conditions.json#/1",
-                            "subjectVariant": "alleles.json#/1",
-                        },
+                        "proposition": prop,
                         "strength": {
                             "primaryCoding": {
                                 "code": "A",
@@ -667,50 +669,50 @@ def test_aac_statement():
             },
         ],
     }
-    assert VariantTherapeuticResponseStatement(**params)
+    assert VariantClinicalSignificanceStatement(**params)
 
     # No strengthOfEvidenceProvided
     no_evidence_line_strength_params = deepcopy(params)
     no_evidence_line_strength_params["hasEvidenceLines"][0].pop(
         "strengthOfEvidenceProvided"
     )
-    assert VariantTherapeuticResponseStatement(**no_evidence_line_strength_params)
+    assert VariantClinicalSignificanceStatement(**no_evidence_line_strength_params)
 
     # Invalid strength
     invalid_params = deepcopy(params)
     invalid_params["strength"]["primaryCoding"]["code"] = "Strong"
     with pytest.raises(ValidationError, match="`strength` must be: strong"):
-        VariantTherapeuticResponseStatement(**invalid_params)
+        VariantClinicalSignificanceStatement(**invalid_params)
 
     invalid_params = deepcopy(params)
     invalid_params["strength"]["primaryCoding"]["code"] = "potential"
     with pytest.raises(ValidationError, match="`strength` must be: strong"):
-        VariantTherapeuticResponseStatement(**invalid_params)
+        VariantClinicalSignificanceStatement(**invalid_params)
 
     # Invalid classification
     invalid_params = deepcopy(params)
     invalid_params["classification"]["primaryCoding"]["code"] = "Tier I"
     with pytest.raises(ValidationError, match="`primaryCoding.code` must be one of"):
-        VariantTherapeuticResponseStatement(**invalid_params)
+        VariantClinicalSignificanceStatement(**invalid_params)
 
     invalid_params = deepcopy(params)
-    invalid_params["classification"]["name"] = "tier 1"
+    invalid_params["classification"]["name"] = "tier i"
     with pytest.raises(ValidationError, match="`classification.name` must be: Tier I"):
-        VariantTherapeuticResponseStatement(**invalid_params)
+        VariantClinicalSignificanceStatement(**invalid_params)
 
     # Invalid direction
     invalid_params = deepcopy(params)
     invalid_params["direction"] = "disputes"
     with pytest.raises(ValidationError, match="`direction` must be: supports"):
-        VariantTherapeuticResponseStatement(**invalid_params)
+        VariantClinicalSignificanceStatement(**invalid_params)
 
     # Invalid targetProposition
     invalid_params = deepcopy(params)
     invalid_params["hasEvidenceLines"][0]["targetProposition"] = invalid_params[
         "proposition"
     ]
-    with pytest.raises(ValidationError, match="`targetProposition` must be one of"):
-        VariantTherapeuticResponseStatement(**invalid_params)
+    with pytest.raises(ValidationError, match="`hasEvidenceLines` must be one of"):
+        VariantClinicalSignificanceStatement(**invalid_params)
 
 
 def test_examples(test_definitions):

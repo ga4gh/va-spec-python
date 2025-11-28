@@ -6,11 +6,13 @@ from .models import (
     AMP_ASCO_CAP_EVIDENCE_LINE_STRENGTHS,
     AmpAscoCapClassificationCode,
     AmpAscoCapClassificationName,
+    AmpAscoCapEvidenceLine,
     AmpAscoCapEvidenceLineStrength,
     AsmpAscoCapStrengthCode,
-    VariantDiagnosticStatement,
-    VariantPrognosticStatement,
-    VariantTherapeuticResponseStatement,
+    DiagnosticEvidenceLine,
+    PrognosticEvidenceLine,
+    TherapeuticEvidenceLine,
+    VariantClinicalSignificanceStatement,
 )
 
 __all__ = [
@@ -19,9 +21,11 @@ __all__ = [
     "AMP_ASCO_CAP_EVIDENCE_LINE_STRENGTHS",
     "AmpAscoCapClassificationCode",
     "AmpAscoCapClassificationName",
+    "AmpAscoCapEvidenceLine",
     "AmpAscoCapEvidenceLineStrength",
     "AsmpAscoCapStrengthCode",
-    "VariantDiagnosticStatement",
-    "VariantPrognosticStatement",
-    "VariantTherapeuticResponseStatement",
+    "DiagnosticEvidenceLine",
+    "PrognosticEvidenceLine",
+    "TherapeuticEvidenceLine",
+    "VariantClinicalSignificanceStatement",
 ]

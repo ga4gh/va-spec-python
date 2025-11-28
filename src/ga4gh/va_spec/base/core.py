@@ -392,7 +392,7 @@ class ClinicalVariantProposition(_SubjectVariantPropositionBase):
     )
     alleleOriginQualifier: MappableConcept | iriReference | None = Field(
         default=None,
-        description="Reports whether the Proposition should be interpreted in the context of a heritable 'germline' variant, an acquired 'somatic' variant in a tumor,  post-zygotic 'mosaic' variant. While these are the most commonly reported allele origins, other more nuanced concepts can be captured  (e.g. 'maternal' vs 'paternal' allele origin'). In practice, populating this field may be complicated by the fact that some sources report allele origin based on the type of tissue that was sequenced to identify the variant, and others use it more generally to specify a category of variant for which the proposition holds. The stated intent of this attribute is the latter. However, if an implementer is not sure about which is reported in their data, it may be safer to create an Extension to hold this information, where they can explicitly acknowledge this ambiguity.",
+        description='Reports whether the Proposition should be interpreted in the context of a heritable "germline" variant, an acquired "somatic" variant in a tumor, or a post-zygotic "mosaic" variant. While these are the most commonly reported allele origins, other more nuanced concepts can be captured  (e.g. "maternal" vs "paternal" allele origin). In practice, populating this field may be complicated by the fact that some sources report allele origin based on the type of tissue that was sequenced to identify the variant, and others use it more generally to specify a category of variant for which the proposition holds. The stated intent of this attribute is the latter. However, if an implementer is not sure about which is reported in their data, it may be safer to create an Extension to hold this information, where they can explicitly acknowledge this ambiguity.',
     )
 
 
@@ -438,7 +438,7 @@ class VariantClinicalSignificanceProposition(
         description="The predicate associating the subject variant to clinical significance for the object Condition. MUST be 'hasClinicalSignificanceFor'.",
     )
     objectCondition: Condition | iriReference = Field(
-        ..., description="The disease that is evaluated."
+        ..., description="The condition that is evaluated."
     )
 
 
