@@ -145,6 +145,57 @@ class InformationEntity(Entity):
     )
 
 
+class DataSet(Entity, BaseModelForbidExtra):
+    """A collection of related data items or records that are organized together in a
+    common format or structure, to enable their computational manipulation as a unit.
+    """
+
+    type: Literal["DataSet"] = Field(
+        default=CoreType.DATA_SET.value,
+        description=f"MUST be '{CoreType.DATA_SET.value}'.",
+    )
+    datasetType: str | None = Field(
+        default=None,
+        description="A specific type of data set the DataSet instance represents (e.g. a 'clinical data set', a 'sequencing data set', a 'gene expression data set', a 'genome annotation data set')",
+    )
+    reportedIn: Document | iriReference | None = Field(
+        default=None, description="A document in which the the Method is reported."
+    )
+    releaseDate: date | None = Field(
+        default=None,
+        description="Indicates the date a version of a DataSet was formally released.",
+    )
+    version: str | None = Field(
+        default=None,
+        description="The version of the DataSet, as assigned by its creator.",
+    )
+    license: MappableConcept | None = Field(
+        default=None,
+        description="A specific license that dictates legal permissions for how a data set can be used (by whom, where, for what purposes, with what additional requirements, etc.)",
+    )
+
+
+class StudyGroup(Entity, BaseModelForbidExtra):
+    """A collection of individuals or specimens from the same taxonomic class, selected
+    for analysis in a scientific study based on their exhibiting one or more common
+    characteristics  (e.g. species, race, age, gender, disease state, income). May be
+    referred to as a 'cohort' or 'population' in specific research settings.
+    """
+
+    type: Literal["StudyGroup"] = Field(
+        default=CoreType.STUDY_GROUP.value,
+        description=f"Must be '{CoreType.STUDY_GROUP.value}'",
+    )
+    memberCount: int | None = Field(
+        default=None,
+        description="The total number of individual members in the StudyGroup.",
+    )
+    characteristics: list[MappableConcept] | None = Field(
+        default=None,
+        description="A feature or role shared by all members of the StudyGroup, representing a criterion for membership in the group.",
+    )
+
+
 class _StudyResult(InformationEntity, ABC):
     """A collection of data items from a single study that pertain to a particular subject
     or experimental unit in the study, along with optional provenance information
@@ -490,36 +541,6 @@ class Direction(str, Enum):
     DISPUTES = "disputes"
 
 
-class DataSet(Entity, BaseModelForbidExtra):
-    """A collection of related data items or records that are organized together in a
-    common format or structure, to enable their computational manipulation as a unit.
-    """
-
-    type: Literal["DataSet"] = Field(
-        default=CoreType.DATA_SET.value,
-        description=f"MUST be '{CoreType.DATA_SET.value}'.",
-    )
-    datasetType: str | None = Field(
-        default=None,
-        description="A specific type of data set the DataSet instance represents (e.g. a 'clinical data set', a 'sequencing data set', a 'gene expression data set', a 'genome annotation data set')",
-    )
-    reportedIn: Document | iriReference | None = Field(
-        default=None, description="A document in which the the Method is reported."
-    )
-    releaseDate: date | None = Field(
-        default=None,
-        description="Indicates the date a version of a DataSet was formally released.",
-    )
-    version: str | None = Field(
-        default=None,
-        description="The version of the DataSet, as assigned by its creator.",
-    )
-    license: MappableConcept | None = Field(
-        default=None,
-        description="A specific license that dictates legal permissions for how a data set can be used (by whom, where, for what purposes, with what additional requirements, etc.)",
-    )
-
-
 class EvidenceLine(InformationEntity, BaseModelForbidExtra):
     """An independent, evidence-based argument that may support or refute the validity
     of a specific Proposition. The strength and direction of this argument is based on
@@ -739,25 +760,4 @@ class Statement(InformationEntity, BaseModelForbidExtra):
     hasEvidenceLines: list[EvidenceLine | iriReference] | None = Field(
         default=None,
         description="An evidence-based argument that supports or disputes the validity of the proposition that a Statement assesses or puts forth as true. The strength and direction of this argument (whether it supports or disputes the proposition, and how strongly) is based on an interpretation of one or more pieces of information as evidence (i.e. 'Evidence Items).",
-    )
-
-
-class StudyGroup(Entity, BaseModelForbidExtra):
-    """A collection of individuals or specimens from the same taxonomic class, selected
-    for analysis in a scientific study based on their exhibiting one or more common
-    characteristics  (e.g. species, race, age, gender, disease state, income). May be
-    referred to as a 'cohort' or 'population' in specific research settings.
-    """
-
-    type: Literal["StudyGroup"] = Field(
-        default=CoreType.STUDY_GROUP.value,
-        description=f"Must be '{CoreType.STUDY_GROUP.value}'",
-    )
-    memberCount: int | None = Field(
-        default=None,
-        description="The total number of individual members in the StudyGroup.",
-    )
-    characteristics: list[MappableConcept] | None = Field(
-        default=None,
-        description="A feature or role shared by all members of the StudyGroup, representing a criterion for membership in the group.",
     )
