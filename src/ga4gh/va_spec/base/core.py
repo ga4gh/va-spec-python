@@ -373,7 +373,7 @@ class SubjectVariantProposition(RootModel):
         | VariantPrognosticProposition
         | VariantOncogenicityProposition
         | VariantTherapeuticResponseProposition
-        | VariantTherapeuticResponseProposition
+        | VariantClinicalSignificanceProposition
     ) = Field(discriminator="type")
 
 
