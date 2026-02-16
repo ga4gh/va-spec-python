@@ -155,27 +155,6 @@ class InformationEntity(Entity):
     )
 
 
-class StudyGroup(Entity, BaseModelForbidExtra):
-    """A collection of individuals or specimens from the same taxonomic class, selected
-    for analysis in a scientific study based on their exhibiting one or more common
-    characteristics  (e.g. species, race, age, gender, disease state, income). May be
-    referred to as a 'cohort' or 'population' in specific research settings.
-    """
-
-    type: Literal["StudyGroup"] = Field(
-        default=CoreType.STUDY_GROUP.value,
-        description=f"Must be '{CoreType.STUDY_GROUP.value}'",
-    )
-    memberCount: int | None = Field(
-        default=None,
-        description="The total number of individual members in the StudyGroup.",
-    )
-    characteristics: list[MappableConcept] | None = Field(
-        default=None,
-        description="A feature or role shared by all members of the StudyGroup, representing a criterion for membership in the group.",
-    )
-
-
 class DataSet(Entity, BaseModelForbidExtra):
     """A collection of related data items or records that are organized together in a
     common format or structure, to enable their computational manipulation as a unit.
@@ -203,6 +182,27 @@ class DataSet(Entity, BaseModelForbidExtra):
     license: MappableConcept | None = Field(
         default=None,
         description="A specific license that dictates legal permissions for how a data set can be used (by whom, where, for what purposes, with what additional requirements, etc.)",
+    )
+
+
+class StudyGroup(Entity, BaseModelForbidExtra):
+    """A collection of individuals or specimens from the same taxonomic class, selected
+    for analysis in a scientific study based on their exhibiting one or more common
+    characteristics  (e.g. species, race, age, gender, disease state, income). May be
+    referred to as a 'cohort' or 'population' in specific research settings.
+    """
+
+    type: Literal["StudyGroup"] = Field(
+        default=CoreType.STUDY_GROUP.value,
+        description=f"Must be '{CoreType.STUDY_GROUP.value}'",
+    )
+    memberCount: int | None = Field(
+        default=None,
+        description="The total number of individual members in the StudyGroup.",
+    )
+    characteristics: list[MappableConcept] | None = Field(
+        default=None,
+        description="A feature or role shared by all members of the StudyGroup, representing a criterion for membership in the group.",
     )
 
 
@@ -719,7 +719,3 @@ class Statement(InformationEntity, BaseModelForbidExtra):
         default=None,
         description="An evidence-based argument that supports or disputes the validity of the proposition that a Statement assesses or puts forth as true. The strength and direction of this argument (whether it supports or disputes the proposition, and how strongly) is based on an interpretation of one or more pieces of information as evidence (i.e. 'Evidence Items).",
     )
-
-
-EvidenceLine.model_rebuild()
-Statement.model_rebuild()
