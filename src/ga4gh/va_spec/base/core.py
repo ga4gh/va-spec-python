@@ -719,3 +719,7 @@ class Statement(InformationEntity, BaseModelForbidExtra):
         default=None,
         description="An evidence-based argument that supports or disputes the validity of the proposition that a Statement assesses or puts forth as true. The strength and direction of this argument (whether it supports or disputes the proposition, and how strongly) is based on an interpretation of one or more pieces of information as evidence (i.e. 'Evidence Items).",
     )
+
+
+Statement.model_rebuild()
+EvidenceLine.model_rebuild()
