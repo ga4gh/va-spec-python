@@ -44,7 +44,7 @@ class Condition(RootModel):
 class TherapyGroup(Element, BaseModelForbidExtra):
     """A group of two or more therapies that are applied in combination to a single
     patient/subject, or applied individually to a different subset of participants in a
-    research study
+    research study.
     """
 
     model_config = ConfigDict(use_enum_values=True)

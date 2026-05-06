@@ -429,6 +429,7 @@ class VariantClinicalSignificanceProposition(
     """
 
     model_config = ConfigDict(use_enum_values=True)
+
     type: Literal["VariantClinicalSignificanceProposition"] = Field(
         default="VariantClinicalSignificanceProposition",
         description="MUST be 'VariantClinicalSignificanceProposition'.",
