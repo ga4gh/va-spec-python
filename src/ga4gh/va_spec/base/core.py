@@ -572,12 +572,12 @@ class EvidenceLine(InformationEntity, BaseModelForbidExtra):
     )
     targetProposition: (
         ExperimentalVariantFunctionalImpactProposition
-        | VariantClinicalSignificanceProposition
-        | VariantDiagnosticProposition
-        | VariantOncogenicityProposition
         | VariantPathogenicityProposition
+        | VariantDiagnosticProposition
         | VariantPrognosticProposition
+        | VariantOncogenicityProposition
         | VariantTherapeuticResponseProposition
+        | VariantClinicalSignificanceProposition
         | None
     ) = Field(
         default=None,
