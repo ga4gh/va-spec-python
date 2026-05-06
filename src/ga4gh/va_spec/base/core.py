@@ -1,4 +1,4 @@
-"""VA Spec Base Core Models"""
+"""VA Specification Core classes"""
 
 from __future__ import annotations
 
@@ -523,8 +523,8 @@ class VariantPrognosticProposition(ClinicalVariantProposition, BaseModelForbidEx
 class VariantTherapeuticResponseProposition(
     ClinicalVariantProposition, BaseModelForbidExtra
 ):
-    """A Proposition about the role of a variant in modulating the response of a neoplasm to drug
-    administration or other therapeutic procedures.
+    """A Proposition about the role of a variant in modulating the response of a
+    neoplasm to drug administration or other therapeutic procedures.
     """
 
     model_config = ConfigDict(use_enum_values=True)
@@ -535,7 +535,7 @@ class VariantTherapeuticResponseProposition(
     )
     predicate: TherapeuticResponsePredicate = Field(
         ...,
-        description="The relationship the Proposition describes between the subject variant and object theapeutic. MUST be one of 'predictsSensitivityTo' or 'predictsResistanceTo'.",
+        description='The relationship the Proposition describes between the subject variant and object therapeutic. MUST be one of "predictsSensitivityTo" or "predictsResistanceTo".',
     )
     objectTherapeutic: Therapeutic | iriReference = Field(
         ...,

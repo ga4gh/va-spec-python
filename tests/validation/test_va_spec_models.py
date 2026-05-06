@@ -642,6 +642,7 @@ def test_aac_statement():
             },
         },
         "hasEvidenceLines": [
+            "evidence_lines.json#/1",  # iri
             {
                 "targetProposition": prop,
                 "directionOfEvidenceProvided": "supports",
@@ -652,7 +653,7 @@ def test_aac_statement():
                     }
                 },
                 "hasEvidenceItems": [
-                    "evidence_lines.json#/1",
+                    "evidence_items.json#/1",
                     {
                         "type": "Statement",
                         "direction": "supports",
@@ -673,7 +674,7 @@ def test_aac_statement():
 
     # No strengthOfEvidenceProvided
     no_evidence_line_strength_params = deepcopy(params)
-    no_evidence_line_strength_params["hasEvidenceLines"][0].pop(
+    no_evidence_line_strength_params["hasEvidenceLines"][1].pop(
         "strengthOfEvidenceProvided"
     )
     assert VariantClinicalSignificanceStatement(**no_evidence_line_strength_params)
@@ -708,7 +709,7 @@ def test_aac_statement():
 
     # Invalid targetProposition
     invalid_params = deepcopy(params)
-    invalid_params["hasEvidenceLines"][0]["targetProposition"] = invalid_params[
+    invalid_params["hasEvidenceLines"][1]["targetProposition"] = invalid_params[
         "proposition"
     ]
     with pytest.raises(ValidationError, match="`hasEvidenceLines` must be one of"):

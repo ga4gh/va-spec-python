@@ -7,11 +7,11 @@ sequence variants in cancer.
 from enum import Enum
 from types import MappingProxyType
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import Field, RootModel, field_validator, model_validator
 from pydantic.dataclasses import dataclass
 from typing_extensions import Self
 
-from ga4gh.core.models import MappableConcept, iriReference
+from ga4gh.core.models import BaseModelForbidExtra, MappableConcept, iriReference
 from ga4gh.va_spec.base.core import (
     Direction,
     EvidenceLine,
@@ -35,12 +35,17 @@ class AmpAscoCapEvidenceLineStrength(str, Enum):
     D = "D"
 
 
+AMP_ASCO_CAP_EVIDENCE_LINE_STRENGTHS = [
+    v.value for v in AmpAscoCapEvidenceLineStrength.__members__.values()
+]
+
+
 class AmpAscoCapEvidenceLine(EvidenceLine):
     """Evidence line for AMP/ASCO/CAP"""
 
     targetProposition: (
-        VariantDiagnosticProposition
-        | VariantPrognosticProposition
+        VariantPrognosticProposition
+        | VariantDiagnosticProposition
         | VariantTherapeuticResponseProposition
     )
 
@@ -59,25 +64,37 @@ class AmpAscoCapEvidenceLine(EvidenceLine):
         return v
 
 
-class DiagnosticEvidenceLine(AmpAscoCapEvidenceLine):
-    """Diagnostic evidence line for AMP/ASCO/CAP"""
-
-    targetProposition: VariantDiagnosticProposition
-
-
-class PrognosticEvidenceLine(AmpAscoCapEvidenceLine):
-    """Prognostic evidence line for AMP/ASCO/CAP"""
+class _PrognosticEvidenceLineObject(AmpAscoCapEvidenceLine):
+    """Internal prognostic evidence line for AMP/ASCO/CAP"""
 
     targetProposition: VariantPrognosticProposition
 
 
-class TherapeuticEvidenceLine(AmpAscoCapEvidenceLine):
-    """Therapeutic evidence line for AMP/ASCO/CAP"""
+class PrognosticEvidenceLine(RootModel[_PrognosticEvidenceLineObject | iriReference]):
+    """Prognostic evidence line for AMP/ASCO/CAP"""
+
+
+class _DiagnosticEvidenceLineObject(AmpAscoCapEvidenceLine):
+    """Internal diagnostic evidence line for AMP/ASCO/CAP"""
+
+    targetProposition: VariantDiagnosticProposition
+
+
+class DiagnosticEvidenceLine(RootModel[_DiagnosticEvidenceLineObject | iriReference]):
+    """Diagnostic evidence line for AMP/ASCO/CAP"""
+
+
+class _TherapeuticEvidenceLineObject(AmpAscoCapEvidenceLine):
+    """Internal therapeutic evidence line for AMP/ASCO/CAP"""
 
     targetProposition: VariantTherapeuticResponseProposition
 
 
-class AsmpAscoCapStrengthCode(str, Enum):
+class TherapeuticEvidenceLine(RootModel[_TherapeuticEvidenceLineObject | iriReference]):
+    """Therapeutic evidence line for AMP/ASCO/CAP"""
+
+
+class AmpAscoCapStrengthCode(str, Enum):
     """Define constraints for AMP/ASCO/CAP strength coding"""
 
     STRONG = "strong"
@@ -107,18 +124,13 @@ class AmpAscoCapClassificationName(str, Enum):
     TIER_4 = "Tier IV"
 
 
-AMP_ASCO_CAP_EVIDENCE_LINE_STRENGTHS = [
-    v.value for v in AmpAscoCapEvidenceLineStrength.__members__.values()
-]
-
-
 @dataclass
 class AmpAscoCapConfig:
     """AMP/ASCO/CAP config for expected values"""
 
     name: AmpAscoCapClassificationName
     direction: Direction
-    strength: AsmpAscoCapStrengthCode | None
+    strength: AmpAscoCapStrengthCode | None
 
 
 AMP_ASCO_CAP_CLASSIFICATION_MAP = MappingProxyType(
@@ -126,12 +138,12 @@ AMP_ASCO_CAP_CLASSIFICATION_MAP = MappingProxyType(
         AmpAscoCapClassificationCode.TIER_1: AmpAscoCapConfig(
             name=AmpAscoCapClassificationName.TIER_1,
             direction=Direction.SUPPORTS,
-            strength=AsmpAscoCapStrengthCode.STRONG,
+            strength=AmpAscoCapStrengthCode.STRONG,
         ),
         AmpAscoCapClassificationCode.TIER_2: AmpAscoCapConfig(
             name=AmpAscoCapClassificationName.TIER_2,
             direction=Direction.SUPPORTS,
-            strength=AsmpAscoCapStrengthCode.POTENTIAL,
+            strength=AmpAscoCapStrengthCode.POTENTIAL,
         ),
         AmpAscoCapClassificationCode.TIER_3: AmpAscoCapConfig(
             name=AmpAscoCapClassificationName.TIER_3,
@@ -147,20 +159,16 @@ AMP_ASCO_CAP_CLASSIFICATION_MAP = MappingProxyType(
 )
 
 
-class VariantClinicalSignificanceStatement(Statement):
-    """A statement reporting a conclusion from a single study about whether a variant is
-    associated with a disease (a diagnostic inclusion criterion), or absence of a
-    disease (diagnostic exclusion criterion) - based on interpretation of the study's
-    results.
+class VariantClinicalSignificanceStatement(Statement, BaseModelForbidExtra):
+    """A statement reporting a conclusion from a single study about the clinical
+    significance of a variant with respect to a condition, based on interpretation of
+    the study's results.
     """
 
-    proposition: VariantClinicalSignificanceProposition = Field(
-        ...,
-        description="A proposition about a diagnostic association between a variant and condition, for which the study provides evidence. The validity of this proposition, and the level of confidence/evidence supporting it, may be assessed and reported by the Statement.",
-    )
+    proposition: VariantClinicalSignificanceProposition
     strength: MappableConcept | None = Field(
         default=None,
-        description="The strength of support that the Statement is determined to provide for or against the Diagnostic Proposition for the assessed variant, based on the curation and reporting conventions of the AMP/ASCO/CAP 2017 Guidelines.",
+        description="The strength of support that the Statement is determined to provide for or against the Variant Clinical Significance Proposition for the assessed variant, based on the curation and reporting conventions of the AMP/ASCO/CAP 2017 Guidelines.",
     )
     classification: MappableConcept = Field(
         ...,
@@ -172,35 +180,35 @@ class VariantClinicalSignificanceStatement(Statement):
     def validate_aac_statement(self) -> Self:
         """Validate VariantClinicalSignificanceStatement"""
 
-        def _validate_classification_config(
+        def _validate_amp_asco_cap_classification_constraints(
             classification_code: AmpAscoCapClassificationCode,
-            classification_name: str,
+            classification_name: str | None,
             direction: str,
             strength_code: MappableConcept | None,
             has_evidence_lines: list,
         ) -> None:
-            """Validate that classification config is correct"""
-            expected_config = AMP_ASCO_CAP_CLASSIFICATION_MAP[classification_code]
+            """Validate that a classification code enforces required values for
+            strength, name, direction, and when applicable allowed evidence line types.
+            """
+            expected = AMP_ASCO_CAP_CLASSIFICATION_MAP[classification_code]
             actual_strength = (
                 strength_code.primaryCoding.code.root
-                if strength_code
+                if strength_code and strength_code.primaryCoding
                 else strength_code
             )
-            if actual_strength != expected_config.strength:
+            if actual_strength != expected.strength:
                 expected_strength = (
-                    expected_config.strength.value
-                    if expected_config.strength
-                    else expected_config.strength
+                    expected.strength.value if expected.strength else expected.strength
                 )
                 msg = f"`strength` must be: {expected_strength}"
                 raise ValueError(msg)
 
-            if classification_name != expected_config.name:
-                msg = f"`classification.name` must be: {expected_config.name.value}"
+            if classification_name != expected.name:
+                msg = f"`classification.name` must be: {expected.name.value}"
                 raise ValueError(msg)
 
-            if direction != expected_config.direction:
-                msg = f"`direction` must be: {expected_config.direction.value}"
+            if direction != expected.direction:
+                msg = f"`direction` must be: {expected.direction.value}"
                 raise ValueError(msg)
 
             if classification_code in {
@@ -208,26 +216,29 @@ class VariantClinicalSignificanceStatement(Statement):
                 AmpAscoCapClassificationCode.TIER_2,
             }:
                 for evidence_line in has_evidence_lines:
-                    found_approved_el_clas = False
-                    for approved_el_cls in [
+                    if hasattr(evidence_line, "root"):
+                        el_input = evidence_line.root
+                    elif hasattr(evidence_line, "model_dump"):
+                        el_input = evidence_line.model_dump()
+                    else:
+                        el_input = evidence_line
+
+                    for approved_el_cls in (
                         DiagnosticEvidenceLine,
                         PrognosticEvidenceLine,
                         TherapeuticEvidenceLine,
-                        iriReference,
-                    ]:
+                    ):
                         try:
-                            approved_el_cls(**evidence_line.model_dump())
-                        except Exception:  # noqa: S110
-                            pass
-                        else:
-                            found_approved_el_clas = True
+                            approved_el_cls.model_validate(el_input)
                             break
-
-                    if not found_approved_el_clas:
-                        msg = "`hasEvidenceLines` must be one of: `DiagnosticEvidenceLine`, `PrognosticEvidenceLine`, `TherapeuticEvidenceLine`, or `iriReference`"
+                        except Exception:  # noqa: S112
+                            continue
+                    else:
+                        msg = "`hasEvidenceLines` must be one of: `DiagnosticEvidenceLine`, `PrognosticEvidenceLine`, or `TherapeuticEvidenceLine`"
                         raise ValueError(msg)
 
-        # Validate strength
+        # Validate strength system. The actual value will be validated in
+        # `_validate_amp_asco_cap_classification_constraints`
         validate_mappable_concept(
             self.strength,
             System.AMP_ASCO_CAP,
@@ -241,7 +252,7 @@ class VariantClinicalSignificanceStatement(Statement):
             valid_codes=AMP_ASCO_CAP_CLASSIFICATION_CODES,
             mc_is_required=True,
         )
-        _validate_classification_config(
+        _validate_amp_asco_cap_classification_constraints(
             AmpAscoCapClassificationCode(self.classification.primaryCoding.code.root),
             self.classification.name,
             self.direction,
