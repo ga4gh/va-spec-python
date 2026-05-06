@@ -177,8 +177,40 @@ class VariantClinicalSignificanceStatement(Statement, BaseModelForbidExtra):
     specifiedBy: Method | iriReference
 
     @model_validator(mode="after")
-    def validate_aac_statement(self) -> Self:
+    def validate_statement(self) -> Self:
         """Validate VariantClinicalSignificanceStatement"""
+
+        def _validate_evidence_lines(
+            classification_code: AmpAscoCapClassificationCode,
+            has_evidence_lines: list,
+        ) -> None:
+            """Validate allowed evidence lines given classification code"""
+            approved_el_classes = [
+                DiagnosticEvidenceLine,
+                PrognosticEvidenceLine,
+                TherapeuticEvidenceLine,
+            ]
+            if classification_code in {
+                AmpAscoCapClassificationCode.TIER_1,
+                AmpAscoCapClassificationCode.TIER_2,
+            }:
+                for evidence_line in has_evidence_lines:
+                    if hasattr(evidence_line, "root"):
+                        el_input = evidence_line.root
+                    elif hasattr(evidence_line, "model_dump"):
+                        el_input = evidence_line.model_dump()
+                    else:
+                        el_input = evidence_line
+
+                    for approved_el_cls in approved_el_classes:
+                        try:
+                            approved_el_cls.model_validate(el_input)
+                            break
+                        except Exception:  # noqa: S112
+                            continue
+                    else:
+                        msg = "`hasEvidenceLines` must be one of: `DiagnosticEvidenceLine`, `PrognosticEvidenceLine`, or `TherapeuticEvidenceLine`"
+                        raise ValueError(msg)
 
         def _validate_amp_asco_cap_classification_constraints(
             classification_code: AmpAscoCapClassificationCode,
@@ -196,6 +228,7 @@ class VariantClinicalSignificanceStatement(Statement, BaseModelForbidExtra):
                 if strength_code and strength_code.primaryCoding
                 else strength_code
             )
+
             if actual_strength != expected.strength:
                 expected_strength = (
                     expected.strength.value if expected.strength else expected.strength
@@ -211,31 +244,7 @@ class VariantClinicalSignificanceStatement(Statement, BaseModelForbidExtra):
                 msg = f"`direction` must be: {expected.direction.value}"
                 raise ValueError(msg)
 
-            if classification_code in {
-                AmpAscoCapClassificationCode.TIER_1,
-                AmpAscoCapClassificationCode.TIER_2,
-            }:
-                for evidence_line in has_evidence_lines:
-                    if hasattr(evidence_line, "root"):
-                        el_input = evidence_line.root
-                    elif hasattr(evidence_line, "model_dump"):
-                        el_input = evidence_line.model_dump()
-                    else:
-                        el_input = evidence_line
-
-                    for approved_el_cls in (
-                        DiagnosticEvidenceLine,
-                        PrognosticEvidenceLine,
-                        TherapeuticEvidenceLine,
-                    ):
-                        try:
-                            approved_el_cls.model_validate(el_input)
-                            break
-                        except Exception:  # noqa: S112
-                            continue
-                    else:
-                        msg = "`hasEvidenceLines` must be one of: `DiagnosticEvidenceLine`, `PrognosticEvidenceLine`, or `TherapeuticEvidenceLine`"
-                        raise ValueError(msg)
+            _validate_evidence_lines(classification_code, has_evidence_lines)
 
         # Validate strength system. The actual value will be validated in
         # `_validate_amp_asco_cap_classification_constraints`
@@ -252,6 +261,8 @@ class VariantClinicalSignificanceStatement(Statement, BaseModelForbidExtra):
             valid_codes=AMP_ASCO_CAP_CLASSIFICATION_CODES,
             mc_is_required=True,
         )
+
+        # Validate values meet AMP/ASCO/CAP classification constraints
         _validate_amp_asco_cap_classification_constraints(
             AmpAscoCapClassificationCode(self.classification.primaryCoding.code.root),
             self.classification.name,
