@@ -13,6 +13,7 @@ from pydantic import (
 
 from ga4gh.core.models import MappableConcept, iriReference
 from ga4gh.va_spec.base.core import (
+    Document,
     Method,
     Statement,
     VariantDiagnosticProposition,
@@ -21,6 +22,23 @@ from ga4gh.va_spec.base.core import (
 )
 from ga4gh.va_spec.base.enums import System
 from ga4gh.va_spec.base.validators import validate_mappable_concept
+
+SYSTEM = System.AMP_ASCO_CAP
+METHOD = Method(  # recommended representation of AMP/ASCO/CAP 2017 method
+    name=SYSTEM,
+    reportedIn=Document(
+        id="pmid:27993330",
+        name="Li et al., 2017, J Mol Diagn.",
+        title="Standards and Guidelines for the Interpretation and Reporting of Sequence Variants in Cancer: A Joint Consensus Recommendation of the Association for Molecular Pathology, American Society of Clinical Oncology, and College of American Pathologists",
+        doi="10.1016/j.jmoldx.2016.10.002",
+        pmid="27993330",
+        urls=[
+            "https://doi.org/10.1016/j.jmoldx.2016.10.002",
+            "https://pubmed.ncbi.nlm.nih.gov/27993330/",
+        ],
+    ),
+    methodType="guideline",
+)
 
 
 class Strength(str, Enum):
@@ -64,7 +82,7 @@ class AmpAscoCapValidatorMixin:
         """
         return validate_mappable_concept(
             v,
-            System.AMP_ASCO_CAP,
+            SYSTEM,
             valid_codes=AMP_ASCO_CAP_LEVELS,
             mc_is_required=False,
         )
@@ -78,9 +96,7 @@ class AmpAscoCapValidatorMixin:
         :raises ValueError: If invalid classification values are provided
         :return: Validated classification value
         """
-        return validate_mappable_concept(
-            v, System.AMP_ASCO_CAP, valid_codes=AMP_ASCO_CAP_TIERS
-        )
+        return validate_mappable_concept(v, SYSTEM, valid_codes=AMP_ASCO_CAP_TIERS)
 
 
 class VariantDiagnosticStudyStatement(Statement, AmpAscoCapValidatorMixin):

@@ -2,6 +2,8 @@
 
 from .models import (
     ACMG_CLASSIFICATIONS,
+    METHOD,
+    SYSTEM,
     AcmgClassification,
     VariantPathogenicityEvidenceLine,
     VariantPathogenicityStatement,
@@ -9,6 +11,8 @@ from .models import (
 
 __all__ = [
     "ACMG_CLASSIFICATIONS",
+    "METHOD",
+    "SYSTEM",
     "AcmgClassification",
     "VariantPathogenicityEvidenceLine",
     "VariantPathogenicityStatement",
