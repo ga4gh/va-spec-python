@@ -10,6 +10,7 @@ from pydantic import Field, field_validator, model_validator
 from ga4gh.core.models import MappableConcept, iriReference
 from ga4gh.va_spec.base.core import (
     Direction,
+    Document,
     EvidenceLine,
     Method,
     Statement,
@@ -22,6 +23,23 @@ from ga4gh.va_spec.base.enums import (
     System,
 )
 from ga4gh.va_spec.base.validators import validate_mappable_concept
+
+SYSTEM = System.CCV
+METHOD = Method(  # recommended representation of ClinGen/CGC/VICC 2022 method
+    name=SYSTEM,
+    reportedIn=Document(
+        id="pmid:35101336",
+        name="Horak et al., 2022, Genet Med.",
+        title="Standards for the classification of pathogenicity of somatic variants in cancer (oncogenicity): Joint recommendations of Clinical Genome Resource (ClinGen), Cancer Genomics Consortium (CGC), and Variant Interpretation for Cancer Consortium (VICC)",
+        doi="10.1016/j.gim.2022.01.001",
+        pmid="35101336",
+        urls=[
+            "https://doi.org/10.1016/j.gim.2022.01.001",
+            "https://pubmed.ncbi.nlm.nih.gov/35101336/",
+        ],
+    ),
+    methodType="guideline",
+)
 
 
 class VariantOncogenicityEvidenceLine(EvidenceLine):
@@ -86,7 +104,7 @@ class VariantOncogenicityEvidenceLine(EvidenceLine):
         """
         return validate_mappable_concept(
             v,
-            System.CCV,
+            SYSTEM,
             valid_codes=STRENGTH_OF_EVIDENCE_PROVIDED_VALUES,
             mc_is_required=False,
         )
@@ -106,7 +124,7 @@ class VariantOncogenicityEvidenceLine(EvidenceLine):
         """
         cls._validate_direction_of_evidence_provided(values)
         ccv_code_pattern = r"^((?:OVS1|SBVS1)(?:_(?:not_met|(?:strong|moderate|supporting)))?|(?:OS[1-3]|SBS[1-2])(?:_(?:not_met|(?:very_strong|moderate|supporting)))?|(?:OM[1-4])(?:_(?:not_met|(?:very_strong|strong|supporting)))?|(OP[1-4]|SBP[1-2])(?:_(?:not_met|very_strong|strong|moderate))?)$"
-        return cls._validate_evidence_outcome(values, System.CCV, ccv_code_pattern)
+        return cls._validate_evidence_outcome(values, SYSTEM, ccv_code_pattern)
 
 
 class VariantOncogenicityStatement(Statement):
@@ -139,7 +157,7 @@ class VariantOncogenicityStatement(Statement):
         :return: Validated strength value
         """
         return validate_mappable_concept(
-            v, System.CCV, valid_codes=STRENGTH_CODES, mc_is_required=False
+            v, SYSTEM, valid_codes=STRENGTH_CODES, mc_is_required=False
         )
 
     @field_validator("classification")
@@ -152,5 +170,5 @@ class VariantOncogenicityStatement(Statement):
         :return: Validated classification value
         """
         return validate_mappable_concept(
-            v, System.CCV, valid_codes=CCV_CLASSIFICATIONS, mc_is_required=True
+            v, SYSTEM, valid_codes=CCV_CLASSIFICATIONS, mc_is_required=True
         )

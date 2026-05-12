@@ -6,6 +6,8 @@ from .derived_evidence import (
     derive_onco_evidence_attributes,
 )
 from .models import (
+    METHOD,
+    SYSTEM,
     VariantOncogenicityEvidenceLine,
     VariantOncogenicityStatement,
 )
@@ -14,6 +16,8 @@ __all__ = [
     "CODE_PREFIX_TO_SCORE_MAP",
     "CODE_SUFFIX_TO_STRENGTH_MAP",
     "derive_onco_evidence_attributes",
+    "METHOD",
+    "SYSTEM",
     "VariantOncogenicityEvidenceLine",
     "VariantOncogenicityStatement",
 ]
