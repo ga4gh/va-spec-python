@@ -52,14 +52,17 @@ STRENGTH_OF_EVIDENCE_PROVIDED_VALUES = [
 ]
 
 
-class Strength(str, Enum):
-    """Define constrains for strength"""
+class StrengthCode(str, Enum):
+    """Define constrains for strength
+
+    Used in ACMG 2015 and CCV 2022
+    """
 
     DEFINITIVE = "definitive"
     LIKELY = "likely"
 
 
-STRENGTHS = [v.value for v in Strength.__members__.values()]
+STRENGTH_CODES = [v.value for v in StrengthCode.__members__.values()]
 
 
 class ClinGenClassification(str, Enum):
@@ -92,6 +95,6 @@ class System(str, Enum):
     """Define constraints for systems"""
 
     ACMG = "ACMG Guidelines, 2015"
-    AMP_ASCO_CAP = "AMP/ASCO/CAP (AAC) Guidelines, 2017"
+    AMP_ASCO_CAP = "AMP/ASCO/CAP Guidelines, 2017"
     CLIN_GEN = "ClinGen Low Penetrance and Risk Allele Recommendations, 2024"
     CCV = "ClinGen/CGC/VICC Guidelines for Oncogenicity, 2022"

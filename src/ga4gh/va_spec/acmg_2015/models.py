@@ -9,6 +9,7 @@ from pydantic import Field, field_validator, model_validator
 
 from ga4gh.core.models import MappableConcept, iriReference
 from ga4gh.va_spec.base.core import (
+    Direction,
     Document,
     EvidenceLine,
     Method,
@@ -18,7 +19,7 @@ from ga4gh.va_spec.base.core import (
 from ga4gh.va_spec.base.enums import (
     CLIN_GEN_CLASSIFICATIONS,
     STRENGTH_OF_EVIDENCE_PROVIDED_VALUES,
-    STRENGTHS,
+    STRENGTHS_CODES,
     System,
 )
 from ga4gh.va_spec.base.validators import (
@@ -58,7 +59,7 @@ ACMG_CLASSIFICATIONS = [v.value for v in AcmgClassification.__members__.values()
 
 class VariantPathogenicityEvidenceLine(EvidenceLine):
     """An Evidence Line that describes how a specific type of information was
-    interpreted as evidence for or againtst a variant's pathogenicity. In the ACMG
+    interpreted as evidence for or against a variant's pathogenicity. In the ACMG
     Framework, evidence is assessed by determining if a specific criterion (e.g. 'PM2')
     with a default strength (e.g. 'moderate') is 'met' or 'not met', and in some cases
     adjusting the default strength based on the quality and abundance of evidence.
@@ -66,15 +67,19 @@ class VariantPathogenicityEvidenceLine(EvidenceLine):
 
     targetProposition: VariantPathogenicityProposition | None = Field(
         default=None,
-        description="A Variant Pathogenicity Proposition against which specific information was assessed, in determining the strength and direction of support this information provides as evidence.",
+        description="A Variant Pathogenicity Proposition against which a specific type of evidence was assessed, to determine the strength and direction of support this evidence provides for or against the proposition's validity.",
+    )
+    directionOfEvidenceProvided: Direction = Field(
+        ...,
+        description="The direction of support that the Evidence Line is determined to provide toward its target Proposition (supports, disputes, neutral). For ACMG-based assessments, if a pathogenicity criterion is 'met' in the Evidence Line the direction is 'supports', if a benignity criterion is 'met' the direction is 'disputes', and if a criteria is 'not met' the direction is 'none'.",
     )
     strengthOfEvidenceProvided: MappableConcept | None = Field(
         default=None,
-        description="The strength of support that an Evidence Line is determined to provide for or against the proposed pathogenicity of the assessed variant. Strength is evaluated relative to the direction indicated by the 'directionOfEvidenceProvided' attribute. The indicated enumeration constrains the nested MappableConcept.primaryCoding > Coding.code attribute when capturing evidence strength. Conditional requirement: if directionOfEvidenceProvided is either 'supports' or 'disputes', then this attribute is required. If it is 'none', then this attribute is not allowed.",
+        description="The strength of support that an Evidence Line is determined to provide for or against the proposed pathogenicity of the assessed variant. Strength is evaluated relative to the direction indicated by the 'directionOfEvidenceProvided' attribute, and captured using a MappableConcept, whose nested 'code' field is bound to an enumerated set of values. Conditional requirement: if `directionOfEvidenceProvided` is either 'supports' or 'disputes', then this attribute is required. If it is 'none', then this attribute is not allowed.",
     )
     specifiedBy: Method | iriReference = Field(
         ...,
-        description="The guidelines that were followed to assess variant information as evidence for or against the assessed variant's pathogenicity.",
+        description="The guidelines or rubrics followed in interpreting evidence, to determine the strength and direction of support that it provides for or against a variant's pathogenicity. While the ACMG Criteria themselves provide minimal guidance, typically a more detailed, disease- or gene- specific rubric is followed to determine if a given criterion was met, and how strongly (e.g. the ClinGen Hearing Loss Expert Panel guidelines for ACMG interpretations).",
     )
 
     class Criterion(str, Enum):
@@ -175,7 +180,7 @@ class VariantPathogenicityStatement(Statement):
         :return: Validated strength value
         """
         return validate_mappable_concept(
-            v, SYSTEM, valid_codes=STRENGTHS, mc_is_required=False
+            v, SYSTEM, valid_codes=STRENGTHS_CODES, mc_is_required=False
         )
 
     @field_validator("classification")

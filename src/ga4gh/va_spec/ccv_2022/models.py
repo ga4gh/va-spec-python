@@ -9,6 +9,7 @@ from pydantic import Field, field_validator, model_validator
 
 from ga4gh.core.models import MappableConcept, iriReference
 from ga4gh.va_spec.base.core import (
+    Direction,
     Document,
     EvidenceLine,
     Method,
@@ -17,8 +18,8 @@ from ga4gh.va_spec.base.core import (
 )
 from ga4gh.va_spec.base.enums import (
     CCV_CLASSIFICATIONS,
+    STRENGTH_CODES,
     STRENGTH_OF_EVIDENCE_PROVIDED_VALUES,
-    STRENGTHS,
     System,
 )
 from ga4gh.va_spec.base.validators import validate_mappable_concept
@@ -42,21 +43,31 @@ METHOD = Method(  # recommended representation of ClinGen/CGC/VICC 2022 method
 
 
 class VariantOncogenicityEvidenceLine(EvidenceLine):
-    """An Evidence Line that describes how information about the specific evidence of a
-    variant was interpreted as evidence for or against the variant's oncogenicity.
+    """An Evidence Line that describes how evidence for a variant was interpreted to
+    determine if a specific CCV 2022 criterion code is met, and the strength that
+    evidence this provides for or against the variant's oncogenicity. An Evidence Line
+    that describes how a specific type of information was interpreted as evidence for
+    or against a variant's oncogenicity. In the CCV Framework, evidence is assessed by
+    determining if a specific criterion (e.g. 'OM2') with a default strength
+    (e.g. 'moderate') is 'met' or 'not met', and in some cases adjusting the default
+    strength based on the quality and abundance of evidence.
     """
 
     targetProposition: VariantOncogenicityProposition | None = Field(
         default=None,
-        description="A Variant Oncogenicity Proposition against which evidence information was assessed, in determining the strength and direction of support this information provides as evidence.",
+        description="A Variant Oncoogenicity Proposition against which a specific type of evidence was assessed, to determine the strength and direction of support this evidence provides for or against the proposition's validity.",
+    )
+    directionOfEvidenceProvided: Direction = Field(
+        ...,
+        description="The direction of support that the Evidence Line is determined to provide toward its target Proposition (supports, disputes, neutral). For CCV-based assessments, if a oncogenicity criterion is 'met' in the Evidence Line the direction is 'supports', if a benignity criterion is 'met' the direction is 'disputes', and if a criteria is 'not met' the direction is 'none'.",
     )
     strengthOfEvidenceProvided: MappableConcept | None = Field(
         default=None,
-        description="The strength of support that an Evidence Line is determined to provide for or against the proposed pathogenicity of the assessed variant. Strength is evaluated relative to the direction indicated by the 'directionOfEvidenceProvided' attribute. The indicated enumeration constrains the nested MappableConcept.primaryCoding > Coding.code attribute when capturing evidence strength.",
+        description="The strength of support that an Evidence Line is determined to provide for or against the proposed oncogenicity of the assessed variant. Strength is evaluated relative to the direction indicated by the 'directionOfEvidenceProvided' attribute, and captured using a MappableConcept, whose nested 'code' field is bound to an enumerated set of values. Conditional requirement: if `directionOfEvidenceProvided` is either 'supports' or 'disputes', then this attribute is required. If it is 'none', then this attribute is not allowed.",
     )
     specifiedBy: Method | iriReference = Field(
         ...,
-        description="The guidelines that were followed to assess the variant information as evidence for or against the assessed variant's oncogenicity.",
+        description="The guidelines or rubrics followed in interpreting evidence, to determine the strength and direction of support that it provides for or against a variant's oncogenicity. While the CCV Criteria themselves provide minimal guidance, typically a more detailed, gene- or cancer- specific rubric is followed to determine if a given criterion was met, and how strongly.",
     )
 
     class Criterion(str, Enum):
@@ -116,10 +127,10 @@ class VariantOncogenicityEvidenceLine(EvidenceLine):
         return cls._validate_evidence_outcome(values, SYSTEM, ccv_code_pattern)
 
 
-class VariantOncogenicityStudyStatement(Statement):
-    """A statement reporting a conclusion from a single study about whether a
-    variant is associated with oncogenicity (positive or negative) - based on
-    interpretation of the study's results.
+class VariantOncogenicityStatement(Statement):
+    """A statement reporting a conclusion from a single study about whether a variant is
+    associated with oncogenicity (positive or negative) - based on interpretation of the
+    study's results.
     """
 
     proposition: VariantOncogenicityProposition = Field(
@@ -128,11 +139,9 @@ class VariantOncogenicityStudyStatement(Statement):
     )
     strength: MappableConcept | None = Field(
         default=None,
-        description="The strength of support that an CCV 2022 Oncogenicity statement is determined to provide for or against the proposed oncogenicity of the assessed variant. Strength is evaluated relative to the direction indicated by the 'direction' attribute. The indicated enumeration constrains the nested MappableConcept.primaryCoding > Coding.code attribute when capturing evidence strength.",
+        description="The strength of support that an CCV 2022 Oncogenicity statement is determined to provide for or against the proposed oncogenicity of the assessed variant. Strength is evaluated relative to the direction indicated by the 'direction' attribute. The indicated enumeration constrains the nested MappableConcept.primaryCoding > Coding.code attribute when capturing evidence strength. Conditional requirement: if directionOfEvidenceProvided is either 'supports' or 'disputes', then this attribute is required. If it is 'neutral', then this attribute is not allowed.",
     )
-    classification: MappableConcept = Field(
-        ...,
-    )
+    classification: MappableConcept
     specifiedBy: Method | iriReference = Field(
         ...,
         description="The method that specifies how the oncogenicity classification is ultimately assigned to the variant, based on assessment of evidence.",
@@ -148,7 +157,7 @@ class VariantOncogenicityStudyStatement(Statement):
         :return: Validated strength value
         """
         return validate_mappable_concept(
-            v, SYSTEM, valid_codes=STRENGTHS, mc_is_required=False
+            v, SYSTEM, valid_codes=STRENGTH_CODES, mc_is_required=False
         )
 
     @field_validator("classification")
