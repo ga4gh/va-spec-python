@@ -16,8 +16,8 @@ from ga4gh.va_spec.base.core import (
 )
 from ga4gh.va_spec.base.enums import (
     CLIN_GEN_CLASSIFICATIONS,
+    STRENGTH_CODES,
     STRENGTH_OF_EVIDENCE_PROVIDED_VALUES,
-    STRENGTHS,
     System,
 )
 from ga4gh.va_spec.base.validators import (
@@ -157,7 +157,7 @@ class VariantPathogenicityStatement(Statement):
         :return: Validated strength value
         """
         return validate_mappable_concept(
-            v, System.ACMG, valid_codes=STRENGTHS, mc_is_required=False
+            v, System.ACMG, valid_codes=STRENGTH_CODES, mc_is_required=False
         )
 
     @field_validator("classification")

@@ -1,20 +1,17 @@
-"""VA Spec Base Core Models"""
+"""VA Specification Core classes"""
 
 from __future__ import annotations
 
-import importlib
-import inspect
 from abc import ABC
 from datetime import date, datetime
 from enum import Enum
-from typing import Annotated, Literal, TypeVar
+from typing import Annotated, Literal
 
 from pydantic import (
     ConfigDict,
     Field,
     RootModel,
     StringConstraints,
-    ValidationError,
     field_validator,
 )
 
@@ -35,9 +32,6 @@ from ga4gh.va_spec.base.enums import (
 from ga4gh.va_spec.base.validators import validate_mappable_concept
 from ga4gh.vrs.models import Allele, MolecularVariation
 
-StatementType = TypeVar("StatementType")
-EvidenceLineType = TypeVar("EvidenceLineType")
-
 
 class CoreType(str, Enum):
     """Define VA Spec Base Core Types"""
@@ -50,6 +44,22 @@ class CoreType(str, Enum):
     EVIDENCE_LINE = "EvidenceLine"
     DATA_SET = "DataSet"
     STUDY_GROUP = "StudyGroup"
+
+
+class Agent(Entity, BaseModelForbidExtra):
+    """An autonomous actor (person, organization, or software agent) that bears some
+    form of responsibility for an activity taking place, for the existence of an entity,
+    or for another agent's activity.
+    """
+
+    type: Literal["Agent"] = Field(
+        default=CoreType.AGENT.value, description=f"MUST be '{CoreType.AGENT.value}'."
+    )
+    name: str | None = Field(default=None, description="The given name of the Agent.")
+    agentType: str | None = Field(
+        default=None,
+        description="A specific type of agent the Agent object represents. Recommended subtypes include codes for `person`, `organization`, or `software`.",
+    )
 
 
 class Contribution(Entity, BaseModelForbidExtra):
@@ -363,6 +373,7 @@ class SubjectVariantProposition(RootModel):
         | VariantPrognosticProposition
         | VariantOncogenicityProposition
         | VariantTherapeuticResponseProposition
+        | VariantClinicalSignificanceProposition
     ) = Field(discriminator="type")
 
 
@@ -381,7 +392,7 @@ class ClinicalVariantProposition(_SubjectVariantPropositionBase):
     )
     alleleOriginQualifier: MappableConcept | iriReference | None = Field(
         default=None,
-        description="Reports whether the Proposition should be interpreted in the context of a heritable 'germline' variant, an acquired 'somatic' variant in a tumor,  post-zygotic 'mosaic' variant. While these are the most commonly reported allele origins, other more nuanced concepts can be captured  (e.g. 'maternal' vs 'paternal' allele origin'). In practice, populating this field may be complicated by the fact that some sources report allele origin based on the type of tissue that was sequenced to identify the variant, and others use it more generally to specify a category of variant for which the proposition holds. The stated intent of this attribute is the latter. However, if an implementer is not sure about which is reported in their data, it may be safer to create an Extension to hold this information, where they can explicitly acknowledge this ambiguity.",
+        description='Reports whether the Proposition should be interpreted in the context of a heritable "germline" variant, an acquired "somatic" variant in a tumor, or a post-zygotic "mosaic" variant. While these are the most commonly reported allele origins, other more nuanced concepts can be captured  (e.g. "maternal" vs "paternal" allele origin). In practice, populating this field may be complicated by the fact that some sources report allele origin based on the type of tissue that was sequenced to identify the variant, and others use it more generally to specify a category of variant for which the proposition holds. The stated intent of this attribute is the latter. However, if an implementer is not sure about which is reported in their data, it may be safer to create an Extension to hold this information, where they can explicitly acknowledge this ambiguity.',
     )
 
 
@@ -407,6 +418,27 @@ class ExperimentalVariantFunctionalImpactProposition(
     experimentalContextQualifier: iriReference | Document | dict | None = Field(
         default=None,
         description="An assay in which the reported variant functional impact was determined - providing a specific experimental context in which this effect is asserted to hold.",
+    )
+
+
+class VariantClinicalSignificanceProposition(
+    ClinicalVariantProposition, BaseModelForbidExtra
+):
+    """A Proposition describing the clinical significance of a variant with respect to a
+    condition.
+    """
+
+    model_config = ConfigDict(use_enum_values=True)
+    type: Literal["VariantClinicalSignificanceProposition"] = Field(
+        default="VariantClinicalSignificanceProposition",
+        description="MUST be 'VariantClinicalSignificanceProposition'.",
+    )
+    predicate: Literal["hasClinicalSignificanceFor"] = Field(
+        default="hasClinicalSignificanceFor",
+        description="The predicate associating the subject variant to clinical significance for the object Condition. MUST be 'hasClinicalSignificanceFor'.",
+    )
+    objectCondition: Condition | iriReference = Field(
+        ..., description="The condition that is evaluated."
     )
 
 
@@ -491,8 +523,8 @@ class VariantPrognosticProposition(ClinicalVariantProposition, BaseModelForbidEx
 class VariantTherapeuticResponseProposition(
     ClinicalVariantProposition, BaseModelForbidExtra
 ):
-    """A Proposition about the role of a variant in modulating the response of a neoplasm to drug
-    administration or other therapeutic procedures.
+    """A Proposition about the role of a variant in modulating the response of a
+    neoplasm to drug administration or other therapeutic procedures.
     """
 
     model_config = ConfigDict(use_enum_values=True)
@@ -503,7 +535,7 @@ class VariantTherapeuticResponseProposition(
     )
     predicate: TherapeuticResponsePredicate = Field(
         ...,
-        description="The relationship the Proposition describes between the subject variant and object theapeutic. MUST be one of 'predictsSensitivityTo' or 'predictsResistanceTo'.",
+        description='The relationship the Proposition describes between the subject variant and object therapeutic. MUST be one of "predictsSensitivityTo" or "predictsResistanceTo".',
     )
     objectTherapeutic: Therapeutic | iriReference = Field(
         ...,
@@ -512,22 +544,6 @@ class VariantTherapeuticResponseProposition(
     conditionQualifier: Condition | iriReference = Field(
         ...,
         description="Reports the disease context in which the variant's association with therapeutic sensitivity or resistance is evaluated. Note that this is a required qualifier in therapeutic response propositions.",
-    )
-
-
-class Agent(Entity, BaseModelForbidExtra):
-    """An autonomous actor (person, organization, or software agent) that bears some
-    form of responsibility for an activity taking place, for the existence of an entity,
-    or for another agent's activity.
-    """
-
-    type: Literal["Agent"] = Field(
-        default=CoreType.AGENT.value, description=f"MUST be '{CoreType.AGENT.value}'."
-    )
-    name: str | None = Field(default=None, description="The given name of the Agent.")
-    agentType: str | None = Field(
-        default=None,
-        description="A specific type of agent the Agent object represents. Recommended subtypes include codes for `person`, `organization`, or `software`.",
     )
 
 
@@ -554,12 +570,21 @@ class EvidenceLine(InformationEntity, BaseModelForbidExtra):
         default=CoreType.EVIDENCE_LINE.value,
         description=f"MUST be '{CoreType.EVIDENCE_LINE.value}'.",
     )
-    targetProposition: Proposition | SubjectVariantProposition | None = Field(
+    targetProposition: (
+        ExperimentalVariantFunctionalImpactProposition
+        | VariantPathogenicityProposition
+        | VariantDiagnosticProposition
+        | VariantPrognosticProposition
+        | VariantOncogenicityProposition
+        | VariantTherapeuticResponseProposition
+        | VariantClinicalSignificanceProposition
+        | None
+    ) = Field(
         default=None,
         description="The possible fact against which evidence items contained in an Evidence Line were collectively evaluated, in determining the overall strength and direction of support they provide. For example, in an ACMG Guideline-based assessment of variant pathogenicity, the support provided by distinct lines of evidence are assessed against a target proposition that the variant is pathogenic for a specific disease.",
     )
     hasEvidenceItems: (
-        list[StudyResult | StatementType | EvidenceLineType | iriReference] | None
+        list[StudyResult | Statement | EvidenceLine | iriReference] | None
     ) = Field(
         default=None,
         description="An individual piece of information that was evaluated as evidence in building the argument represented by an Evidence Line.",
@@ -580,73 +605,6 @@ class EvidenceLine(InformationEntity, BaseModelForbidExtra):
         default=None,
         description="A term summarizing the overall outcome of the evidence assessment represented by the Evidence Line, in terms of the direction and strength of support it provides for or against the target Proposition.",
     )
-
-    @field_validator("hasEvidenceItems", mode="before")
-    def validate_has_evidence_items(
-        cls,  # noqa: N805
-        v: list | None,
-    ) -> list | None:
-        """Ensure hasEvidenceItems is correct type
-
-        This is needed since Pydantic was unable to determine which model to use
-
-        This only handles cases defined in the VA-Spec.
-
-        :param v: hasEvidenceItems value
-        :raises ValueError: If unable to find valid model for evidence items
-        :return: Evidence items
-        """
-        if not v:
-            return v
-
-        evidence_items = []
-
-        # Avoid circular imports
-        has_evidence_items_models = []
-        for module in [
-            "ga4gh.va_spec.aac_2017.models",
-            "ga4gh.va_spec.acmg_2015.models",
-            "ga4gh.va_spec.ccv_2022.models",
-        ]:
-            imported_module = importlib.import_module(module)
-            has_evidence_items_models.extend(
-                [
-                    obj_
-                    for _, obj_ in vars(imported_module).items()
-                    if inspect.isclass(obj_)
-                    and issubclass(obj_, Statement)
-                    and obj_.__name__.endswith(("Statement", "EvidenceLine"))
-                    and obj_ not in (Statement, EvidenceLine)
-                ]
-            )
-
-        has_evidence_items_models.extend(
-            [Statement, StudyResult, EvidenceLine, iriReference]
-        )
-
-        for evidence_item in v:
-            if isinstance(evidence_item, dict):
-                found_model = False
-                for evidence_item_model in has_evidence_items_models:
-                    try:
-                        evidence_item = evidence_item_model(**evidence_item)
-                    except ValidationError:
-                        pass
-                    else:
-                        evidence_items.append(evidence_item)
-                        found_model = True
-                        break
-                if not found_model:
-                    err_msg = "Unable to find valid model for `hasEvidenceItems`"
-                    raise ValueError(err_msg)
-            elif isinstance(evidence_item, str):
-                evidence_items.append(iriReference(root=evidence_item))
-            elif isinstance(evidence_item, tuple(has_evidence_items_models)):
-                evidence_items.append(evidence_item)
-            else:
-                err_msg = "Unable to find valid model for `hasEvidenceItems`"
-                raise ValueError(err_msg)
-        return evidence_items
 
     @staticmethod
     def _validate_evidence_outcome(
@@ -761,3 +719,7 @@ class Statement(InformationEntity, BaseModelForbidExtra):
         default=None,
         description="An evidence-based argument that supports or disputes the validity of the proposition that a Statement assesses or puts forth as true. The strength and direction of this argument (whether it supports or disputes the proposition, and how strongly) is based on an interpretation of one or more pieces of information as evidence (i.e. 'Evidence Items).",
     )
+
+
+Statement.model_rebuild()
+EvidenceLine.model_rebuild()
