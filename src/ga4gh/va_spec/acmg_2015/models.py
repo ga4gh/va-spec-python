@@ -9,6 +9,7 @@ from pydantic import Field, field_validator, model_validator
 
 from ga4gh.core.models import MappableConcept, iriReference
 from ga4gh.va_spec.base.core import (
+    Document,
     EvidenceLine,
     Method,
     Statement,
@@ -22,6 +23,23 @@ from ga4gh.va_spec.base.enums import (
 )
 from ga4gh.va_spec.base.validators import (
     validate_mappable_concept,
+)
+
+SYSTEM = System.ACMG
+METHOD = Method(  # recommended representation of ACMG 2015 method
+    name=SYSTEM,
+    reportedIn=Document(
+        id="pmid:25741868",
+        name="Richards et al., 2015, Genet Med.",
+        title="Standards and guidelines for the interpretation of sequence variants: a joint consensus recommendation of the American College of Medical Genetics and Genomics and the Association for Molecular Pathology",
+        doi="10.1038/gim.2015.30",
+        pmid="25741868",
+        urls=[
+            "https://doi.org/10.1038/gim.2015.30",
+            "https://pubmed.ncbi.nlm.nih.gov/25741868/",
+        ],
+    ),
+    methodType="guideline",
 )
 
 
@@ -104,7 +122,7 @@ class VariantPathogenicityEvidenceLine(EvidenceLine):
         """
         return validate_mappable_concept(
             v,
-            System.ACMG,
+            SYSTEM,
             valid_codes=STRENGTH_OF_EVIDENCE_PROVIDED_VALUES,
             mc_is_required=False,
         )
@@ -124,7 +142,7 @@ class VariantPathogenicityEvidenceLine(EvidenceLine):
         """
         cls._validate_direction_of_evidence_provided(values)
         acmg_code_pattern = r"^((?:PVS1)(?:_(?:not_met|(?:strong|moderate|supporting)))?|(?:PS[1-4]|BS[1-4])(?:_(?:not_met|(?:very_strong|moderate|supporting)))?|BA1(?:_not_met)?|(?:PM[1-6])(?:_(?:not_met|(?:very_strong|strong|supporting)))?|(PP[1-5]|BP[1-7])(?:_(?:not_met|very_strong|strong|moderate))?)$"
-        return cls._validate_evidence_outcome(values, System.ACMG, acmg_code_pattern)
+        return cls._validate_evidence_outcome(values, SYSTEM, acmg_code_pattern)
 
 
 class VariantPathogenicityStatement(Statement):
@@ -157,7 +175,7 @@ class VariantPathogenicityStatement(Statement):
         :return: Validated strength value
         """
         return validate_mappable_concept(
-            v, System.ACMG, valid_codes=STRENGTHS, mc_is_required=False
+            v, SYSTEM, valid_codes=STRENGTHS, mc_is_required=False
         )
 
     @field_validator("classification")
@@ -173,12 +191,12 @@ class VariantPathogenicityStatement(Statement):
             err_msg = "`primaryCoding` is required."
             raise ValueError(err_msg)
 
-        supported_systems = [System.ACMG.value, System.CLIN_GEN.value]
+        supported_systems = [SYSTEM.value, System.CLIN_GEN.value]
         if v.primaryCoding.system not in supported_systems:
             err_msg = f"`primaryCoding.system` must be one of: {supported_systems}."
             raise ValueError(err_msg)
 
-        if v.primaryCoding.system == System.ACMG:
+        if v.primaryCoding.system == SYSTEM:
             if v.primaryCoding.code.root not in ACMG_CLASSIFICATIONS:
                 err_msg = f"`primaryCoding.code` must be one of {ACMG_CLASSIFICATIONS}."
                 raise ValueError(err_msg)
