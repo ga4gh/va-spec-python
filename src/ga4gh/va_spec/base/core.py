@@ -5,7 +5,7 @@ from __future__ import annotations
 from abc import ABC
 from datetime import date, datetime
 from enum import Enum
-from typing import Annotated, Literal
+from typing import Annotated, Literal, TypeAlias
 
 from pydantic import (
     ConfigDict,
@@ -363,20 +363,6 @@ class Proposition(Entity):
     )
 
 
-class SubjectVariantProposition(RootModel):
-    """A `Proposition` that has a variant as the subject."""
-
-    root: (
-        ExperimentalVariantFunctionalImpactProposition
-        | VariantPathogenicityProposition
-        | VariantDiagnosticProposition
-        | VariantPrognosticProposition
-        | VariantOncogenicityProposition
-        | VariantTherapeuticResponseProposition
-        | VariantClinicalSignificanceProposition
-    ) = Field(discriminator="type")
-
-
 class _SubjectVariantPropositionBase(Entity, ABC):
     subjectVariant: MolecularVariation | CategoricalVariant | iriReference = Field(
         ..., description="A variant that is the subject of the Proposition."
@@ -548,6 +534,23 @@ class VariantTherapeuticResponseProposition(
     )
 
 
+_SubjectVariantPropositionType: TypeAlias = (
+    ExperimentalVariantFunctionalImpactProposition
+    | VariantPathogenicityProposition
+    | VariantDiagnosticProposition
+    | VariantPrognosticProposition
+    | VariantOncogenicityProposition
+    | VariantTherapeuticResponseProposition
+    | VariantClinicalSignificanceProposition
+)
+
+
+class SubjectVariantProposition(RootModel):
+    """A `Proposition` that has a variant as the subject."""
+
+    root: _SubjectVariantPropositionType = Field(discriminator="type")
+
+
 class Direction(str, Enum):
     """A term indicating whether the Statement supports, disputes, or remains neutral
     w.r.t. the validity of the Proposition it evaluates.
@@ -571,16 +574,7 @@ class EvidenceLine(InformationEntity, BaseModelForbidExtra):
         default=CoreType.EVIDENCE_LINE.value,
         description=f"MUST be '{CoreType.EVIDENCE_LINE.value}'.",
     )
-    targetProposition: (
-        ExperimentalVariantFunctionalImpactProposition
-        | VariantPathogenicityProposition
-        | VariantDiagnosticProposition
-        | VariantPrognosticProposition
-        | VariantOncogenicityProposition
-        | VariantTherapeuticResponseProposition
-        | VariantClinicalSignificanceProposition
-        | None
-    ) = Field(
+    targetProposition: _SubjectVariantPropositionType | None = Field(
         default=None,
         description="The possible fact against which evidence items contained in an Evidence Line were collectively evaluated, in determining the overall strength and direction of support they provide. For example, in an ACMG Guideline-based assessment of variant pathogenicity, the support provided by distinct lines of evidence are assessed against a target proposition that the variant is pathogenic for a specific disease.",
     )
@@ -688,15 +682,7 @@ class Statement(InformationEntity, BaseModelForbidExtra):
         default=CoreType.STATEMENT.value,
         description=f"MUST be '{CoreType.STATEMENT.value}'.",
     )
-    proposition: (
-        ExperimentalVariantFunctionalImpactProposition
-        | VariantDiagnosticProposition
-        | VariantOncogenicityProposition
-        | VariantPathogenicityProposition
-        | VariantPrognosticProposition
-        | VariantTherapeuticResponseProposition
-        | VariantClinicalSignificanceProposition
-    ) = Field(
+    proposition: _SubjectVariantPropositionType = Field(
         ...,
         description="A possible fact, the validity of which is assessed and reported by the Statement. A Statement can put forth the proposition as being true, false, or uncertain, and may provide an assessment of the level of confidence/evidence supporting this claim.",
         discriminator="type",
