@@ -695,6 +695,7 @@ class Statement(InformationEntity, BaseModelForbidExtra):
         | VariantPathogenicityProposition
         | VariantPrognosticProposition
         | VariantTherapeuticResponseProposition
+        | VariantClinicalSignificanceProposition
     ) = Field(
         ...,
         description="A possible fact, the validity of which is assessed and reported by the Statement. A Statement can put forth the proposition as being true, false, or uncertain, and may provide an assessment of the level of confidence/evidence supporting this claim.",
