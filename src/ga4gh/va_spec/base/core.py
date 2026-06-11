@@ -534,6 +534,8 @@ class VariantTherapeuticResponseProposition(
     )
 
 
+# Any new proposition type should be added to this union, and ONLY this union
+# should be used when annotating a proposition property
 _SubjectVariantPropositionType: TypeAlias = (
     ExperimentalVariantFunctionalImpactProposition
     | VariantPathogenicityProposition
