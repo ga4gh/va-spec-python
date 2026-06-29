@@ -17,6 +17,7 @@ from pydantic import (
     ValidationError,
     field_validator,
 )
+from typing_extensions import Self
 
 from ga4gh.cat_vrs.models import CategoricalVariant
 from ga4gh.core.models import (
@@ -648,54 +649,48 @@ class EvidenceLine(InformationEntity, BaseModelForbidExtra):
                 raise ValueError(err_msg)
         return evidence_items
 
-    @staticmethod
-    def _validate_evidence_outcome(
-        values: dict, system: System, code_pattern: str
-    ) -> dict:
+    def _validate_evidence_outcome(self, system: System, code_pattern: str) -> Self:
         """Validate ``evidenceOutcome`` property if it exists
 
-        :param values: Input values
         :param system: System that should be used for ``primaryCoding.system``
         :param code_pattern: The regex pattern that should be used for
             ``primaryCoding.code``
         :raises ValueError: If ``evidenceOutcome`` exists and is invalid
-        :return: Validated input values. If ``evidenceOutcome`` exists, then it will be
-            validated and converted to a ``MappableConcept``
         """
-        if "evidenceOutcome" in values:
-            mc = MappableConcept(**values["evidenceOutcome"])
-            values["evidenceOutcome"] = mc
+        if evidence_outcome := self.evidenceOutcome:
             validate_mappable_concept(
-                mc, system, code_pattern=code_pattern, mc_is_required=False
+                evidence_outcome,
+                system,
+                code_pattern=code_pattern,
+                mc_is_required=False,
             )
-        return values
+        return self
 
-    @staticmethod
-    def _validate_direction_of_evidence_provided(values: dict) -> dict:
+    def _validate_direction_of_evidence_provided(self) -> Self:
         """Validate conditional requirements for ``directionOfEvidenceProvided``
 
-        :param values: Input values
         :raises ValueError: If ``strengthOfEvidenceProvided`` is not provided when
             ``directionOfEvidenceProvided`` is supports or disputes or if
             ``strengthOfEvidenceProvided`` is provided when
             ``directionOfEvidenceProvided`` is neutral
-        :return: Validated input values
         """
-        direction_of_evidence_provided = values.get("directionOfEvidenceProvided")
+        direction_of_evidence_provided = self.directionOfEvidenceProvided
+        strength_of_evidence_provided = self.strengthOfEvidenceProvided
         if (
             direction_of_evidence_provided in (Direction.SUPPORTS, Direction.DISPUTES)
-            and values.get("strengthOfEvidenceProvided") is None
+            and strength_of_evidence_provided is None
         ):
             err_msg = f"`strengthOfEvidenceProvided` is required when `directionOfEvidenceProvided` is '{Direction.SUPPORTS.value}' or '{Direction.DISPUTES.value}'."
             raise ValueError(err_msg)
 
-        if direction_of_evidence_provided == Direction.NEUTRAL and values.get(
-            "strengthOfEvidenceProvided"
+        if (
+            direction_of_evidence_provided == Direction.NEUTRAL
+            and strength_of_evidence_provided
         ):
             err_msg = f"`strengthOfEvidenceProvided` is not allowed when `directionOfEvidenceProvided` is '{Direction.NEUTRAL.value}'."
             raise ValueError(err_msg)
 
-        return values
+        return self
 
     @field_validator("specifiedBy")
     @classmethod

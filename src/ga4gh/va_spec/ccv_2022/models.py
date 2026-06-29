@@ -6,6 +6,7 @@ Cancer Consortium (VICC) 2022 community guidelines for cancer variant interpreta
 from enum import Enum
 
 from pydantic import Field, field_validator, model_validator
+from typing_extensions import Self
 
 from ga4gh.core.models import MappableConcept, iriReference
 from ga4gh.va_spec.base.core import (
@@ -98,22 +99,19 @@ class VariantOncogenicityEvidenceLine(EvidenceLine):
             mc_is_required=False,
         )
 
-    @model_validator(mode="before")
-    def validate_model(cls, values: dict) -> dict:  # noqa: N805
+    @model_validator(mode="after")
+    def validate_model(self) -> Self:
         """Validate ``evidenceOutcome`` and ``directionOfEvidenceProvided`` properties
 
-        :param values: Input values
-        :raises ValueError: If ``evidenceOutcome`` exists and is invalid
-        :return: Validated input values. If ``evidenceOutcome`` exists, then it will be
-            validated and converted to a ``MappableConcept``.
+        :raises ValueError: If ``evidenceOutcome`` exists and is invalid.
             Or if ``strengthOfEvidenceProvided`` is not provided when
             ``directionOfEvidenceProvided`` is supports or disputes or if
             ``strengthOfEvidenceProvided`` is provided when
             ``directionOfEvidenceProvided`` is neutral
         """
-        cls._validate_direction_of_evidence_provided(values)
+        self._validate_direction_of_evidence_provided()
         ccv_code_pattern = r"^((?:OVS1|SBVS1)(?:_(?:not_met|(?:strong|moderate|supporting)))?|(?:OS[1-3]|SBS[1-2])(?:_(?:not_met|(?:very_strong|moderate|supporting)))?|(?:OM[1-4])(?:_(?:not_met|(?:very_strong|strong|supporting)))?|(OP[1-4]|SBP[1-2])(?:_(?:not_met|very_strong|strong|moderate))?)$"
-        return cls._validate_evidence_outcome(values, SYSTEM, ccv_code_pattern)
+        return self._validate_evidence_outcome(SYSTEM, ccv_code_pattern)
 
 
 class VariantOncogenicityStudyStatement(Statement):
