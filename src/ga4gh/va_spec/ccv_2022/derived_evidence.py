@@ -9,10 +9,7 @@ from types import MappingProxyType
 from pydantic import BaseModel
 
 from ga4gh.core.models import Coding, MappableConcept, code
-from ga4gh.va_spec.base import (
-    StrengthOfEvidenceProvided,
-)
-from ga4gh.va_spec.base.enums import System
+from ga4gh.va_spec.base.enums import StrengthOfEvidenceProvided, System
 from ga4gh.va_spec.ccv_2022.models import VariantOncogenicityEvidenceLine
 
 

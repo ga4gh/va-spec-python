@@ -4,6 +4,8 @@ variant pathogenicity.
 """
 
 from enum import Enum
+from types import MappingProxyType
+from typing import ClassVar
 
 from pydantic import Field, field_validator, model_validator
 from typing_extensions import Self
@@ -24,6 +26,7 @@ from ga4gh.va_spec.base.enums import (
     System,
 )
 from ga4gh.va_spec.base.validators import (
+    _validate_method_type_evidence_outcome,
     validate_mappable_concept,
 )
 
@@ -115,6 +118,167 @@ class VariantPathogenicityEvidenceLine(EvidenceLine):
         BP6 = "BP6"
         BP7 = "BP7"
 
+    class MethodType(str, Enum):
+        """Define ACMG 2015 method type values"""
+
+        # Assessment of whether population control frequency refutes
+        # pathogenicity or whether absence/extreme rarity in controls provides
+        # supporting evidence for pathogenicity
+        POPULATION_DATA_ASSESSMENT = "Population Data Assessment"
+
+        # Prevalence in affected statistically increased over matched controls,
+        # or enrichment in controls inconsistent with disease penetrance
+        CASE_CONTROL_ENRICHMENT_ASSESSMENT = "Case-Control Enrichment Assessment"
+
+        # Predicted null variant in a gene where LOF is a known mechanism of disease
+        NULL_VARIANT_ASSESSMENT = "Null variant assessment"
+
+        # Same amino acid change as an established pathogenic variant
+        SAME_AMINO_ACID_CHANGE_ASSESSMENT = "Same amino acid change assessment"
+
+        # Mutational hot spot or well-established functional domain without
+        # benign variation
+        MUTATIONAL_HOT_SPOT_AND_FUNCTIONAL_DOMAIN_ASSESSMENT = (
+            "Mutational hot spot and functional domain assessment"
+        )
+
+        # Protein length change, or in-frame indels changing counts of repeats
+        # with no known function
+        PROTEIN_LENGTH_CHANGE_ASSESSMENT = "Protein length change assessment"
+
+        # Novel missense change at an amino acid where a different pathogenic
+        # missense change has been seen before
+        NOVEL_MISSENSE_POSITION_ASSESSMENT = "Novel missense position assessment"
+
+        # Missense in a gene where only truncation causes disease, or with low
+        # rate of benign missense variation
+        VARIANT_SPECTRUM_ASSESSMENT = "Variant spectrum assessment"
+
+        # Multiple lines of computational evidence support a deleterious effect
+        # or no impact
+        IN_SILICO_FUNCTIONAL_IMPACT_ASSESSMENT = (
+            "In silico functional impact assessment"
+        )
+
+        # Silent variant with no predicted splicing impact
+        PREDICTED_SILENT_VARIANT_ASSESSMENT = "Predicted silent variant assessment"
+
+        # Well-established functional studies show or do not show deleterious
+        # effect
+        FUNCTIONAL_DATA_ASSESSMENT = "Functional Data Assessment"
+
+        # Consegregation with disease in multiple family members, or
+        # nonsegregation
+        SEGREGATION_DATA_ASSESSMENT = "Segregation Data Assessment"
+
+        # De novo, with or without paternity and maternity confirmed
+        DE_NOVO_DATA_ASSESSMENT = "De Novo Data Assessment"
+
+        # Observed in trans with a dominant variant, in cis with a pathogenic
+        # variant, or in trans with a pathogenic variant in a recessive
+        # disorder
+        CIS_TRANS_VARIANT_ASSESSMENT = "Cis/trans variant assessment"
+
+        # Benign or pathogenic according to a reputable source
+        REPUTABLE_SOURCE_ASSESSMENT = "Reputable Source Assessment"
+
+        # Patient's phenotype or family history highly specific for the gene
+        # and disorder
+        PHENOTYPE_GENE_SPECIFICITY_ASSESSMENT = "Phenotype-gene specificity assessment"
+
+        # Found in a case with an alternate cause
+        ALTERNATIVE_CAUSE_ASSESSMENT = "Alternative cause assessment"
+
+    ALLOWED_CRITERIA_BY_METHOD_TYPE: ClassVar[
+        MappingProxyType[
+            MethodType,
+            frozenset[Criterion],
+        ]
+    ] = MappingProxyType(
+        {
+            MethodType.POPULATION_DATA_ASSESSMENT: frozenset(
+                {
+                    Criterion.BA1,
+                    Criterion.BS1,
+                    Criterion.PM2,
+                }
+            ),
+            MethodType.CASE_CONTROL_ENRICHMENT_ASSESSMENT: frozenset(
+                {
+                    Criterion.BS2,
+                    Criterion.PM4,
+                }
+            ),
+            MethodType.NULL_VARIANT_ASSESSMENT: frozenset({Criterion.PVS1}),
+            MethodType.SAME_AMINO_ACID_CHANGE_ASSESSMENT: frozenset({Criterion.PS1}),
+            MethodType.MUTATIONAL_HOT_SPOT_AND_FUNCTIONAL_DOMAIN_ASSESSMENT: frozenset(
+                {
+                    Criterion.PM1,
+                }
+            ),
+            MethodType.PROTEIN_LENGTH_CHANGE_ASSESSMENT: frozenset(
+                {
+                    Criterion.PM4,
+                    Criterion.BP3,
+                }
+            ),
+            MethodType.NOVEL_MISSENSE_POSITION_ASSESSMENT: frozenset({Criterion.PM5}),
+            MethodType.VARIANT_SPECTRUM_ASSESSMENT: frozenset(
+                {
+                    Criterion.PP2,
+                    Criterion.BP1,
+                }
+            ),
+            MethodType.IN_SILICO_FUNCTIONAL_IMPACT_ASSESSMENT: frozenset(
+                {
+                    Criterion.PP3,
+                    Criterion.BP4,
+                }
+            ),
+            MethodType.PREDICTED_SILENT_VARIANT_ASSESSMENT: frozenset({Criterion.BP7}),
+            MethodType.FUNCTIONAL_DATA_ASSESSMENT: frozenset(
+                {
+                    Criterion.PS3,
+                    Criterion.BS3,
+                }
+            ),
+            MethodType.SEGREGATION_DATA_ASSESSMENT: frozenset(
+                {
+                    Criterion.PP1,
+                    Criterion.BS4,
+                }
+            ),
+            MethodType.DE_NOVO_DATA_ASSESSMENT: frozenset(
+                {
+                    Criterion.PS2,
+                    Criterion.PM6,
+                }
+            ),
+            MethodType.CIS_TRANS_VARIANT_ASSESSMENT: frozenset(
+                {
+                    Criterion.PM3,
+                    Criterion.BP2,
+                }
+            ),
+            MethodType.REPUTABLE_SOURCE_ASSESSMENT: frozenset(
+                {
+                    Criterion.PP5,
+                    Criterion.BP6,
+                }
+            ),
+            MethodType.PHENOTYPE_GENE_SPECIFICITY_ASSESSMENT: frozenset(
+                {
+                    Criterion.PP4,
+                }
+            ),
+            MethodType.ALTERNATIVE_CAUSE_ASSESSMENT: frozenset(
+                {
+                    Criterion.BP5,
+                }
+            ),
+        }
+    )
+
     @field_validator("strengthOfEvidenceProvided")
     @classmethod
     def validate_strength_of_evidence_provided(
@@ -146,7 +310,16 @@ class VariantPathogenicityEvidenceLine(EvidenceLine):
         """
         self._validate_direction_of_evidence_provided()
         acmg_code_pattern = r"^((?:PVS1)(?:_(?:not_met|(?:strong|moderate|supporting)))?|(?:PS[1-4]|BS[1-4])(?:_(?:not_met|(?:very_strong|moderate|supporting)))?|BA1(?:_not_met)?|(?:PM[1-6])(?:_(?:not_met|(?:very_strong|strong|supporting)))?|(PP[1-5]|BP[1-7])(?:_(?:not_met|very_strong|strong|moderate))?)$"
-        return self._validate_evidence_outcome(SYSTEM, acmg_code_pattern)
+        self._validate_evidence_outcome(SYSTEM, acmg_code_pattern)
+        self._validate_specified_by()
+        _validate_method_type_evidence_outcome(
+            self.MethodType,
+            self.specifiedBy.methodType,
+            self.Criterion,
+            self.ALLOWED_CRITERIA_BY_METHOD_TYPE,
+            self.evidenceOutcome.primaryCoding.code.root,
+        )
+        return self
 
 
 class VariantPathogenicityStatement(Statement):
