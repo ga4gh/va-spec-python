@@ -238,7 +238,7 @@ class CohortAlleleFrequencyStudyResult(_StudyResult, BaseModelForbidExtra):
         ...,
         description="The number of occurrences of all alleles at the locus in the cohort.",
     )
-    focusAlleleFrequency: float = Field(
+    focusAlleleFrequency: int | float = Field(
         ..., description="The frequency of the focusAllele in the cohort."
     )
     cohort: StudyGroup = Field(
@@ -275,7 +275,7 @@ class TumorVariantFrequencyStudyResult(_StudyResult, BaseModelForbidExtra):
         ...,
         description="The total number of tumor samples in the sample group.",
     )
-    affectedFrequency: float = Field(
+    affectedFrequency: int | float = Field(
         ...,
         description="The frequency of tumor samples that include the focus variant in the sample group.",
     )
@@ -302,7 +302,7 @@ class ExperimentalVariantFunctionalImpactStudyResult(
         ...,
         description="The genetic variant for which a functional impact score is generated.",
     )
-    functionalImpactScore: float | None = Field(
+    functionalImpactScore: int | float | None = Field(
         default=None,
         description="The score of the variant impact measured in the assay or study.",
     )
@@ -573,7 +573,7 @@ class EvidenceLine(InformationEntity, BaseModelForbidExtra):
         default=None,
         description="The strength of support that an Evidence Line is determined to provide for or against its target Proposition, evaluated relative to the direction indicated by the directionOfEvidenceProvided value.",
     )
-    scoreOfEvidenceProvided: float | None = Field(
+    scoreOfEvidenceProvided: int | float | None = Field(
         default=None,
         description="A quantitative score indicating the strength of support that an Evidence Line is determined to provide for or against its target Proposition, evaluated relative to the direction indicated by the directionOfEvidenceProvided value.",
     )
@@ -744,7 +744,7 @@ class Statement(InformationEntity, BaseModelForbidExtra):
         default=None,
         description="A term used to report the strength of a Proposition's assessment in the direction indicated (i.e. how strongly supported or disputed the Proposition is believed to be).  Implementers may choose to frame a strength assessment in terms of how *confident* an agent is that the Proposition is true or false, or in terms of the *strength of all evidence* they believe supports or disputes it.",
     )
-    score: float | None = Field(
+    score: int | float | None = Field(
         default=None,
         description="A quantitative score that indicates the strength of a Proposition's assessment in the direction indicated (i.e. how strongly supported or disputed the Proposition is believed to be). Depending on its implementation, a score may reflect how *confident* that agent is that the Proposition is true or false, or the *strength of evidence* they believe supports or disputes it. Instructions for how to interpret the meaning of a given score may be gleaned from the method or document referenced in 'specifiedBy' attribute.",
     )
