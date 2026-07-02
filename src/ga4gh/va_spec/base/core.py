@@ -12,9 +12,7 @@ from pydantic import (
     Field,
     RootModel,
     StringConstraints,
-    field_validator,
 )
-from typing_extensions import Self
 
 from ga4gh.cat_vrs.models import CategoricalVariant
 from ga4gh.core.models import (
@@ -30,7 +28,9 @@ from ga4gh.va_spec.base.enums import (
     System,
     TherapeuticResponsePredicate,
 )
-from ga4gh.va_spec.base.validators import validate_mappable_concept
+from ga4gh.va_spec.base.validators import (
+    validate_mappable_concept,
+)
 from ga4gh.vrs.models import Allele, MolecularVariation
 
 
@@ -604,7 +604,7 @@ class EvidenceLine(InformationEntity, BaseModelForbidExtra):
         description="A term summarizing the overall outcome of the evidence assessment represented by the Evidence Line, in terms of the direction and strength of support it provides for or against the target Proposition.",
     )
 
-    def _validate_evidence_outcome(self, system: System, code_pattern: str) -> Self:
+    def _validate_evidence_outcome(self, system: System, code_pattern: str) -> None:
         """Validate ``evidenceOutcome`` property if it exists
 
         :param system: System that should be used for ``primaryCoding.system``
@@ -619,9 +619,8 @@ class EvidenceLine(InformationEntity, BaseModelForbidExtra):
                 code_pattern=code_pattern,
                 mc_is_required=False,
             )
-        return self
 
-    def _validate_direction_of_evidence_provided(self) -> Self:
+    def _validate_direction_of_evidence_provided(self) -> None:
         """Validate conditional requirements for ``directionOfEvidenceProvided``
 
         :raises ValueError: If ``strengthOfEvidenceProvided`` is not provided when
@@ -645,25 +644,25 @@ class EvidenceLine(InformationEntity, BaseModelForbidExtra):
             err_msg = f"`strengthOfEvidenceProvided` is not allowed when `directionOfEvidenceProvided` is '{Direction.NEUTRAL.value}'."
             raise ValueError(err_msg)
 
-        return self
-
-    @field_validator("specifiedBy")
-    @classmethod
-    def validate_specified_by(cls, v: Method | iriReference) -> Method | iriReference:
+    def _validate_specified_by(self) -> None:
         """Validate specifiedBy
 
-        :param v: specifiedBy
         :raises ValueError: If invalid specifiedBy values are provided
         :return: Validated specifiedBy value
         """
-        if hasattr(cls, "Criterion") and isinstance(v, Method):
-            if not v.reportedIn:
-                err_msg = "`reportedIn` is required."
-                raise ValueError(err_msg)
+        specified_by = self.specifiedBy
+        if not isinstance(specified_by, Method):
+            msg = "`specifiedBy` is required and must be a `Method`"
+            raise ValueError(msg)
 
-            cls.Criterion(v.methodType)
+        method_type = specified_by.methodType
+        if method_type is None:
+            msg = "`specifiedBy.methodType` is required"
+            raise ValueError(msg)
 
-        return v
+        if specified_by.reportedIn is None:
+            msg = "`specifiedBy.reportedIn` is required"
+            raise ValueError(msg)
 
 
 class Statement(InformationEntity, BaseModelForbidExtra):
