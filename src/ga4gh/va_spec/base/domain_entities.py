@@ -4,8 +4,12 @@ from __future__ import annotations
 
 from pydantic import ConfigDict, Field, RootModel
 
-from ga4gh.core.models import BaseModelForbidExtra, Element, MappableConcept
-from ga4gh.va_spec.base.enums import MembershipOperator
+from ga4gh.core.models import (
+    BaseModelForbidExtra,
+    Element,
+    MappableConcept,
+    MembershipOperator,
+)
 
 
 class ConditionSet(Element, BaseModelForbidExtra):

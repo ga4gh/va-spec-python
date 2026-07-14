@@ -24,19 +24,6 @@ class TherapeuticResponsePredicate(str, Enum):
     RESISTANCE = "predictsResistanceTo"
 
 
-class MembershipOperator(str, Enum):
-    """The logical relationship between members of the set, that indicates how they
-    manifest in patients/research subjects.
-    The value 'AND' indicates that all conditions in the set co-occur together in a
-    given patient or subject.
-    The value 'OR' indicates that only one condition in the set manifests in each
-    participant interrogated in a given study.
-    """
-
-    AND = "AND"
-    OR = "OR"
-
-
 class StrengthOfEvidenceProvided(str, Enum):
     """Define constraints for strength of evidence provided values"""
 
