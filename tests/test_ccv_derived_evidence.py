@@ -129,4 +129,4 @@ def test_derive_onco_evidence_attributes(
         == expected_strength
     )
     assert onco_evidence_attrs.scoreOfEvidenceProvided == expected_score
-    assert onco_evidence_attrs.methodType == expected_method_type
+    assert onco_evidence_attrs.specifiedBy.methodType == expected_method_type

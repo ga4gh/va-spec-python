@@ -9,8 +9,14 @@ from types import MappingProxyType
 from pydantic import BaseModel
 
 from ga4gh.core.models import Coding, MappableConcept, code
+from ga4gh.va_spec.base.core import Method
 from ga4gh.va_spec.base.enums import StrengthOfEvidenceProvided, System
-from ga4gh.va_spec.ccv_2022.models import VariantOncogenicityEvidenceLine
+from ga4gh.va_spec.ccv_2022.models import (
+    METHOD as CCV_METHOD,
+)
+from ga4gh.va_spec.ccv_2022.models import (
+    VariantOncogenicityEvidenceLine,
+)
 
 
 class EvidenceAttributes(BaseModel):
@@ -19,7 +25,7 @@ class EvidenceAttributes(BaseModel):
     evidenceOutcome: MappableConcept
     strengthOfEvidenceProvided: MappableConcept
     scoreOfEvidenceProvided: int
-    methodType: VariantOncogenicityEvidenceLine.MethodType
+    specifiedBy: Method
 
 
 # IMPORTANT: Don't change the order. Longer suffixes must be evaluated first.
@@ -54,7 +60,7 @@ def derive_onco_evidence_attributes(
 
     :param evidence: CCV 2022 evidence code
     :return: Derived evidence attributes (evidenceOutcome, strengthOfEvidenceProvided,
-        scoreOfEvidenceProvided)
+        scoreOfEvidenceProvided, specifiedBy)
     """
     evidence_code = evidence.value
     normalized_evidence_code = evidence_code.rstrip("1234")
@@ -81,5 +87,12 @@ def derive_onco_evidence_attributes(
             )
         ),
         scoreOfEvidenceProvided=CODE_PREFIX_TO_SCORE_MAP[code_prefix],
-        methodType=VariantOncogenicityEvidenceLine.METHOD_TYPE_BY_CRITERION[evidence],
+        specifiedBy=CCV_METHOD.model_copy(
+            deep=True,
+            update={
+                "methodType": VariantOncogenicityEvidenceLine.METHOD_TYPE_BY_CRITERION[
+                    evidence
+                ]
+            },
+        ),
     )
