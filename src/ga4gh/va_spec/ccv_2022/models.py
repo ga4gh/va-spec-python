@@ -3,6 +3,7 @@ Resource (ClinGen), Cancer Genomics Consortium (CGC),and Variant Interpretation 
 Cancer Consortium (VICC) 2022 community guidelines for cancer variant interpretation.
 """
 
+from collections.abc import Collection, Mapping
 from enum import Enum
 from types import MappingProxyType
 from typing import ClassVar
@@ -26,7 +27,9 @@ from ga4gh.va_spec.base.enums import (
     System,
 )
 from ga4gh.va_spec.base.validators import (
+    CriterionT,
     MethodTypeCriterionValidationMixin,
+    MethodTypeT,
     validate_mappable_concept,
 )
 
@@ -46,6 +49,22 @@ METHOD = Method(  # recommended representation of ClinGen/CGC/VICC 2022 method
     ),
     methodType="guideline",
 )
+
+
+def _build_reverse_mapping(
+    allowed: Mapping[MethodTypeT, Collection[CriterionT]],
+) -> MappingProxyType[CriterionT, MethodTypeT]:
+    """Build an immutable reverse mapping.
+
+    :param allowed: Mapping of method types to their associated criteria.
+    :return: Immutable mapping of each criterion to its method type.
+    """
+    mapping = {
+        criterion: method_type
+        for method_type, criteria in allowed.items()
+        for criterion in criteria
+    }
+    return MappingProxyType(mapping)
 
 
 class VariantOncogenicityEvidenceLine(EvidenceLine, MethodTypeCriterionValidationMixin):
@@ -196,16 +215,6 @@ class VariantOncogenicityEvidenceLine(EvidenceLine, MethodTypeCriterionValidatio
             ),
         }
     )
-
-    _method_type_by_criterion: dict[Criterion, MethodType] = {}
-    for method_type, criteria in ALLOWED_CRITERIA_BY_METHOD_TYPE.items():
-        for criterion in criteria:
-            _method_type_by_criterion[criterion] = method_type
-
-    METHOD_TYPE_BY_CRITERION: ClassVar[MappingProxyType[Criterion, MethodType]] = (
-        MappingProxyType(_method_type_by_criterion)
-    )
-    del _method_type_by_criterion
 
     @field_validator("strengthOfEvidenceProvided")
     @classmethod

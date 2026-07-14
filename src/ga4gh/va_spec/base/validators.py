@@ -71,7 +71,24 @@ class MethodTypeCriterionValidationMixin(Generic[MethodTypeT, CriterionT]):
     ALLOWED_CRITERIA_BY_METHOD_TYPE: ClassVar[
         MappingProxyType[MethodTypeT, frozenset[CriterionT]]
     ]
-    EVIDENCE_OUTCOME_CODE_PATTERN: ClassVar[str]
+    METHOD_TYPE_BY_CRITERION: ClassVar[MappingProxyType[CriterionT, MethodTypeT]]
+
+    def __init_subclass__(cls, **kwargs) -> None:
+        """Initialize derived criterion mappings for a subclass.
+
+        :param kwargs: Additional subclass initialization arguments.
+        """
+        super().__init_subclass__(**kwargs)
+
+        allowed = cls.ALLOWED_CRITERIA_BY_METHOD_TYPE
+
+        cls.METHOD_TYPE_BY_CRITERION = MappingProxyType(
+            {
+                criterion: method_type
+                for method_type, criteria in allowed.items()
+                for criterion in criteria
+            }
+        )
 
     @classmethod
     def _get_base_criterion_from_code(cls, evidence_outcome_code: str) -> CriterionT:
