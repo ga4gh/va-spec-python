@@ -26,7 +26,7 @@ from ga4gh.va_spec.base.enums import (
     System,
 )
 from ga4gh.va_spec.base.validators import (
-    _validate_method_type_evidence_outcome,
+    MethodTypeCriterionValidationMixin,
     validate_mappable_concept,
 )
 
@@ -48,7 +48,7 @@ METHOD = Method(  # recommended representation of ClinGen/CGC/VICC 2022 method
 )
 
 
-class VariantOncogenicityEvidenceLine(EvidenceLine):
+class VariantOncogenicityEvidenceLine(EvidenceLine, MethodTypeCriterionValidationMixin):
     """An Evidence Line that describes how evidence for a variant was interpreted to
     determine if a specific CCV 2022 criterion code is met, and the strength that
     evidence this provides for or against the variant's oncogenicity. An Evidence Line
@@ -229,14 +229,9 @@ class VariantOncogenicityEvidenceLine(EvidenceLine):
         ccv_code_pattern = r"^((?:OVS1|SBVS1)(?:_(?:not_met|(?:strong|moderate|supporting)))?|(?:OS[1-3]|SBS[1-2])(?:_(?:not_met|(?:very_strong|moderate|supporting)))?|(?:OM[1-4])(?:_(?:not_met|(?:very_strong|strong|supporting)))?|(OP[1-4]|SBP[1-2])(?:_(?:not_met|very_strong|strong|moderate))?)$"
         self._validate_evidence_outcome(SYSTEM, ccv_code_pattern)
         self._validate_specified_by()
-        _validate_method_type_evidence_outcome(
-            self.MethodType,
-            self.specifiedBy.methodType,
-            self.Criterion,
-            self.ALLOWED_CRITERIA_BY_METHOD_TYPE,
-            self.evidenceOutcome.primaryCoding.code.root,
+        self._validate_method_type_evidence_outcome(
+            self.specifiedBy.methodType, self.evidenceOutcome.primaryCoding.code.root
         )
-
         return self
 
 

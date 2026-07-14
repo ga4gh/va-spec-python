@@ -26,7 +26,7 @@ from ga4gh.va_spec.base.enums import (
     System,
 )
 from ga4gh.va_spec.base.validators import (
-    _validate_method_type_evidence_outcome,
+    MethodTypeCriterionValidationMixin,
     validate_mappable_concept,
 )
 
@@ -61,7 +61,9 @@ class AcmgClassification(str, Enum):
 ACMG_CLASSIFICATIONS = [v.value for v in AcmgClassification.__members__.values()]
 
 
-class VariantPathogenicityEvidenceLine(EvidenceLine):
+class VariantPathogenicityEvidenceLine(
+    EvidenceLine, MethodTypeCriterionValidationMixin
+):
     """An Evidence Line that describes how a specific type of information was
     interpreted as evidence for or against a variant's pathogenicity. In the ACMG
     Framework, evidence is assessed by determining if a specific criterion (e.g. 'PM2')
@@ -312,12 +314,8 @@ class VariantPathogenicityEvidenceLine(EvidenceLine):
         acmg_code_pattern = r"^((?:PVS1)(?:_(?:not_met|(?:strong|moderate|supporting)))?|(?:PS[1-4]|BS[1-4])(?:_(?:not_met|(?:very_strong|moderate|supporting)))?|BA1(?:_not_met)?|(?:PM[1-6])(?:_(?:not_met|(?:very_strong|strong|supporting)))?|(PP[1-5]|BP[1-7])(?:_(?:not_met|very_strong|strong|moderate))?)$"
         self._validate_evidence_outcome(SYSTEM, acmg_code_pattern)
         self._validate_specified_by()
-        _validate_method_type_evidence_outcome(
-            self.MethodType,
-            self.specifiedBy.methodType,
-            self.Criterion,
-            self.ALLOWED_CRITERIA_BY_METHOD_TYPE,
-            self.evidenceOutcome.primaryCoding.code.root,
+        self._validate_method_type_evidence_outcome(
+            self.specifiedBy.methodType, self.evidenceOutcome.primaryCoding.code.root
         )
         return self
 
