@@ -604,15 +604,24 @@ class EvidenceLine(InformationEntity, BaseModelForbidExtra):
         description="A term summarizing the overall outcome of the evidence assessment represented by the Evidence Line, in terms of the direction and strength of support it provides for or against the target Proposition.",
     )
 
-    def _validate_evidence_outcome(self, system: System, code_pattern: str) -> None:
+    def _validate_evidence_outcome(
+        self, system: System, code_pattern: str, is_required: bool = False
+    ) -> None:
         """Validate ``evidenceOutcome`` property if it exists
 
         :param system: System that should be used for ``primaryCoding.system``
         :param code_pattern: The regex pattern that should be used for
             ``primaryCoding.code``
-        :raises ValueError: If ``evidenceOutcome`` exists and is invalid
+        :param is_required: Whether evidenceOutcome is required
+        :raises ValueError: If ``evidenceOutcome`` exists and is invalid, or if
+            `is_required` is True and no `evidenceOutcome` provided
         """
-        if evidence_outcome := self.evidenceOutcome:
+        evidence_outcome = self.evidenceOutcome
+        if is_required and not evidence_outcome:
+            msg = "`evidenceOutcome` is required"
+            raise ValueError(msg)
+
+        if evidence_outcome:
             validate_mappable_concept(
                 evidence_outcome,
                 system,

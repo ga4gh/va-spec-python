@@ -24,29 +24,34 @@ def validate_mappable_concept(
     :param code_pattern: The regex pattern that should be used for
         ``primaryCoding.code``
     :param mc_is_required: Whether or not `mc` is required
-    :raises ValueError: If `mc` is invalid
+    :raises ValueError: If `mc` is invalid or not provided when `mc_is_required`
+        is set to True
     :return: Validated mappable concept
     """
-    if not mc_is_required and not mc:
-        return mc
+    if not mc:
+        if mc_is_required:
+            msg = "MappableConcept is required"
+            raise ValueError(msg)
+        return None
 
-    if mc and not mc.primaryCoding:
-        err_msg = "`primaryCoding` is required."
-        raise ValueError(err_msg)
+    if not mc.primaryCoding:
+        msg = "`primaryCoding` is required."
+        raise ValueError(msg)
 
-    if mc and mc.primaryCoding.system != valid_system:
-        err_msg = f"`primaryCoding.system` must be '{valid_system.value}'."
-        raise ValueError(err_msg)
+    coding = mc.primaryCoding
+    code = coding.code.root
 
-    if valid_codes is not None and mc.primaryCoding.code.root not in valid_codes:
-        err_msg = f"`primaryCoding.code` must be one of {valid_codes}."
-        raise ValueError(err_msg)
+    if coding.system != valid_system:
+        msg = f"`primaryCoding.system` must be '{valid_system.value}'."
+        raise ValueError(msg)
 
-    if code_pattern is not None and not re.match(
-        code_pattern, mc.primaryCoding.code.root
-    ):
-        err_msg = f"`primaryCoding.code` does not match regex pattern {code_pattern}."
-        raise ValueError(err_msg)
+    if valid_codes is not None and code not in valid_codes:
+        msg = f"`primaryCoding.code` must be one of {valid_codes}."
+        raise ValueError(msg)
+
+    if code_pattern is not None and not re.match(code_pattern, code):
+        msg = f"`primaryCoding.code` does not match regex pattern {code_pattern}."
+        raise ValueError(msg)
 
     return mc
 
