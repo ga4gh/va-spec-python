@@ -197,15 +197,15 @@ class VariantOncogenicityEvidenceLine(EvidenceLine, MethodTypeCriterionValidatio
         }
     )
 
+    _method_type_by_criterion: dict[Criterion, MethodType] = {}
+    for method_type, criteria in ALLOWED_CRITERIA_BY_METHOD_TYPE.items():
+        for criterion in criteria:
+            _method_type_by_criterion[criterion] = method_type
+
     METHOD_TYPE_BY_CRITERION: ClassVar[MappingProxyType[Criterion, MethodType]] = (
-        MappingProxyType(
-            {
-                criterion: method_type
-                for method_type, criteria in ALLOWED_CRITERIA_BY_METHOD_TYPE.items()
-                for criterion in criteria
-            }
-        )
+        MappingProxyType(_method_type_by_criterion)
     )
+    del _method_type_by_criterion
 
     @field_validator("strengthOfEvidenceProvided")
     @classmethod
