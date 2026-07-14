@@ -197,6 +197,16 @@ class VariantOncogenicityEvidenceLine(EvidenceLine, MethodTypeCriterionValidatio
         }
     )
 
+    METHOD_TYPE_BY_CRITERION: ClassVar[MappingProxyType[Criterion, MethodType]] = (
+        MappingProxyType(
+            {
+                criterion: method_type
+                for method_type, criteria in ALLOWED_CRITERIA_BY_METHOD_TYPE.items()
+                for criterion in criteria
+            }
+        )
+    )
+
     @field_validator("strengthOfEvidenceProvided")
     @classmethod
     def validate_strength_of_evidence_provided(

@@ -19,6 +19,7 @@ class EvidenceAttributes(BaseModel):
     evidenceOutcome: MappableConcept
     strengthOfEvidenceProvided: MappableConcept
     scoreOfEvidenceProvided: int
+    methodType: VariantOncogenicityEvidenceLine.MethodType
 
 
 # IMPORTANT: Don't change the order. Longer suffixes must be evaluated first.
@@ -80,4 +81,5 @@ def derive_onco_evidence_attributes(
             )
         ),
         scoreOfEvidenceProvided=CODE_PREFIX_TO_SCORE_MAP[code_prefix],
+        methodType=VariantOncogenicityEvidenceLine.METHOD_TYPE_BY_CRITERION[evidence],
     )
