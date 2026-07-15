@@ -92,7 +92,7 @@ def derive_onco_evidence_attributes(
             update={
                 "methodType": VariantOncogenicityEvidenceLine.METHOD_TYPE_BY_CRITERION[
                     evidence
-                ]
+                ].value
             },
         ),
     )
