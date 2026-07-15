@@ -10,4 +10,4 @@ finally:
     del version, PackageNotFoundError
 
 
-VASPEC_VERSION = "1.1.0-snapshot.2026-02.1"
+VASPEC_VERSION = "1.1.0-snapshot.2026-06.1"

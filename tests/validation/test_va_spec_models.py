@@ -391,7 +391,7 @@ def test_variant_pathogenicity_el():
                 "pmid": "25741868",
                 "name": "ACMG Guidelines, 2015",
             },
-            "methodType": "PS3",
+            "methodType": "Functional Data Assessment",
         },
         "directionOfEvidenceProvided": "supports",
         "evidenceOutcome": {
@@ -441,7 +441,7 @@ def test_variant_pathogenicity_el():
 
     invalid_params = deepcopy(params)
     del invalid_params["specifiedBy"]["reportedIn"]
-    with pytest.raises(ValueError, match="`reportedIn` is required"):
+    with pytest.raises(ValueError, match="`specifiedBy.reportedIn` is required"):
         VariantPathogenicityEvidenceLine(**invalid_params)
 
     invalid_params = deepcopy(params)
@@ -477,7 +477,7 @@ def test_variant_pathogenicity_el():
     invalid_params["specifiedBy"]["methodType"] = "OS1"
     with pytest.raises(
         ValueError,
-        match="'OS1' is not a valid VariantPathogenicityEvidenceLine.Criterion",
+        match="'OS1' is not a valid VariantPathogenicityEvidenceLine.MethodType",
     ):
         VariantPathogenicityEvidenceLine(**invalid_params)
 
@@ -554,7 +554,7 @@ def test_variant_onco_el():
                 "pmid": "35101336",
                 "name": "ClinGen/CGC/VICC Guidelines for Oncogenicity, 2022",
             },
-            "methodType": "OS2",
+            "methodType": "functional_assay",
         },
         directionOfEvidenceProvided="supports",
         scoreOfEvidenceProvided=1,
@@ -583,7 +583,7 @@ def test_variant_onco_el():
     vo_invalid_params["specifiedBy"]["methodType"] = "PS1"
     with pytest.raises(
         ValueError,
-        match="'PS1' is not a valid VariantOncogenicityEvidenceLine.Criterion",
+        match="'PS1' is not a valid VariantOncogenicityEvidenceLine.MethodType",
     ):
         VariantOncogenicityEvidenceLine(**vo_invalid_params)
 
