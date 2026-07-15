@@ -312,7 +312,7 @@ class VariantPathogenicityEvidenceLine(
         """
         self._validate_direction_of_evidence_provided()
         acmg_code_pattern = r"^((?:PVS1)(?:_(?:not_met|(?:strong|moderate|supporting)))?|(?:PS[1-4]|BS[1-4])(?:_(?:not_met|(?:very_strong|moderate|supporting)))?|BA1(?:_not_met)?|(?:PM[1-6])(?:_(?:not_met|(?:very_strong|strong|supporting)))?|(PP[1-5]|BP[1-7])(?:_(?:not_met|very_strong|strong|moderate))?)$"
-        self._validate_evidence_outcome(SYSTEM, acmg_code_pattern)
+        self._validate_evidence_outcome(SYSTEM, acmg_code_pattern, is_required=True)
         self._validate_specified_by()
         self._validate_method_type_evidence_outcome(
             self.specifiedBy.methodType, self.evidenceOutcome.primaryCoding.code.root
