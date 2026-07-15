@@ -228,7 +228,7 @@ class VariantOncogenicityEvidenceLine(EvidenceLine, MethodTypeCriterionValidatio
         self._validate_direction_of_evidence_provided()
         ccv_code_pattern = r"^((?:OVS1|SBVS1)(?:_(?:not_met|(?:strong|moderate|supporting)))?|(?:OS[1-3]|SBS[1-2])(?:_(?:not_met|(?:very_strong|moderate|supporting)))?|(?:OM[1-4])(?:_(?:not_met|(?:very_strong|strong|supporting)))?|(OP[1-4]|SBP[1-2])(?:_(?:not_met|very_strong|strong|moderate))?)$"
         self._validate_evidence_outcome(SYSTEM, ccv_code_pattern, is_required=True)
-        self._validate_specified_by()
+        self._validate_criterion_specified_by()
         self._validate_method_type_evidence_outcome(
             self.specifiedBy.methodType, self.evidenceOutcome.primaryCoding.code.root
         )

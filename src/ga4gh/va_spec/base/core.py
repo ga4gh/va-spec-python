@@ -653,8 +653,8 @@ class EvidenceLine(InformationEntity, BaseModelForbidExtra):
             err_msg = f"`strengthOfEvidenceProvided` is not allowed when `directionOfEvidenceProvided` is '{Direction.NEUTRAL.value}'."
             raise ValueError(err_msg)
 
-    def _validate_specified_by(self) -> None:
-        """Validate specifiedBy
+    def _validate_criterion_specified_by(self) -> None:
+        """Validate specifiedBy for criterion evidence lines
 
         :raises ValueError: If invalid specifiedBy values are provided
         :return: Validated specifiedBy value
