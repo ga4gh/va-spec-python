@@ -660,18 +660,19 @@ class EvidenceLine(InformationEntity, BaseModelForbidExtra):
         :return: Validated specifiedBy value
         """
         specified_by = self.specifiedBy
-        if not isinstance(specified_by, Method):
-            msg = "`specifiedBy` is required and must be a `Method`"
-            raise ValueError(msg)
+        if isinstance(specified_by, iriReference):
+            # cannot validate iris
+            return
 
-        method_type = specified_by.methodType
-        if method_type is None:
-            msg = "`specifiedBy.methodType` is required"
-            raise ValueError(msg)
+        if isinstance(specified_by, Method):
+            method_type = specified_by.methodType
+            if method_type is None:
+                msg = "`specifiedBy.methodType` is required"
+                raise ValueError(msg)
 
-        if specified_by.reportedIn is None:
-            msg = "`specifiedBy.reportedIn` is required"
-            raise ValueError(msg)
+            if specified_by.reportedIn is None:
+                msg = "`specifiedBy.reportedIn` is required"
+                raise ValueError(msg)
 
 
 class Statement(InformationEntity, BaseModelForbidExtra):
