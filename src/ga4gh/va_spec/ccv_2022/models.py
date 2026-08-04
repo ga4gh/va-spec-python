@@ -32,11 +32,11 @@ from ga4gh.va_spec.base.validators import (
 
 SYSTEM = System.CCV
 CCV_CODE_PATTERN = (
-    r"^(?:"
-    r"(?:OVS1|SBVS1)(?:_(?:not_met|strong|moderate|supporting))?"
-    r"|(?:OS[1-3]|SBS[1-2])(?:_(?:not_met|very_strong|moderate|supporting))?"
-    r"|OM[1-4](?:_(?:not_met|very_strong|strong|supporting))?"
-    r"|(?:OP[1-4]|SBP[1-2])(?:_(?:not_met|very_strong|strong|moderate))?"
+    r"^("
+    r"(?:OVS1|SBVS1)(?:_(?:not_met|(?:strong|moderate|supporting)))?"
+    r"|(?:OS[1-3]|SBS[1-2])(?:_(?:not_met|(?:very_strong|moderate|supporting)))?"
+    r"|(?:OM[1-4])(?:_(?:not_met|(?:very_strong|strong|supporting)))?"
+    r"|(OP[1-4]|SBP[1-2])(?:_(?:not_met|very_strong|strong|moderate))?"
     r")$"
 )
 METHOD = Method(  # recommended representation of ClinGen/CGC/VICC 2022 method
