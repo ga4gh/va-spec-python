@@ -129,4 +129,82 @@ def test_derive_onco_evidence_attributes(
         == expected_strength
     )
     assert onco_evidence_attrs.scoreOfEvidenceProvided == expected_score
+    expected_direction = "disputes" if expected_score < 0 else "supports"
+    assert onco_evidence_attrs.directionOfEvidenceProvided == expected_direction
     assert onco_evidence_attrs.specifiedBy.methodType == expected_method_type.value
+
+
+@pytest.mark.parametrize(
+    ("outcome", "expected_direction", "expected_score", "expected_method_type"),
+    [
+        (
+            "OS2_moderate",
+            "supports",
+            2,
+            VariantOncogenicityEvidenceLine.MethodType.FUNCTIONAL_ASSAY,
+        ),
+        (
+            "SBS2_moderate",
+            "disputes",
+            -2,
+            VariantOncogenicityEvidenceLine.MethodType.FUNCTIONAL_ASSAY,
+        ),
+    ],
+)
+def test_derive_onco_evidence_attributes_with_adjusted_strength(
+    outcome, expected_direction, expected_score, expected_method_type
+):
+    """Test that the outcome's adjusted strength determines strength and score."""
+    onco_evidence_attrs = derive_onco_evidence_attributes(outcome)
+
+    evidence_outcome = onco_evidence_attrs.evidenceOutcome.primaryCoding.code.root
+    assert evidence_outcome == outcome
+    evidence_line = VariantOncogenicityEvidenceLine(**onco_evidence_attrs.model_dump())
+    assert evidence_line.evidenceOutcome.primaryCoding.code.root == evidence_outcome
+    assert onco_evidence_attrs.directionOfEvidenceProvided == expected_direction
+    assert (
+        onco_evidence_attrs.strengthOfEvidenceProvided.primaryCoding.code.root
+        == "moderate"
+    )
+    assert onco_evidence_attrs.scoreOfEvidenceProvided == expected_score
+    assert onco_evidence_attrs.specifiedBy.methodType == expected_method_type.value
+
+
+@pytest.mark.parametrize(
+    ("provided_outcome", "expected_outcome"),
+    [
+        ("OS2_MODERATE", "OS2_moderate"),
+        ("OS2_Moderate", "OS2_moderate"),
+        ("OS2_NOT_MET", "OS2_not_met"),
+    ],
+)
+def test_derive_onco_evidence_attributes_normalizes_modifier(
+    provided_outcome, expected_outcome
+):
+    """Test that outcome modifiers are normalized to lowercase."""
+    onco_evidence_attrs = derive_onco_evidence_attributes(provided_outcome)
+
+    assert (
+        onco_evidence_attrs.evidenceOutcome.primaryCoding.code.root == expected_outcome
+    )
+
+
+def test_derive_onco_evidence_attributes_does_not_normalize_criterion():
+    """Test that criterion codes must retain their canonical uppercase form."""
+    with pytest.raises(ValueError, match="Invalid CCV evidence outcome"):
+        derive_onco_evidence_attributes("os2_MODERATE")
+
+
+def test_derive_onco_evidence_attributes_from_not_met_outcome():
+    """Test that a not-met outcome has no strength or score."""
+    onco_evidence_attrs = derive_onco_evidence_attributes("OS2_not_met")
+
+    assert onco_evidence_attrs.evidenceOutcome.primaryCoding.code.root == "OS2_not_met"
+    assert onco_evidence_attrs.directionOfEvidenceProvided == "neutral"
+    assert onco_evidence_attrs.strengthOfEvidenceProvided is None
+    assert onco_evidence_attrs.scoreOfEvidenceProvided is None
+    assert (
+        onco_evidence_attrs.specifiedBy.methodType
+        == VariantOncogenicityEvidenceLine.MethodType.FUNCTIONAL_ASSAY.value
+    )
+    VariantOncogenicityEvidenceLine(**onco_evidence_attrs.model_dump())
