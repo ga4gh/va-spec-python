@@ -1,35 +1,48 @@
-"""Provide derived evidence attributes for an onco evidence code.
+"""Derive evidence line attributes from a CCV 2022 evidence outcome code.
 
-Can be used to populate `evidenceOutcome`, `strengthOfEvidenceProvided`, and
-`scoreOfEvidenceProvided` fields in `VariantOncogenicityEvidenceLine`.
+Can be used to populate `evidenceOutcome`, `directionOfEvidenceProvided`,
+`strengthOfEvidenceProvided`, and `scoreOfEvidenceProvided` fields in
+`VariantOncogenicityEvidenceLine`.
 """
 
+import re
 from types import MappingProxyType
+from typing import NamedTuple
 
 from pydantic import BaseModel
 
 from ga4gh.core.models import Coding, MappableConcept, code
-from ga4gh.va_spec.base.core import Method
+from ga4gh.va_spec.base.core import Direction, Method
 from ga4gh.va_spec.base.enums import StrengthOfEvidenceProvided, System
 from ga4gh.va_spec.ccv_2022.models import (
-    METHOD as CCV_METHOD,
+    CCV_CODE_PATTERN,
+    VariantOncogenicityEvidenceLine,
 )
 from ga4gh.va_spec.ccv_2022.models import (
-    VariantOncogenicityEvidenceLine,
+    METHOD as CCV_METHOD,
 )
 
 
 class EvidenceAttributes(BaseModel):
-    """Define derived evidence attributes for an onco evidence code."""
+    """Store the evidence line attributes derived from a CCV outcome code."""
 
     evidenceOutcome: MappableConcept
-    strengthOfEvidenceProvided: MappableConcept
-    scoreOfEvidenceProvided: int
+    directionOfEvidenceProvided: Direction
+    strengthOfEvidenceProvided: MappableConcept | None
+    scoreOfEvidenceProvided: int | None
     specifiedBy: Method
 
 
+class _ParsedEvidenceOutcome(NamedTuple):
+    """Store the normalized parts of a CCV evidence outcome code."""
+
+    outcome: str
+    criterion: VariantOncogenicityEvidenceLine.Criterion
+    modifier: str
+
+
 # IMPORTANT: Don't change the order. Longer suffixes must be evaluated first.
-CODE_SUFFIX_TO_STRENGTH_MAP = MappingProxyType(
+_CODE_SUFFIX_TO_DEFAULT_STRENGTH_MAP = MappingProxyType(
     {
         "VS": StrengthOfEvidenceProvided.VERY_STRONG,
         "S": StrengthOfEvidenceProvided.STRONG,
@@ -39,59 +52,101 @@ CODE_SUFFIX_TO_STRENGTH_MAP = MappingProxyType(
 )
 
 
-CODE_PREFIX_TO_SCORE_MAP = MappingProxyType(
+_STRENGTH_TO_SCORE_MAGNITUDE_MAP = MappingProxyType(
     {
-        "OVS": 8,
-        "SBVS": -8,
-        "OS": 4,
-        "SBS": -4,
-        "OM": 2,
-        "SBM": -2,
-        "OP": 1,
-        "SBP": -1,
+        StrengthOfEvidenceProvided.VERY_STRONG: 8,
+        StrengthOfEvidenceProvided.STRONG: 4,
+        StrengthOfEvidenceProvided.MODERATE: 2,
+        StrengthOfEvidenceProvided.SUPPORTING: 1,
     }
 )
 
 
-def derive_onco_evidence_attributes(
-    evidence: VariantOncogenicityEvidenceLine.Criterion,
-) -> EvidenceAttributes:
-    """Derive evidence attributes given a CCV 2022 evidence code.
+def _parse_ccv_evidence_outcome(
+    evidence: VariantOncogenicityEvidenceLine.Criterion | str,
+) -> _ParsedEvidenceOutcome:
+    """Normalize and validate a CCV evidence outcome code.
 
-    :param evidence: CCV 2022 evidence code
-    :return: Derived evidence attributes (evidenceOutcome, strengthOfEvidenceProvided,
-        scoreOfEvidenceProvided, specifiedBy)
+    :param evidence: A base criterion or complete CCV evidence outcome code.
+    :raises ValueError: If the outcome code does not follow the CCV format.
+    :return: The canonical outcome code and its parsed parts.
     """
-    evidence_code = evidence.value
-    normalized_evidence_code = evidence_code.rstrip("1234")
+    provided_outcome = (
+        evidence.value
+        if isinstance(evidence, VariantOncogenicityEvidenceLine.Criterion)
+        else evidence
+    )
+    evidence_code, separator, outcome_modifier = provided_outcome.partition("_")
+    outcome_modifier = outcome_modifier.lower()
+    evidence_outcome = (
+        f"{evidence_code}_{outcome_modifier}" if separator else evidence_code
+    )
 
-    code_suffix = next(
-        suffix
-        for suffix in CODE_SUFFIX_TO_STRENGTH_MAP
-        if normalized_evidence_code.endswith(suffix)
+    if re.fullmatch(CCV_CODE_PATTERN, evidence_outcome) is None:
+        msg = f"Invalid CCV evidence outcome: {provided_outcome}"
+        raise ValueError(msg)
+
+    criterion = VariantOncogenicityEvidenceLine.Criterion(evidence_code)
+    return _ParsedEvidenceOutcome(evidence_outcome, criterion, outcome_modifier)
+
+
+def derive_onco_evidence_attributes(
+    evidence: VariantOncogenicityEvidenceLine.Criterion | str,
+) -> EvidenceAttributes:
+    """Derive evidence line attributes from a CCV 2022 outcome code.
+
+    :param evidence: A base criterion or complete CCV evidence outcome code.
+    :raises ValueError: If the outcome code does not follow the CCV format.
+    :return: The attributes needed to populate a CCV evidence line.
+    """
+    parsed_outcome = _parse_ccv_evidence_outcome(evidence)
+    evidence_code = parsed_outcome.criterion.value
+    criterion_prefix = evidence_code.rstrip("1234")
+
+    default_strength = next(
+        default_strength
+        for suffix, default_strength in _CODE_SUFFIX_TO_DEFAULT_STRENGTH_MAP.items()
+        if criterion_prefix.endswith(suffix)
     )
-    code_prefix = next(
-        prefix
-        for prefix in CODE_PREFIX_TO_SCORE_MAP
-        if normalized_evidence_code.startswith(prefix)
+    direction, score_sign = (
+        (Direction.DISPUTES, -1)
+        if evidence_code.startswith("SB")
+        else (Direction.SUPPORTS, 1)
     )
+
+    if parsed_outcome.modifier == "not_met":
+        applied_strength = None
+        direction = Direction.NEUTRAL
+    else:
+        applied_strength = (
+            StrengthOfEvidenceProvided(parsed_outcome.modifier.replace("_", " "))
+            if parsed_outcome.modifier
+            else default_strength
+        )
     system = System.CCV
 
     return EvidenceAttributes(
         evidenceOutcome=MappableConcept(
-            primaryCoding=Coding(code=code(evidence_code), system=system)
+            primaryCoding=Coding(code=code(parsed_outcome.outcome), system=system)
         ),
-        strengthOfEvidenceProvided=MappableConcept(
-            primaryCoding=Coding(
-                code=code(CODE_SUFFIX_TO_STRENGTH_MAP[code_suffix]), system=system
+        directionOfEvidenceProvided=direction,
+        strengthOfEvidenceProvided=(
+            MappableConcept(
+                primaryCoding=Coding(code=code(applied_strength), system=system)
             )
+            if applied_strength is not None
+            else None
         ),
-        scoreOfEvidenceProvided=CODE_PREFIX_TO_SCORE_MAP[code_prefix],
+        scoreOfEvidenceProvided=(
+            score_sign * _STRENGTH_TO_SCORE_MAGNITUDE_MAP[applied_strength]
+            if applied_strength is not None
+            else None
+        ),
         specifiedBy=CCV_METHOD.model_copy(
             deep=True,
             update={
                 "methodType": VariantOncogenicityEvidenceLine.METHOD_TYPE_BY_CRITERION[
-                    evidence
+                    parsed_outcome.criterion
                 ].value
             },
         ),
