@@ -21,6 +21,7 @@ from ga4gh.va_spec.base import (
     ExperimentalVariantFunctionalImpactStudyResult,
 )
 from ga4gh.va_spec.base.core import (
+    Direction,
     EvidenceLine,
     Method,
     Statement,
@@ -609,6 +610,27 @@ def test_variant_onco_el():
         match="`strengthOfEvidenceProvided` is not allowed when `directionOfEvidenceProvided` is 'neutral'.",
     ):
         VariantOncogenicityEvidenceLine(**invalid_params)
+
+
+def test_variant_onco_el_no_evidence_outcome():
+    """Test that VariantOncogenicityEvidenceLine validates without evidence
+    outcome
+    """
+    assert VariantOncogenicityEvidenceLine(
+        type="EvidenceLine",
+        specifiedBy={
+            "type": "Method",
+            "reportedIn": {
+                "type": "Document",
+                "pmid": "35101336",
+                "name": "ClinGen/CGC/VICC Guidelines for Oncogenicity, 2022",
+            },
+            "methodType": "functional_assay",
+        },
+        directionOfEvidenceProvided=Direction.NEUTRAL,
+        scoreOfEvidenceProvided=0,
+        evidenceOutcome=None,
+    )
 
 
 def test_aac_statement():
