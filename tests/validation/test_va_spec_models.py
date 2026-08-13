@@ -616,7 +616,7 @@ def test_variant_onco_el_no_evidence_outcome():
     """Test that VariantOncogenicityEvidenceLine validates without evidence
     outcome
     """
-    assert VariantOncogenicityEvidenceLine(
+    valid = VariantOncogenicityEvidenceLine(
         type="EvidenceLine",
         specifiedBy={
             "type": "Method",
@@ -631,6 +631,17 @@ def test_variant_onco_el_no_evidence_outcome():
         scoreOfEvidenceProvided=0,
         evidenceOutcome=None,
     )
+
+    assert valid
+
+    invalid = valid.model_dump()
+    invalid["specifiedBy"]["methodType"] = "dummy"
+
+    with pytest.raises(
+        ValueError,
+        match="'dummy' is not a valid VariantOncogenicityEvidenceLine.MethodType",
+    ):
+        VariantOncogenicityEvidenceLine.model_validate(invalid)
 
 
 def test_aac_statement():

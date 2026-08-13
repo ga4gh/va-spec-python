@@ -237,11 +237,14 @@ class VariantOncogenicityEvidenceLine(EvidenceLine, MethodTypeCriterionValidatio
         self._validate_evidence_outcome(SYSTEM, CCV_CODE_PATTERN, is_required=False)
         self._validate_criterion_specified_by()
 
-        if self.evidenceOutcome:
-            self._validate_method_type_evidence_outcome(
-                self.specifiedBy.methodType,
-                self.evidenceOutcome.primaryCoding.code.root,
-            )
+        evidence_outcome = (
+            self.evidenceOutcome.primaryCoding.code.root
+            if self.evidenceOutcome
+            else None
+        )
+        self._validate_method_type_evidence_outcome(
+            self.specifiedBy.methodType, evidence_outcome
+        )
         return self
 
 
