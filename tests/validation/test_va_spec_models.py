@@ -95,7 +95,6 @@ def test_proposition_condition_helpers(
 ):
     """Test condition access without knowing the proposition field name."""
     initial_condition = iriReference(root="conditions.json#/1")
-    replacement_condition = iriReference(root="conditions.json#/2")
     proposition_data = {
         "subjectVariant": "alleles.json#/1",
         "predicate": predicate,
@@ -106,15 +105,10 @@ def test_proposition_condition_helpers(
 
     proposition = proposition_class(**proposition_data)
 
-    assert proposition.get_condition() == initial_condition
-
-    proposition.set_condition(replacement_condition)
-
-    assert (
-        proposition.get_condition()
-        == replacement_condition
-        == getattr(proposition, condition_field_name)
-    )
+    assert proposition.condition == initial_condition
+    assert proposition.condition == getattr(proposition, condition_field_name)
+    assert "condition" not in proposition.model_dump()
+    assert "condition" not in proposition_class.model_json_schema()["properties"]
 
 
 def test_condition_set():

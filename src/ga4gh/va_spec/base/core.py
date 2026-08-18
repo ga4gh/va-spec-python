@@ -406,13 +406,10 @@ class ClinicalVariantProposition(_SubjectVariantPropositionBase):
     _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
     condition_field_name: ClassVar[str]
 
-    def get_condition(self) -> Condition | iriReference:
+    @property
+    def condition(self) -> Condition | iriReference:
         """Return the condition associated with the proposition."""
         return getattr(self, self.condition_field_name)
-
-    def set_condition(self, condition: Condition | iriReference) -> None:
-        """Set the condition associated with the proposition."""
-        setattr(self, self.condition_field_name, condition)
 
     geneContextQualifier: MappableConcept | iriReference | None = Field(
         default=None,
