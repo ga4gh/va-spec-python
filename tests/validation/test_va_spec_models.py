@@ -27,6 +27,12 @@ from ga4gh.va_spec.base.core import (
     Statement,
     StudyGroup,
     StudyResult,
+    VariantClinicalSignificanceProposition,
+    VariantDiagnosticProposition,
+    VariantOncogenicityProposition,
+    VariantPathogenicityProposition,
+    VariantPrognosticProposition,
+    VariantTherapeuticResponseProposition,
 )
 from ga4gh.va_spec.base.domain_entities import ConditionSet
 from ga4gh.va_spec.ccv_2022.models import (
@@ -54,6 +60,60 @@ def caf():
         focusAlleleFrequency=0,
         locusAlleleCount=34086,
         cohort=StudyGroup(id="ALL", name="Overall"),
+    )
+
+
+@pytest.mark.parametrize(
+    ("proposition_class", "condition_field_name", "predicate"),
+    [
+        (
+            VariantClinicalSignificanceProposition,
+            "objectCondition",
+            "hasClinicalSignificanceFor",
+        ),
+        (
+            VariantDiagnosticProposition,
+            "objectCondition",
+            "isDiagnosticInclusionCriterionFor",
+        ),
+        (VariantOncogenicityProposition, "objectTumorType", "isOncogenicFor"),
+        (VariantPathogenicityProposition, "objectCondition", "isCausalFor"),
+        (
+            VariantPrognosticProposition,
+            "objectCondition",
+            "associatedWithBetterOutcomeFor",
+        ),
+        (
+            VariantTherapeuticResponseProposition,
+            "conditionQualifier",
+            "predictsSensitivityTo",
+        ),
+    ],
+)
+def test_proposition_condition_helpers(
+    proposition_class, condition_field_name, predicate
+):
+    """Test condition access without knowing the proposition field name."""
+    initial_condition = iriReference(root="conditions.json#/1")
+    replacement_condition = iriReference(root="conditions.json#/2")
+    proposition_data = {
+        "subjectVariant": "alleles.json#/1",
+        "predicate": predicate,
+        condition_field_name: initial_condition,
+    }
+    if proposition_class is VariantTherapeuticResponseProposition:
+        proposition_data["objectTherapeutic"] = "therapeutics.json#/1"
+
+    proposition = proposition_class(**proposition_data)
+
+    assert proposition.get_condition() == initial_condition
+
+    proposition.set_condition(replacement_condition)
+
+    assert (
+        proposition.get_condition()
+        == replacement_condition
+        == getattr(proposition, condition_field_name)
     )
 
 
