@@ -114,18 +114,20 @@ class MethodTypeCriterionValidationMixin(Generic[MethodTypeT, CriterionT]):
     def _validate_method_type_evidence_outcome(
         cls,
         method_type: str,
-        evidence_outcome_code: str,
+        evidence_outcome_code: str | None,
     ) -> None:
         """Validate that ``evidenceOutcome`` is compatible with a method type.
 
         :param method_type: Method type value from ``specifiedBy.methodType``.
         :param evidence_outcome_code: Evidence outcome to validate.
         :raises ValueError: If the evidence outcome criterion is invalid or is
-            not valid for the specified method type.
-        :return: None.
+            not valid for the specified method type, or if method type is invalid
         """
         parsed_method_type = cls.MethodType(method_type)
         allowed_criteria = cls.ALLOWED_CRITERIA_BY_METHOD_TYPE[parsed_method_type]
+
+        if not evidence_outcome_code:
+            return
 
         criterion = cls._get_base_criterion_from_code(evidence_outcome_code)
 

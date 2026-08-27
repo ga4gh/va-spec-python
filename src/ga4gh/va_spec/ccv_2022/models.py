@@ -234,10 +234,16 @@ class VariantOncogenicityEvidenceLine(EvidenceLine, MethodTypeCriterionValidatio
             ``directionOfEvidenceProvided`` is neutral
         """
         self._validate_direction_of_evidence_provided()
-        self._validate_evidence_outcome(SYSTEM, CCV_CODE_PATTERN, is_required=True)
+        self._validate_evidence_outcome(SYSTEM, CCV_CODE_PATTERN, is_required=False)
         self._validate_criterion_specified_by()
+
+        evidence_outcome = (
+            self.evidenceOutcome.primaryCoding.code.root
+            if self.evidenceOutcome
+            else None
+        )
         self._validate_method_type_evidence_outcome(
-            self.specifiedBy.methodType, self.evidenceOutcome.primaryCoding.code.root
+            self.specifiedBy.methodType, evidence_outcome
         )
         return self
 
