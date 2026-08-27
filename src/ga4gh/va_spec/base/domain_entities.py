@@ -2,22 +2,28 @@
 
 from __future__ import annotations
 
+from typing import ClassVar
+
 from pydantic import ConfigDict, Field, RootModel
 
+from ga4gh.core.metadata import Maturity
 from ga4gh.core.models import (
     BaseModelForbidExtra,
     Element,
     MappableConcept,
     MembershipOperator,
 )
+from ga4gh.va_spec.base.metadata import BaseMetadataMixin
 
 
-class ConditionSet(Element, BaseModelForbidExtra):
+class ConditionSet(BaseMetadataMixin, Element, BaseModelForbidExtra):
     """A set of conditions (diseases, phenotypes, traits) that occur together or are
     related, depending on the membership operator, and may manifest together in the
     same patient or individually in a different subset of participants in a research
     study.
     """
+
+    _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
 
     model_config = ConfigDict(use_enum_values=True)
 
@@ -32,10 +38,12 @@ class ConditionSet(Element, BaseModelForbidExtra):
     )
 
 
-class Condition(RootModel):
+class Condition(BaseMetadataMixin, RootModel):
     """A single condition (disease, phenotype, or trait), or a set of conditions
     (ConditionSet).
     """
+
+    _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
 
     root: ConditionSet | MappableConcept = Field(
         ...,
@@ -45,11 +53,13 @@ class Condition(RootModel):
     )
 
 
-class TherapyGroup(Element, BaseModelForbidExtra):
+class TherapyGroup(BaseMetadataMixin, Element, BaseModelForbidExtra):
     """A group of two or more therapies that are applied in combination to a single
     patient/subject, or applied individually to a different subset of participants in a
     research study.
     """
+
+    _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
 
     model_config = ConfigDict(use_enum_values=True)
 
@@ -64,8 +74,10 @@ class TherapyGroup(Element, BaseModelForbidExtra):
     )
 
 
-class Therapeutic(RootModel):
+class Therapeutic(BaseMetadataMixin, RootModel):
     """An individual therapy (drug, procedure, behavioral intervention, etc.), or group of therapies (TherapyGroup)."""
+
+    _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
 
     root: TherapyGroup | MappableConcept = Field(
         ...,

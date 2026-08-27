@@ -5,7 +5,7 @@ from __future__ import annotations
 from abc import ABC
 from datetime import date, datetime
 from enum import Enum
-from typing import Annotated, Literal, TypeAlias
+from typing import Annotated, ClassVar, Literal, TypeAlias
 
 from pydantic import (
     ConfigDict,
@@ -15,6 +15,7 @@ from pydantic import (
 )
 
 from ga4gh.cat_vrs.models import CategoricalVariant
+from ga4gh.core.metadata import Maturity
 from ga4gh.core.models import (
     BaseModelForbidExtra,
     Entity,
@@ -28,6 +29,7 @@ from ga4gh.va_spec.base.enums import (
     System,
     TherapeuticResponsePredicate,
 )
+from ga4gh.va_spec.base.metadata import BaseMetadataMixin
 from ga4gh.va_spec.base.validators import (
     validate_mappable_concept,
 )
@@ -47,11 +49,13 @@ class CoreType(str, Enum):
     STUDY_GROUP = "StudyGroup"
 
 
-class Agent(Entity, BaseModelForbidExtra):
+class Agent(BaseMetadataMixin, Entity, BaseModelForbidExtra):
     """An autonomous actor (person, organization, or software agent) that bears some
     form of responsibility for an activity taking place, for the existence of an entity,
     or for another agent's activity.
     """
+
+    _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
 
     type: Literal["Agent"] = Field(
         default=CoreType.AGENT.value, description=f"MUST be '{CoreType.AGENT.value}'."
@@ -63,11 +67,13 @@ class Agent(Entity, BaseModelForbidExtra):
     )
 
 
-class Contribution(Entity, BaseModelForbidExtra):
+class Contribution(BaseMetadataMixin, Entity, BaseModelForbidExtra):
     """An action taken by an agent in contributing to the creation, modification,
     assessment, or deprecation of a particular entity (e.g. a Statement, EvidenceLine,
     DataSet, Publication, etc.)
     """
+
+    _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
 
     type: Literal["Contribution"] = Field(
         default=CoreType.CONTRIBUTION.value,
@@ -85,10 +91,12 @@ class Contribution(Entity, BaseModelForbidExtra):
     )
 
 
-class Document(Entity, BaseModelForbidExtra):
+class Document(BaseMetadataMixin, Entity, BaseModelForbidExtra):
     """A collection of information, usually in a text-based or graphic human-readable
     form, intended to be read and understood together as a whole.
     """
+
+    _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
 
     type: Literal["Document"] = Field(
         default=CoreType.DOCUMENT.value,
@@ -121,8 +129,10 @@ class Document(Entity, BaseModelForbidExtra):
     )
 
 
-class Method(Entity, BaseModelForbidExtra):
+class Method(BaseMetadataMixin, Entity, BaseModelForbidExtra):
     """A set of instructions that specify how to achieve some objective."""
+
+    _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
 
     type: Literal["Method"] = Field(
         default=CoreType.METHOD.value, description=f"MUST be '{CoreType.METHOD.value}'."
@@ -136,11 +146,13 @@ class Method(Entity, BaseModelForbidExtra):
     )
 
 
-class InformationEntity(Entity):
+class InformationEntity(BaseMetadataMixin, Entity):
     """An abstract (non-physical) entity that represents 'information content' carried by
     physical or digital information artifacts such as books, web pages, data sets, or
     images.
     """
+
+    _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
 
     specifiedBy: Method | iriReference | None = Field(
         default=None,
@@ -156,10 +168,12 @@ class InformationEntity(Entity):
     )
 
 
-class DataSet(Entity, BaseModelForbidExtra):
+class DataSet(BaseMetadataMixin, Entity, BaseModelForbidExtra):
     """A collection of related data items or records that are organized together in a
     common format or structure, to enable their computational manipulation as a unit.
     """
+
+    _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
 
     type: Literal["DataSet"] = Field(
         default=CoreType.DATA_SET.value,
@@ -186,12 +200,14 @@ class DataSet(Entity, BaseModelForbidExtra):
     )
 
 
-class StudyGroup(Entity, BaseModelForbidExtra):
+class StudyGroup(BaseMetadataMixin, Entity, BaseModelForbidExtra):
     """A collection of individuals or specimens from the same taxonomic class, selected
     for analysis in a scientific study based on their exhibiting one or more common
     characteristics  (e.g. species, race, age, gender, disease state, income). May be
     referred to as a 'cohort' or 'population' in specific research settings.
     """
+
+    _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
 
     type: Literal["StudyGroup"] = Field(
         default=CoreType.STUDY_GROUP.value,
@@ -213,6 +229,8 @@ class _StudyResult(InformationEntity, ABC):
     describing how these data items were generated.
     """
 
+    _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
+
     sourceDataSet: DataSet | None = Field(
         default=None,
         description="A larger DataSet from which the data included in the StudyResult was taken or derived.",
@@ -229,6 +247,8 @@ class _StudyResult(InformationEntity, ABC):
 
 class CohortAlleleFrequencyStudyResult(_StudyResult, BaseModelForbidExtra):
     """A StudyResult that reports measures related to the frequency of an Allele in a cohort"""
+
+    _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
 
     type: Literal["CohortAlleleFrequencyStudyResult"] = Field(
         default="CohortAlleleFrequencyStudyResult",
@@ -264,6 +284,8 @@ class TumorVariantFrequencyStudyResult(_StudyResult, BaseModelForbidExtra):
     """A Study Result that reports measures related to the frequency of an variant
     across different tumor types.
     """
+
+    _maturity: ClassVar[Maturity] = Maturity.DRAFT
 
     type: Literal["TumorVariantFrequencyStudyResult"] = Field(
         default="TumorVariantFrequencyStudyResult",
@@ -304,6 +326,8 @@ class ExperimentalVariantFunctionalImpactStudyResult(
 ):
     """A StudyResult that reports a functional impact score from a variant functional assay or study."""
 
+    _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
+
     type: Literal["ExperimentalVariantFunctionalImpactStudyResult"] = Field(
         default="ExperimentalVariantFunctionalImpactStudyResult",
         description="MUST be 'ExperimentalVariantFunctionalImpactStudyResult'.",
@@ -326,11 +350,13 @@ class ExperimentalVariantFunctionalImpactStudyResult(
     )
 
 
-class StudyResult(RootModel):
+class StudyResult(BaseMetadataMixin, RootModel):
     """A collection of data items from a single study that pertain to a particular subject
     or experimental unit in the study, along with optional provenance information
     describing how these data items were generated.
     """
+
+    _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
 
     root: (
         CohortAlleleFrequencyStudyResult
@@ -344,12 +370,14 @@ class StudyResult(RootModel):
     )
 
 
-class Proposition(Entity):
+class Proposition(BaseMetadataMixin, Entity):
     """An abstract entity representing a possible fact that may be true or false. As
     abstract entities, Propositions capture a 'sharable' piece of meaning whose identify
     and existence is independent of space and time, or whether it is ever asserted to be
     true by some agent.
     """
+
+    _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
 
     subject: dict = Field(
         ..., description="The Entity or concept about which the Proposition is made."
@@ -364,7 +392,9 @@ class Proposition(Entity):
     )
 
 
-class _SubjectVariantPropositionBase(Entity, ABC):
+class _SubjectVariantPropositionBase(BaseMetadataMixin, Entity, ABC):
+    _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
+
     subjectVariant: MolecularVariation | CategoricalVariant | iriReference = Field(
         ..., description="A variant that is the subject of the Proposition."
     )
@@ -372,6 +402,8 @@ class _SubjectVariantPropositionBase(Entity, ABC):
 
 class ClinicalVariantProposition(_SubjectVariantPropositionBase):
     """A proposition for use in describing the effect of variants in human subjects."""
+
+    _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
 
     geneContextQualifier: MappableConcept | iriReference | None = Field(
         default=None,
@@ -389,6 +421,8 @@ class ExperimentalVariantFunctionalImpactProposition(
     """A Proposition describing the impact of a variant on the function sequence feature
     (typically a gene or gene product).
     """
+
+    _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
 
     type: Literal["ExperimentalVariantFunctionalImpactProposition"] = Field(
         default="ExperimentalVariantFunctionalImpactProposition",
@@ -415,6 +449,8 @@ class VariantClinicalSignificanceProposition(
     condition.
     """
 
+    _maturity: ClassVar[Maturity] = Maturity.DRAFT
+
     model_config = ConfigDict(use_enum_values=True)
 
     type: Literal["VariantClinicalSignificanceProposition"] = Field(
@@ -437,6 +473,8 @@ class VariantDiagnosticProposition(ClinicalVariantProposition, BaseModelForbidEx
 
     model_config = ConfigDict(use_enum_values=True)
 
+    _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
+
     type: Literal["VariantDiagnosticProposition"] = Field(
         default="VariantDiagnosticProposition",
         description="MUST be 'VariantDiagnosticProposition'.",
@@ -453,6 +491,8 @@ class VariantDiagnosticProposition(ClinicalVariantProposition, BaseModelForbidEx
 class VariantOncogenicityProposition(ClinicalVariantProposition, BaseModelForbidExtra):
     """A proposition describing the role of a variant in causing a tumor type."""
 
+    _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
+
     type: Literal["VariantOncogenicityProposition"] = Field(
         default="VariantOncogenicityProposition",
         description="MUST be 'VariantOncogenicityProposition'.",
@@ -468,6 +508,8 @@ class VariantOncogenicityProposition(ClinicalVariantProposition, BaseModelForbid
 
 class VariantPathogenicityProposition(ClinicalVariantProposition, BaseModelForbidExtra):
     """A proposition describing the role of a variant in causing a heritable condition."""
+
+    _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
 
     type: Literal["VariantPathogenicityProposition"] = Field(
         default="VariantPathogenicityProposition",
@@ -495,6 +537,8 @@ class VariantPrognosticProposition(ClinicalVariantProposition, BaseModelForbidEx
 
     model_config = ConfigDict(use_enum_values=True)
 
+    _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
+
     type: Literal["VariantPrognosticProposition"] = Field(
         default="VariantPrognosticProposition",
         description="MUST be 'VariantPrognosticProposition'.",
@@ -516,6 +560,8 @@ class VariantTherapeuticResponseProposition(
     """
 
     model_config = ConfigDict(use_enum_values=True)
+
+    _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
 
     type: Literal["VariantTherapeuticResponseProposition"] = Field(
         default="VariantTherapeuticResponseProposition",
@@ -548,8 +594,10 @@ _SubjectVariantPropositionType: TypeAlias = (
 )
 
 
-class SubjectVariantProposition(RootModel):
+class SubjectVariantProposition(BaseMetadataMixin, RootModel):
     """A `Proposition` that has a variant as the subject."""
+
+    _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
 
     root: _SubjectVariantPropositionType = Field(discriminator="type")
 
@@ -572,6 +620,8 @@ class EvidenceLine(InformationEntity, BaseModelForbidExtra):
     """
 
     model_config = ConfigDict(use_enum_values=True)
+
+    _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
 
     type: Literal["EvidenceLine"] = Field(
         default=CoreType.EVIDENCE_LINE.value,
@@ -683,6 +733,8 @@ class Statement(InformationEntity, BaseModelForbidExtra):
     """
 
     model_config = ConfigDict(use_enum_values=True)
+
+    _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
 
     type: Literal["Statement"] = Field(
         default=CoreType.STATEMENT.value,

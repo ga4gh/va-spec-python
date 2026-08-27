@@ -1,13 +1,15 @@
 """Package for VA-Spec Python implementation"""
 
-from importlib.metadata import PackageNotFoundError, version
+from importlib.metadata import PackageNotFoundError
+from importlib.metadata import version as package_version
+
+from ga4gh.va_spec.version import VASPEC_VERSION
 
 try:
-    __version__ = version(__name__)
+    __version__ = package_version(__name__)
 except PackageNotFoundError:  # pragma: nocover
     __version__ = "unknown"
 finally:
-    del version, PackageNotFoundError
+    del package_version, PackageNotFoundError
 
-
-VASPEC_VERSION = "1.1.0-snapshot.2026-06.1"
+__all__ = ["VASPEC_VERSION", "__version__"]

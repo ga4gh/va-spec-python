@@ -10,7 +10,9 @@ from typing import ClassVar
 from pydantic import Field, field_validator, model_validator
 from typing_extensions import Self
 
+from ga4gh.core.metadata import Maturity
 from ga4gh.core.models import MappableConcept, iriReference
+from ga4gh.va_spec.acmg_2015.metadata import ACMG2015MetadataMixin
 from ga4gh.va_spec.base.core import (
     Direction,
     Document,
@@ -62,7 +64,7 @@ ACMG_CLASSIFICATIONS = [v.value for v in AcmgClassification.__members__.values()
 
 
 class VariantPathogenicityEvidenceLine(
-    EvidenceLine, MethodTypeCriterionValidationMixin
+    ACMG2015MetadataMixin, EvidenceLine, MethodTypeCriterionValidationMixin
 ):
     """An Evidence Line that describes how a specific type of information was
     interpreted as evidence for or against a variant's pathogenicity. In the ACMG
@@ -70,6 +72,8 @@ class VariantPathogenicityEvidenceLine(
     with a default strength (e.g. 'moderate') is 'met' or 'not met', and in some cases
     adjusting the default strength based on the quality and abundance of evidence.
     """
+
+    _maturity: ClassVar[Maturity] = Maturity.DRAFT
 
     targetProposition: VariantPathogenicityProposition | None = Field(
         default=None,
@@ -320,8 +324,10 @@ class VariantPathogenicityEvidenceLine(
         return self
 
 
-class VariantPathogenicityStatement(Statement):
+class VariantPathogenicityStatement(ACMG2015MetadataMixin, Statement):
     """A Statement describing the role of a variant in causing an inherited condition."""
+
+    _maturity: ClassVar[Maturity] = Maturity.DRAFT
 
     proposition: VariantPathogenicityProposition = Field(
         ...,

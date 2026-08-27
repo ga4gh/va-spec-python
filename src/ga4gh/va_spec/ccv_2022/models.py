@@ -10,6 +10,7 @@ from typing import ClassVar
 from pydantic import Field, field_validator, model_validator
 from typing_extensions import Self
 
+from ga4gh.core.metadata import Maturity
 from ga4gh.core.models import MappableConcept, iriReference
 from ga4gh.va_spec.base.core import (
     Direction,
@@ -29,6 +30,7 @@ from ga4gh.va_spec.base.validators import (
     MethodTypeCriterionValidationMixin,
     validate_mappable_concept,
 )
+from ga4gh.va_spec.ccv_2022.metadata import CCV2022MetadataMixin
 
 SYSTEM = System.CCV
 CCV_CODE_PATTERN = (
@@ -56,7 +58,9 @@ METHOD = Method(  # recommended representation of ClinGen/CGC/VICC 2022 method
 )
 
 
-class VariantOncogenicityEvidenceLine(EvidenceLine, MethodTypeCriterionValidationMixin):
+class VariantOncogenicityEvidenceLine(
+    CCV2022MetadataMixin, EvidenceLine, MethodTypeCriterionValidationMixin
+):
     """An Evidence Line that describes how evidence for a variant was interpreted to
     determine if a specific CCV 2022 criterion code is met, and the strength that
     evidence this provides for or against the variant's oncogenicity. An Evidence Line
@@ -66,6 +70,8 @@ class VariantOncogenicityEvidenceLine(EvidenceLine, MethodTypeCriterionValidatio
     (e.g. 'moderate') is 'met' or 'not met', and in some cases adjusting the default
     strength based on the quality and abundance of evidence.
     """
+
+    _maturity: ClassVar[Maturity] = Maturity.DRAFT
 
     targetProposition: VariantOncogenicityProposition | None = Field(
         default=None,
@@ -248,11 +254,13 @@ class VariantOncogenicityEvidenceLine(EvidenceLine, MethodTypeCriterionValidatio
         return self
 
 
-class VariantOncogenicityStatement(Statement):
+class VariantOncogenicityStatement(CCV2022MetadataMixin, Statement):
     """A statement reporting a conclusion from a single study about whether a variant is
     associated with oncogenicity (positive or negative) - based on interpretation of the
     study's results.
     """
+
+    _maturity: ClassVar[Maturity] = Maturity.DRAFT
 
     proposition: VariantOncogenicityProposition = Field(
         ...,

@@ -6,12 +6,15 @@ sequence variants in cancer.
 
 from enum import Enum
 from types import MappingProxyType
+from typing import ClassVar
 
 from pydantic import Field, RootModel, field_validator, model_validator
 from pydantic.dataclasses import dataclass
 from typing_extensions import Self
 
+from ga4gh.core.metadata import Maturity
 from ga4gh.core.models import BaseModelForbidExtra, MappableConcept, iriReference
+from ga4gh.va_spec.aac_2017.metadata import AAC2017MetadataMixin
 from ga4gh.va_spec.base.core import (
     Direction,
     Document,
@@ -58,8 +61,10 @@ AMP_ASCO_CAP_EVIDENCE_LINE_STRENGTHS = [
 ]
 
 
-class AmpAscoCapEvidenceLine(EvidenceLine):
+class AmpAscoCapEvidenceLine(AAC2017MetadataMixin, EvidenceLine):
     """Evidence line for AMP/ASCO/CAP"""
+
+    _maturity: ClassVar[Maturity] = Maturity.DRAFT
 
     targetProposition: (
         VariantPrognosticProposition
@@ -88,8 +93,12 @@ class _PrognosticEvidenceLineObject(AmpAscoCapEvidenceLine):
     targetProposition: VariantPrognosticProposition
 
 
-class PrognosticEvidenceLine(RootModel[_PrognosticEvidenceLineObject | iriReference]):
+class PrognosticEvidenceLine(
+    AAC2017MetadataMixin, RootModel[_PrognosticEvidenceLineObject | iriReference]
+):
     """Prognostic evidence line for AMP/ASCO/CAP"""
+
+    _maturity: ClassVar[Maturity] = Maturity.DRAFT
 
 
 class _DiagnosticEvidenceLineObject(AmpAscoCapEvidenceLine):
@@ -98,8 +107,12 @@ class _DiagnosticEvidenceLineObject(AmpAscoCapEvidenceLine):
     targetProposition: VariantDiagnosticProposition
 
 
-class DiagnosticEvidenceLine(RootModel[_DiagnosticEvidenceLineObject | iriReference]):
+class DiagnosticEvidenceLine(
+    AAC2017MetadataMixin, RootModel[_DiagnosticEvidenceLineObject | iriReference]
+):
     """Diagnostic evidence line for AMP/ASCO/CAP"""
+
+    _maturity: ClassVar[Maturity] = Maturity.DRAFT
 
 
 class _TherapeuticEvidenceLineObject(AmpAscoCapEvidenceLine):
@@ -108,8 +121,12 @@ class _TherapeuticEvidenceLineObject(AmpAscoCapEvidenceLine):
     targetProposition: VariantTherapeuticResponseProposition
 
 
-class TherapeuticEvidenceLine(RootModel[_TherapeuticEvidenceLineObject | iriReference]):
+class TherapeuticEvidenceLine(
+    AAC2017MetadataMixin, RootModel[_TherapeuticEvidenceLineObject | iriReference]
+):
     """Therapeutic evidence line for AMP/ASCO/CAP"""
+
+    _maturity: ClassVar[Maturity] = Maturity.DRAFT
 
 
 class AmpAscoCapStrengthCode(str, Enum):
@@ -177,11 +194,15 @@ AMP_ASCO_CAP_CLASSIFICATION_MAP = MappingProxyType(
 )
 
 
-class VariantClinicalSignificanceStatement(Statement, BaseModelForbidExtra):
+class VariantClinicalSignificanceStatement(
+    AAC2017MetadataMixin, Statement, BaseModelForbidExtra
+):
     """A statement reporting a conclusion from a single study about the clinical
     significance of a variant with respect to a condition, based on interpretation of
     the study's results.
     """
+
+    _maturity: ClassVar[Maturity] = Maturity.DRAFT
 
     proposition: VariantClinicalSignificanceProposition
     strength: MappableConcept | None = Field(
