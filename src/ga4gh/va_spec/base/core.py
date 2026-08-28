@@ -404,6 +404,12 @@ class ClinicalVariantProposition(_SubjectVariantPropositionBase):
     """A proposition for use in describing the effect of variants in human subjects."""
 
     _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
+    condition_field_name: ClassVar[str]
+
+    @property
+    def condition(self) -> Condition | iriReference:
+        """Return the condition associated with the proposition."""
+        return getattr(self, self.condition_field_name)
 
     geneContextQualifier: MappableConcept | iriReference | None = Field(
         default=None,
@@ -450,6 +456,7 @@ class VariantClinicalSignificanceProposition(
     """
 
     _maturity: ClassVar[Maturity] = Maturity.DRAFT
+    condition_field_name: ClassVar[str] = "objectCondition"
 
     model_config = ConfigDict(use_enum_values=True)
 
@@ -474,6 +481,7 @@ class VariantDiagnosticProposition(ClinicalVariantProposition, BaseModelForbidEx
     model_config = ConfigDict(use_enum_values=True)
 
     _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
+    condition_field_name: ClassVar[str] = "objectCondition"
 
     type: Literal["VariantDiagnosticProposition"] = Field(
         default="VariantDiagnosticProposition",
@@ -492,6 +500,7 @@ class VariantOncogenicityProposition(ClinicalVariantProposition, BaseModelForbid
     """A proposition describing the role of a variant in causing a tumor type."""
 
     _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
+    condition_field_name: ClassVar[str] = "objectTumorType"
 
     type: Literal["VariantOncogenicityProposition"] = Field(
         default="VariantOncogenicityProposition",
@@ -510,6 +519,7 @@ class VariantPathogenicityProposition(ClinicalVariantProposition, BaseModelForbi
     """A proposition describing the role of a variant in causing a heritable condition."""
 
     _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
+    condition_field_name: ClassVar[str] = "objectCondition"
 
     type: Literal["VariantPathogenicityProposition"] = Field(
         default="VariantPathogenicityProposition",
@@ -538,6 +548,7 @@ class VariantPrognosticProposition(ClinicalVariantProposition, BaseModelForbidEx
     model_config = ConfigDict(use_enum_values=True)
 
     _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
+    condition_field_name: ClassVar[str] = "objectCondition"
 
     type: Literal["VariantPrognosticProposition"] = Field(
         default="VariantPrognosticProposition",
@@ -562,6 +573,7 @@ class VariantTherapeuticResponseProposition(
     model_config = ConfigDict(use_enum_values=True)
 
     _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
+    condition_field_name: ClassVar[str] = "conditionQualifier"
 
     type: Literal["VariantTherapeuticResponseProposition"] = Field(
         default="VariantTherapeuticResponseProposition",
