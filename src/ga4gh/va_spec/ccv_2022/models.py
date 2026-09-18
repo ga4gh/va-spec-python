@@ -275,6 +275,7 @@ class VariantOncogenicityStatement(CCV2022MetadataMixin, Statement):
         ...,
         description="The method that specifies how the oncogenicity classification is ultimately assigned to the variant, based on assessment of evidence.",
     )
+    hasEvidenceLines: list[VariantOncogenicityEvidenceLine | iriReference] | None = None
 
     @field_validator("strength")
     @classmethod

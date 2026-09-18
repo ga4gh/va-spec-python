@@ -63,6 +63,70 @@ def caf():
     )
 
 
+@pytest.fixture()
+def pathogenicity_evidence_line_params():
+    """Return valid VariantPathogenicityEvidenceLine parameters."""
+    return {
+        "type": "EvidenceLine",
+        "specifiedBy": {
+            "type": "Method",
+            "id": "PS3",
+            "name": "ACMG 2015 PS3 Criterion",
+            "reportedIn": {
+                "type": "Document",
+                "pmid": "25741868",
+                "name": "ACMG Guidelines, 2015",
+            },
+            "methodType": "Functional Data Assessment",
+        },
+        "directionOfEvidenceProvided": "supports",
+        "evidenceOutcome": {
+            "primaryCoding": {
+                "code": "PS3_supporting",
+                "system": "ACMG Guidelines, 2015",
+            },
+            "name": "ACMG 2015 PS3 Supporting Criterion Met",
+        },
+        "strengthOfEvidenceProvided": {
+            "primaryCoding": {
+                "system": "ACMG Guidelines, 2015",
+                "code": "supporting",
+            }
+        },
+    }
+
+
+@pytest.fixture()
+def oncogenicity_evidence_line_params():
+    """Return valid VariantOncogenicityEvidenceLine parameters."""
+    return {
+        "type": "EvidenceLine",
+        "specifiedBy": {
+            "type": "Method",
+            "reportedIn": {
+                "type": "Document",
+                "pmid": "35101336",
+                "name": "ClinGen/CGC/VICC Guidelines for Oncogenicity, 2022",
+            },
+            "methodType": "functional_assay",
+        },
+        "directionOfEvidenceProvided": "supports",
+        "scoreOfEvidenceProvided": 1,
+        "evidenceOutcome": {
+            "primaryCoding": {
+                "code": "OS2_supporting",
+                "system": "ClinGen/CGC/VICC Guidelines for Oncogenicity, 2022",
+            },
+        },
+        "strengthOfEvidenceProvided": {
+            "primaryCoding": {
+                "code": "supporting",
+                "system": "ClinGen/CGC/VICC Guidelines for Oncogenicity, 2022",
+            }
+        },
+    }
+
+
 @pytest.mark.parametrize(
     ("proposition_class", "condition_field_name", "predicate"),
     [
@@ -376,7 +440,7 @@ def test_evidence_line(caf):
         EvidenceLine(**invalid_params)
 
 
-def test_variant_pathogenicity_stmt():
+def test_variant_pathogenicity_stmt(pathogenicity_evidence_line_params):
     """Ensure VariantPathogenicityStatement model works as expected"""
     params = {
         "direction": "supports",
@@ -396,8 +460,10 @@ def test_variant_pathogenicity_stmt():
                 "name": "ACMG Guidelines, 2015",
             }
         },
+        "hasEvidenceLines": [pathogenicity_evidence_line_params],
     }
-    assert VariantPathogenicityStatement(**params)
+    statement = VariantPathogenicityStatement(**params)
+    assert isinstance(statement.hasEvidenceLines[0], VariantPathogenicityEvidenceLine)
 
     invalid_params = deepcopy(params)
     del invalid_params["classification"]["primaryCoding"]
@@ -433,36 +499,9 @@ def test_variant_pathogenicity_stmt():
         VariantPathogenicityStatement(**invalid_params)
 
 
-def test_variant_pathogenicity_el():
+def test_variant_pathogenicity_el(pathogenicity_evidence_line_params):
     """Ensure VariantPathogenicityEvidenceLine model works as expected"""
-    params = {
-        "type": "EvidenceLine",
-        "specifiedBy": {
-            "type": "Method",
-            "id": "PS3",
-            "name": "ACMG 2015 PS3 Criterion",
-            "reportedIn": {
-                "type": "Document",
-                "pmid": "25741868",
-                "name": "ACMG Guidelines, 2015",
-            },
-            "methodType": "Functional Data Assessment",
-        },
-        "directionOfEvidenceProvided": "supports",
-        "evidenceOutcome": {
-            "primaryCoding": {
-                "code": "PS3_supporting",
-                "system": "ACMG Guidelines, 2015",
-            },
-            "name": "ACMG 2015 PS3 Supporting Criterion Met",
-        },
-        "strengthOfEvidenceProvided": {
-            "primaryCoding": {
-                "system": "ACMG Guidelines, 2015",
-                "code": "supporting",
-            }
-        },
-    }
+    params = pathogenicity_evidence_line_params
     vp = VariantPathogenicityEvidenceLine(**params)
 
     assert isinstance(vp.specifiedBy, Method)
@@ -545,7 +584,7 @@ def test_variant_pathogenicity_el():
         VariantPathogenicityEvidenceLine(**invalid_params)
 
 
-def test_variant_onco_stmt():
+def test_variant_onco_stmt(oncogenicity_evidence_line_params):
     """Ensure VariantOncogenicityStatement model works as expected"""
     params = {
         "direction": "neutral",
@@ -568,8 +607,10 @@ def test_variant_onco_stmt():
                 "system": "ClinGen/CGC/VICC Guidelines for Oncogenicity, 2022",
             }
         },
+        "hasEvidenceLines": [oncogenicity_evidence_line_params],
     }
-    assert VariantOncogenicityStatement(**params)
+    statement = VariantOncogenicityStatement(**params)
+    assert isinstance(statement.hasEvidenceLines[0], VariantOncogenicityEvidenceLine)
 
     valid_params = deepcopy(params)
     valid_params["strength"] = None
@@ -598,34 +639,9 @@ def test_variant_onco_stmt():
         VariantOncogenicityStatement(**invalid_params)
 
 
-def test_variant_onco_el():
+def test_variant_onco_el(oncogenicity_evidence_line_params):
     """Ensure VariantOncogenicityEvidenceLine model works as expected"""
-    vo = VariantOncogenicityEvidenceLine(
-        type="EvidenceLine",
-        specifiedBy={
-            "type": "Method",
-            "reportedIn": {
-                "type": "Document",
-                "pmid": "35101336",
-                "name": "ClinGen/CGC/VICC Guidelines for Oncogenicity, 2022",
-            },
-            "methodType": "functional_assay",
-        },
-        directionOfEvidenceProvided="supports",
-        scoreOfEvidenceProvided=1,
-        evidenceOutcome={
-            "primaryCoding": {
-                "code": "OS2_supporting",
-                "system": "ClinGen/CGC/VICC Guidelines for Oncogenicity, 2022",
-            },
-        },
-        strengthOfEvidenceProvided={
-            "primaryCoding": {
-                "code": "supporting",
-                "system": "ClinGen/CGC/VICC Guidelines for Oncogenicity, 2022",
-            }
-        },
-    )
+    vo = VariantOncogenicityEvidenceLine(**oncogenicity_evidence_line_params)
     assert isinstance(vo.specifiedBy, Method)
     assert vo.evidenceOutcome == MappableConcept(
         primaryCoding=Coding(

@@ -345,6 +345,9 @@ class VariantPathogenicityStatement(ACMG2015MetadataMixin, Statement):
         ...,
         description="The method that specifies how the pathogenicity classification is ultimately assigned to the variant, based on assessment of evidence.",
     )
+    hasEvidenceLines: list[VariantPathogenicityEvidenceLine | iriReference] | None = (
+        None
+    )
 
     @field_validator("strength")
     @classmethod
