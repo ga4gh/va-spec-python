@@ -55,10 +55,10 @@ def test_definitions():
 def caf():
     """Create test fixture for CohortAlleleFrequencyStudyResult"""
     return CohortAlleleFrequencyStudyResult(
-        focusAllele="allele.json#/1",
-        focusAlleleCount=0,
-        focusAlleleFrequency=0,
-        locusAlleleCount=34086,
+        focus="allele.json#/1",
+        focusCount=0,
+        alleleFrequency=0,
+        locusCount=34086,
         cohort=StudyGroup(id="ALL", name="Overall"),
     )
 
@@ -77,7 +77,7 @@ def pathogenicity_evidence_line_params():
                 "pmid": "25741868",
                 "name": "ACMG Guidelines, 2015",
             },
-            "methodType": "Functional Data Assessment",
+            "methodType": "functional_data_assessment",
         },
         "directionOfEvidenceProvided": "supports",
         "evidenceOutcome": {
@@ -108,7 +108,7 @@ def oncogenicity_evidence_line_params():
                 "pmid": "35101336",
                 "name": "ClinGen/CGC/VICC Guidelines for Oncogenicity, 2022",
             },
-            "methodType": "functional_assay",
+            "methodType": "functional_data_assessment",
         },
         "directionOfEvidenceProvided": "supports",
         "scoreOfEvidenceProvided": 1,
@@ -132,19 +132,19 @@ def oncogenicity_evidence_line_params():
     [
         (
             VariantClinicalSignificanceProposition,
-            "objectCondition",
+            "object",
             "hasClinicalSignificanceFor",
         ),
         (
             VariantDiagnosticProposition,
-            "objectCondition",
+            "object",
             "isDiagnosticInclusionCriterionFor",
         ),
-        (VariantOncogenicityProposition, "objectTumorType", "isOncogenicFor"),
-        (VariantPathogenicityProposition, "objectCondition", "isCausalFor"),
+        (VariantOncogenicityProposition, "object", "isOncogenicFor"),
+        (VariantPathogenicityProposition, "object", "isCausalFor"),
         (
             VariantPrognosticProposition,
-            "objectCondition",
+            "object",
             "associatedWithBetterOutcomeFor",
         ),
         (
@@ -160,12 +160,12 @@ def test_proposition_condition_helpers(
     """Test condition access without knowing the proposition field name."""
     initial_condition = iriReference(root="conditions.json#/1")
     proposition_data = {
-        "subjectVariant": "alleles.json#/1",
+        "subject": "alleles.json#/1",
         "predicate": predicate,
         condition_field_name: initial_condition,
     }
     if proposition_class is VariantTherapeuticResponseProposition:
-        proposition_data["objectTherapeutic"] = "therapeutics.json#/1"
+        proposition_data["object"] = "therapeutics.json#/1"
 
     proposition = proposition_class(**proposition_data)
 
@@ -179,7 +179,7 @@ def test_condition_set():
     """Ensure ConditionSet model works as expected"""
     condition_set_dict = {
         "membershipOperator": "AND",
-        "conditions": [
+        "concepts": [
             {
                 "conceptType": "Disease",
                 "id": "civic.did:3387",
@@ -195,7 +195,7 @@ def test_condition_set():
                 "name": "Diffuse Astrocytoma, MYB- Or MYBL1-altered",
             },
             {
-                "conditions": [
+                "concepts": [
                     {
                         "conceptType": "Phenotype",
                         "id": "civic.phenotype:8121",
@@ -247,7 +247,7 @@ def test_condition_set():
     assert ConditionSet(**condition_set_dict)
 
     invalid_params = deepcopy(condition_set_dict)
-    invalid_params["conditions"].pop()
+    invalid_params["concepts"].pop()
 
     with pytest.raises(
         ValidationError, match="List should have at least 2 items after validation"
@@ -273,53 +273,31 @@ def test_agent():
 
 def test_caf_study_result(caf):
     """Ensure CohortAlleleFrequencyStudyResult model works as expected"""
-    assert caf.focusAllele.root == "allele.json#/1"
-    assert caf.focusAlleleCount == 0
-    assert caf.focusAlleleFrequency == 0
-    assert caf.locusAlleleCount == 34086
+    assert caf.focus.root == "allele.json#/1"
+    assert caf.focusCount == 0
+    assert caf.alleleFrequency == 0
+    assert caf.locusCount == 34086
     assert caf.cohort.id == "ALL"
     assert caf.cohort.name == "Overall"
     assert caf.cohort.type == "StudyGroup"
 
-    assert "focus" not in caf.model_dump()
-    assert "focus" not in json.loads(caf.model_dump_json())
-
-    with pytest.raises(
-        AttributeError,
-        match="'CohortAlleleFrequencyStudyResult' object has no attribute 'focus'",
-    ):
-        caf.focus  # noqa: B018
-
-    with pytest.raises(
-        ValueError,
-        match='"CohortAlleleFrequencyStudyResult" object has no field "focus"',
-    ):
-        caf.focus = "focus"
+    assert caf.model_dump()["focus"] == "allele.json#/1"
+    assert json.loads(caf.model_dump_json())["focus"] == "allele.json#/1"
 
 
 def test_experimental_func_impact_study_result():
     """Ensure ExperimentalVariantFunctionalImpactStudyResult model works as expected"""
     experimental_func_impact_study_result = (
-        ExperimentalVariantFunctionalImpactStudyResult(focusVariant="allele.json#/1")
+        ExperimentalVariantFunctionalImpactStudyResult(focus="allele.json#/1")
     )
-    assert experimental_func_impact_study_result.focusVariant.root == "allele.json#/1"
+    assert experimental_func_impact_study_result.focus.root == "allele.json#/1"
 
-    assert "focus" not in experimental_func_impact_study_result.model_dump()
-    assert "focus" not in json.loads(
+    assert (
+        experimental_func_impact_study_result.model_dump()["focus"] == "allele.json#/1"
+    )
+    assert "focus" in json.loads(
         experimental_func_impact_study_result.model_dump_json()
     )
-
-    with pytest.raises(
-        AttributeError,
-        match="'ExperimentalVariantFunctionalImpactStudyResult' object has no attribute 'focus'",
-    ):
-        experimental_func_impact_study_result.focus  # noqa: B018
-
-    with pytest.raises(
-        ValueError,
-        match='"ExperimentalVariantFunctionalImpactStudyResult" object has no field "focus"',
-    ):
-        experimental_func_impact_study_result.focus = "focus"
 
 
 def test_evidence_line(caf):
@@ -333,7 +311,7 @@ def test_evidence_line(caf):
                 "type": "Statement",
                 "proposition": {
                     "type": "VariantTherapeuticResponseProposition",
-                    "subjectVariant": {
+                    "subject": {
                         "id": "civic.mpid:33",
                         "type": "CategoricalVariant",
                         "name": "EGFR L858R",
@@ -345,7 +323,7 @@ def test_evidence_line(caf):
                     },
                     "alleleOriginQualifier": {"name": "somatic"},
                     "predicate": "predictsSensitivityTo",
-                    "objectTherapeutic": {
+                    "object": {
                         "id": "civic.tid:146",
                         "conceptType": "Therapy",
                         "name": "Afatinib",
@@ -362,7 +340,7 @@ def test_evidence_line(caf):
                         "code": "strong",
                     }
                 },
-                "classification": {
+                "outcome": {
                     "primaryCoding": {
                         "system": "AMP/ASCO/CAP Guidelines, 2017",
                         "code": "tier i",
@@ -447,10 +425,10 @@ def test_variant_pathogenicity_stmt(pathogenicity_evidence_line_params):
         "proposition": {
             "type": "VariantPathogenicityProposition",
             "predicate": "isCausalFor",
-            "objectCondition": "conditions.json#/1",
-            "subjectVariant": "alleles.json#/1",
+            "object": "conditions.json#/1",
+            "subject": "alleles.json#/1",
         },
-        "classification": {
+        "outcome": {
             "primaryCoding": {"code": "pathogenic", "system": "ACMG Guidelines, 2015"}
         },
         "specifiedBy": {
@@ -466,30 +444,28 @@ def test_variant_pathogenicity_stmt(pathogenicity_evidence_line_params):
     assert isinstance(statement.hasEvidenceLines[0], VariantPathogenicityEvidenceLine)
 
     invalid_params = deepcopy(params)
-    del invalid_params["classification"]["primaryCoding"]
-    invalid_params["classification"]["name"] = "test"
+    del invalid_params["outcome"]["primaryCoding"]
+    invalid_params["outcome"]["name"] = "test"
     with pytest.raises(ValueError, match="`primaryCoding` is required."):
         VariantPathogenicityStatement(**invalid_params)
 
     invalid_params = deepcopy(params)
-    invalid_params["classification"]["primaryCoding"]["system"] = (
+    invalid_params["outcome"]["primaryCoding"]["system"] = (
         "AMP/ASCO/CAP Guidelines, 2017"
     )
     with pytest.raises(ValueError, match="`primaryCoding.system` must be one of"):
         VariantPathogenicityStatement(**invalid_params)
 
     invalid_params = deepcopy(params)
-    invalid_params["classification"]["primaryCoding"]["code"] = (
-        "pathogenic, low penetrance"
-    )
+    invalid_params["outcome"]["primaryCoding"]["code"] = "pathogenic, low penetrance"
     with pytest.raises(ValueError, match="`primaryCoding.code` must be one of"):
         VariantPathogenicityStatement(**invalid_params)
 
     invalid_params = deepcopy(params)
-    invalid_params["classification"]["primaryCoding"]["system"] = (
+    invalid_params["outcome"]["primaryCoding"]["system"] = (
         "ClinGen Low Penetrance and Risk Allele Recommendations, 2024"
     )
-    invalid_params["classification"]["primaryCoding"]["code"] = "pathogenic"
+    invalid_params["outcome"]["primaryCoding"]["code"] = "pathogenic"
     with pytest.raises(ValueError, match="`primaryCoding.code` must be one of"):
         VariantPathogenicityStatement(**invalid_params)
 
@@ -591,10 +567,10 @@ def test_variant_onco_stmt(oncogenicity_evidence_line_params):
         "proposition": {
             "type": "VariantOncogenicityProposition",
             "predicate": "isOncogenicFor",
-            "objectTumorType": "conditions.json#/1",
-            "subjectVariant": "alleles.json#/1",
+            "object": "conditions.json#/1",
+            "subject": "alleles.json#/1",
         },
-        "classification": {
+        "outcome": {
             "primaryCoding": {
                 "code": "oncogenic",
                 "system": "ClinGen/CGC/VICC Guidelines for Oncogenicity, 2022",
@@ -627,14 +603,12 @@ def test_variant_onco_stmt(oncogenicity_evidence_line_params):
         VariantOncogenicityStatement(**invalid_params)
 
     invalid_params = deepcopy(params)
-    invalid_params["classification"]["primaryCoding"]["code"] = "pathogenic"
+    invalid_params["outcome"]["primaryCoding"]["code"] = "pathogenic"
     with pytest.raises(ValueError, match="`primaryCoding.code` must be one of"):
         VariantOncogenicityStatement(**invalid_params)
 
     invalid_params = deepcopy(params)
-    invalid_params["classification"]["primaryCoding"]["system"] = (
-        "ACMG Guidelines, 2015"
-    )
+    invalid_params["outcome"]["primaryCoding"]["system"] = "ACMG Guidelines, 2015"
     with pytest.raises(ValueError, match="`primaryCoding.system` must be"):
         VariantOncogenicityStatement(**invalid_params)
 
@@ -695,7 +669,7 @@ def test_variant_onco_el_no_evidence_outcome():
                 "pmid": "35101336",
                 "name": "ClinGen/CGC/VICC Guidelines for Oncogenicity, 2022",
             },
-            "methodType": "functional_assay",
+            "methodType": "functional_data_assessment",
         },
         directionOfEvidenceProvided=Direction.NEUTRAL,
         scoreOfEvidenceProvided=0,
@@ -719,16 +693,16 @@ def test_aac_statement():
     prop = {
         "type": "VariantDiagnosticProposition",
         "predicate": "isDiagnosticExclusionCriterionFor",
-        "objectCondition": "conditions.json#/1",
-        "subjectVariant": "alleles.json#/1",
+        "object": "conditions.json#/1",
+        "subject": "alleles.json#/1",
     }
     params = {
         "direction": "supports",
         "proposition": {
             "type": "VariantClinicalSignificanceProposition",
             "predicate": "hasClinicalSignificanceFor",
-            "objectCondition": "conditions.json#/1",
-            "subjectVariant": "alleles.json#/1",
+            "object": "conditions.json#/1",
+            "subject": "alleles.json#/1",
         },
         "strength": {
             "primaryCoding": {
@@ -737,7 +711,7 @@ def test_aac_statement():
             }
         },
         "specifiedBy": "documents.json#/1",
-        "classification": {
+        "outcome": {
             "name": "Tier I",
             "primaryCoding": {
                 "code": "tier i",
@@ -793,15 +767,15 @@ def test_aac_statement():
     with pytest.raises(ValidationError, match="`strength` must be: strong"):
         VariantClinicalSignificanceStatement(**invalid_params)
 
-    # Invalid classification
+    # Invalid outcome
     invalid_params = deepcopy(params)
-    invalid_params["classification"]["primaryCoding"]["code"] = "Tier I"
+    invalid_params["outcome"]["primaryCoding"]["code"] = "Tier I"
     with pytest.raises(ValidationError, match="`primaryCoding.code` must be one of"):
         VariantClinicalSignificanceStatement(**invalid_params)
 
     invalid_params = deepcopy(params)
-    invalid_params["classification"]["name"] = "tier i"
-    with pytest.raises(ValidationError, match="`classification.name` must be: Tier I"):
+    invalid_params["outcome"]["name"] = "tier i"
+    with pytest.raises(ValidationError, match="`outcome.name` must be: Tier I"):
         VariantClinicalSignificanceStatement(**invalid_params)
 
     # Invalid direction

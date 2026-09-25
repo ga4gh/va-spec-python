@@ -8,7 +8,6 @@ from pydantic import BaseModel
 from tests.conftest import (
     SUBMODULES_DIR,
     VaSpecSchema,
-    get_va_spec_schema,
 )
 
 from ga4gh.va_spec import aac_2017, acmg_2015, base, ccv_2022
@@ -39,7 +38,7 @@ def _update_va_spec_schema_mapping(
     spec_class = cls_def["title"]
     va_spec_schema_mapping.va_spec_schema[spec_class] = cls_def
 
-    if "properties" in cls_def:
+    if "properties" in cls_def and not cls_def.get("abstract", False):
         va_spec_schema_mapping.concrete_classes.add(spec_class)
     elif cls_def.get("type") in {"array", "integer", "string"}:
         va_spec_schema_mapping.primitives.add(spec_class)
@@ -50,16 +49,15 @@ def _update_va_spec_schema_mapping(
 VA_SPEC_SCHEMA_MAPPING = {schema: VaSpecSchemaMapping() for schema in VaSpecSchema}
 
 
-# Get core + profiles classes
-for child in VA_SCHEMA_DIR.iterdir():
-    child_str = str(child)
-    mapping_key = get_va_spec_schema(child_str)
-    if not mapping_key:
-        continue
+# The reinstated EvidenceLine schema puts core JSON schemas directly under
+# ``va-spec/json`` and profile schemas below their profile namespace.
+for f in VA_SCHEMA_DIR.glob("json/*"):
+    if f.is_file():
+        _update_va_spec_schema_mapping(f, VA_SPEC_SCHEMA_MAPPING[VaSpecSchema.BASE])
 
-    mapping = VA_SPEC_SCHEMA_MAPPING[mapping_key]
-    for f in (child / "json").glob("*"):
-        _update_va_spec_schema_mapping(f, mapping)
+for profile in (VaSpecSchema.AAC_2017, VaSpecSchema.ACMG_2015, VaSpecSchema.CCV_2022):
+    for f in (VA_SCHEMA_DIR / "json" / profile.value).glob("*"):
+        _update_va_spec_schema_mapping(f, VA_SPEC_SCHEMA_MAPPING[profile])
 
 
 @pytest.mark.parametrize(

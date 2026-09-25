@@ -130,70 +130,70 @@ class VariantPathogenicityEvidenceLine(
         # Assessment of whether population control frequency refutes
         # pathogenicity or whether absence/extreme rarity in controls provides
         # supporting evidence for pathogenicity
-        POPULATION_DATA_ASSESSMENT = "Population Data Assessment"
+        POPULATION_DATA_ASSESSMENT = "population_data_assessment"
 
         # Prevalence in affected statistically increased over matched controls,
         # or enrichment in controls inconsistent with disease penetrance
-        CASE_CONTROL_ENRICHMENT_ASSESSMENT = "Case-Control Enrichment Assessment"
+        CASE_CONTROL_ENRICHMENT_ASSESSMENT = "case_control_enrichment_assessment"
 
         # Predicted null variant in a gene where LOF is a known mechanism of disease
-        NULL_VARIANT_ASSESSMENT = "Null variant assessment"
+        NULL_VARIANT_ASSESSMENT = "null_variant_assessment"
 
         # Same amino acid change as an established pathogenic variant
-        SAME_AMINO_ACID_CHANGE_ASSESSMENT = "Same amino acid change assessment"
+        SAME_AMINO_ACID_CHANGE_ASSESSMENT = "same_amino_acid_change_assessment"
 
         # Mutational hot spot or well-established functional domain without
         # benign variation
         MUTATIONAL_HOT_SPOT_AND_FUNCTIONAL_DOMAIN_ASSESSMENT = (
-            "Mutational hot spot and functional domain assessment"
+            "mutational_hot_spot_and_functional_domain_assessment"
         )
 
         # Protein length change, or in-frame indels changing counts of repeats
         # with no known function
-        PROTEIN_LENGTH_CHANGE_ASSESSMENT = "Protein length change assessment"
+        PROTEIN_LENGTH_CHANGE_ASSESSMENT = "protein_length_change_assessment"
 
         # Novel missense change at an amino acid where a different pathogenic
         # missense change has been seen before
-        NOVEL_MISSENSE_POSITION_ASSESSMENT = "Novel missense position assessment"
+        NOVEL_MISSENSE_POSITION_ASSESSMENT = "novel_missense_position_assessment"
 
         # Missense in a gene where only truncation causes disease, or with low
         # rate of benign missense variation
-        VARIANT_SPECTRUM_ASSESSMENT = "Variant spectrum assessment"
+        VARIANT_SPECTRUM_ASSESSMENT = "variant_spectrum_assessment"
 
         # Multiple lines of computational evidence support a deleterious effect
         # or no impact
         IN_SILICO_FUNCTIONAL_IMPACT_ASSESSMENT = (
-            "In silico functional impact assessment"
+            "in_silico_functional_impact_assessment"
         )
 
         # Silent variant with no predicted splicing impact
-        PREDICTED_SILENT_VARIANT_ASSESSMENT = "Predicted silent variant assessment"
+        PREDICTED_SILENT_VARIANT_ASSESSMENT = "predicted_silent_variant_assessment"
 
         # Well-established functional studies show or do not show deleterious
         # effect
-        FUNCTIONAL_DATA_ASSESSMENT = "Functional Data Assessment"
+        FUNCTIONAL_DATA_ASSESSMENT = "functional_data_assessment"
 
         # Consegregation with disease in multiple family members, or
         # nonsegregation
-        SEGREGATION_DATA_ASSESSMENT = "Segregation Data Assessment"
+        SEGREGATION_DATA_ASSESSMENT = "segregation_data_assessment"
 
         # De novo, with or without paternity and maternity confirmed
-        DE_NOVO_DATA_ASSESSMENT = "De Novo Data Assessment"
+        DE_NOVO_OCCURRENCE_ASSESSMENT = "de_novo_occurrence_assessment"
 
         # Observed in trans with a dominant variant, in cis with a pathogenic
         # variant, or in trans with a pathogenic variant in a recessive
         # disorder
-        CIS_TRANS_VARIANT_ASSESSMENT = "Cis/trans variant assessment"
+        CIS_TRANS_VARIANT_ASSESSMENT = "cis_trans_variant_assessment"
 
         # Benign or pathogenic according to a reputable source
-        REPUTABLE_SOURCE_ASSESSMENT = "Reputable Source Assessment"
+        REPUTABLE_SOURCE_ASSESSMENT = "reputable_source_assessment"
 
         # Patient's phenotype or family history highly specific for the gene
         # and disorder
-        PHENOTYPE_GENE_SPECIFICITY_ASSESSMENT = "Phenotype-gene specificity assessment"
+        PHENOTYPE_GENE_SPECIFICITY_ASSESSMENT = "phenotype_gene_specificity_assessment"
 
         # Found in a case with an alternate cause
-        ALTERNATIVE_CAUSE_ASSESSMENT = "Alternative cause assessment"
+        ALTERNATIVE_CAUSE_ASSESSMENT = "alternative_cause_assessment"
 
     ALLOWED_CRITERIA_BY_METHOD_TYPE: ClassVar[
         MappingProxyType[
@@ -254,7 +254,7 @@ class VariantPathogenicityEvidenceLine(
                     Criterion.BS4,
                 }
             ),
-            MethodType.DE_NOVO_DATA_ASSESSMENT: frozenset(
+            MethodType.DE_NOVO_OCCURRENCE_ASSESSMENT: frozenset(
                 {
                     Criterion.PS2,
                     Criterion.PM6,
@@ -315,7 +315,7 @@ class VariantPathogenicityEvidenceLine(
             ``directionOfEvidenceProvided`` is neutral
         """
         self._validate_direction_of_evidence_provided()
-        acmg_code_pattern = r"^((?:PVS1)(?:_(?:not_met|(?:strong|moderate|supporting)))?|(?:PS[1-4]|BS[1-4])(?:_(?:not_met|(?:very_strong|moderate|supporting)))?|BA1(?:_not_met)?|(?:PM[1-6])(?:_(?:not_met|(?:very_strong|strong|supporting)))?|(PP[1-5]|BP[1-7])(?:_(?:not_met|very_strong|strong|moderate))?)$"
+        acmg_code_pattern = r"^(?:no_criteria_met|(?:PVS1)(?:_(?:not_met|(?:strong|moderate|supporting)))?|(?:PS[1-4]|BS[1-4])(?:_(?:not_met|(?:very_strong|moderate|supporting)))?|BA1(?:_not_met)?|(?:PM[1-6])(?:_(?:not_met|(?:very_strong|strong|supporting)))?|(PP[1-5]|BP[1-7])(?:_(?:not_met|very_strong|strong|moderate))?)$"
         self._validate_evidence_outcome(SYSTEM, acmg_code_pattern, is_required=True)
         self._validate_criterion_specified_by()
         self._validate_method_type_evidence_outcome(
@@ -337,7 +337,7 @@ class VariantPathogenicityStatement(ACMG2015MetadataMixin, Statement):
         default=None,
         description="The strength of support that an ACMG 2015 Variant Pathogenicity statement is determined to provide for or against the proposed pathogenicity of the assessed variant. Strength is evaluated relative to the direction indicated by the 'direction' attribute. The indicated enumeration constrains the nested MappableConcept.primaryCoding > Coding.code attribute when capturing evidence strength.",
     )
-    classification: MappableConcept = Field(
+    outcome: MappableConcept = Field(
         ...,
         description="The classification of the variant's pathogenicity, based on the ACMG 2015 guidelines. These classifications should coincide with the direction and strength values as follows: 'pathogenic' with supports-strong, 'likely pathogenic' with supports-moderate, 'benign' with disputes-strong, 'likely benign' with disputes-moderate 'uncertain significance' can be one of three possibilities... supports-weak, disputes-weak or neutral for uncertain significance (favoring pathogenic), uncertain significance (favoring benign) or uncertain significance (favoring neither pathogenic nor benign). The 'low penetrance' and 'risk allele' versions of pathogenicity classifications would be applied based on whether the variant proposition was defined to have a 'penetrance' of 'low' or 'risk' respectively.",
     )
@@ -362,9 +362,9 @@ class VariantPathogenicityStatement(ACMG2015MetadataMixin, Statement):
             v, SYSTEM, valid_codes=STRENGTH_CODES, mc_is_required=False
         )
 
-    @field_validator("classification")
+    @field_validator("outcome")
     @classmethod
-    def validate_classification(cls, v: MappableConcept) -> MappableConcept:
+    def validate_outcome(cls, v: MappableConcept) -> MappableConcept:
         """Validate classification
 
         :param v: classification

@@ -209,7 +209,7 @@ class VariantClinicalSignificanceStatement(
         default=None,
         description="The strength of support that the Statement is determined to provide for or against the Variant Clinical Significance Proposition for the assessed variant, based on the curation and reporting conventions of the AMP/ASCO/CAP 2017 Guidelines.",
     )
-    classification: MappableConcept = Field(
+    outcome: MappableConcept = Field(
         ...,
         description="A single term or phrase classifying the subject variant based on the outcome of direction and strength assessments of the Statement's Proposition, using terms from the AMP/ASCO/CAP 2017 Guidelines.",
     )
@@ -276,7 +276,7 @@ class VariantClinicalSignificanceStatement(
                 raise ValueError(msg)
 
             if classification_name != expected.name:
-                msg = f"`classification.name` must be: {expected.name.value}"
+                msg = f"`outcome.name` must be: {expected.name.value}"
                 raise ValueError(msg)
 
             if direction != expected.direction:
@@ -295,7 +295,7 @@ class VariantClinicalSignificanceStatement(
 
         # Validate classification
         validate_mappable_concept(
-            self.classification,
+            self.outcome,
             System.AMP_ASCO_CAP,
             valid_codes=AMP_ASCO_CAP_CLASSIFICATION_CODES,
             mc_is_required=True,
@@ -303,8 +303,8 @@ class VariantClinicalSignificanceStatement(
 
         # Validate values meet AMP/ASCO/CAP classification constraints
         _validate_amp_asco_cap_classification_constraints(
-            AmpAscoCapClassificationCode(self.classification.primaryCoding.code.root),
-            self.classification.name,
+            AmpAscoCapClassificationCode(self.outcome.primaryCoding.code.root),
+            self.outcome.name,
             self.direction,
             self.strength,
             self.hasEvidenceLines or [],

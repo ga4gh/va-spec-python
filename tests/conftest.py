@@ -11,7 +11,7 @@ class VaSpecSchema(str, Enum):
 
     AAC_2017 = "aac-2017"
     ACMG_2015 = "acmg-2015"
-    BASE = "base"
+    BASE = "va-spec"
     CCV_2022 = "ccv-2022"
 
 
@@ -25,7 +25,7 @@ def get_va_spec_schema(label: str) -> str | None:
         schema = VaSpecSchema.AAC_2017
     elif label.endswith(VaSpecSchema.ACMG_2015):
         schema = VaSpecSchema.ACMG_2015
-    elif label.endswith(VaSpecSchema.BASE):
+    elif label.endswith(VaSpecSchema.BASE) or label == "va-spec":
         schema = VaSpecSchema.BASE
     elif label.endswith(VaSpecSchema.CCV_2022):
         schema = VaSpecSchema.CCV_2022

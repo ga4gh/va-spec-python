@@ -123,10 +123,14 @@ class MethodTypeCriterionValidationMixin(Generic[MethodTypeT, CriterionT]):
         :raises ValueError: If the evidence outcome criterion is invalid or is
             not valid for the specified method type, or if method type is invalid
         """
-        parsed_method_type = cls.MethodType(method_type)
+        try:
+            parsed_method_type = cls.MethodType[method_type.upper()]
+        except KeyError as e:
+            msg = f"{method_type!r} is not a valid {cls.__qualname__}.MethodType"
+            raise ValueError(msg) from e
         allowed_criteria = cls.ALLOWED_CRITERIA_BY_METHOD_TYPE[parsed_method_type]
 
-        if not evidence_outcome_code:
+        if not evidence_outcome_code or evidence_outcome_code == "no_criteria_met":
             return
 
         criterion = cls._get_base_criterion_from_code(evidence_outcome_code)

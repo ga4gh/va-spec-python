@@ -34,7 +34,7 @@ from ga4gh.va_spec.ccv_2022.metadata import CCV2022MetadataMixin
 
 SYSTEM = System.CCV
 CCV_CODE_PATTERN = (
-    r"^("
+    r"^(?:no_criteria_met|"
     r"(?:OVS1|SBVS1)(?:_(?:not_met|(?:strong|moderate|supporting)))?"
     r"|(?:OS[1-3]|SBS[1-2])(?:_(?:not_met|(?:very_strong|moderate|supporting)))?"
     r"|(?:OM[1-4])(?:_(?:not_met|(?:very_strong|strong|supporting)))?"
@@ -117,93 +117,95 @@ class VariantOncogenicityEvidenceLine(
         # Assessment of whether population control frequency refutes
         # oncogenicity or whether absence/extreme rarity in controls provides
         # supporting evidence for oncogenicity
-        POPULATION_FREQUENCY = "population_frequency"
+        POPULATION_DATA_ASSESSMENT = "population_data_assessment"
 
         # Assessment of well-established in vitro or in vivo functional studies
         # to determine whether experimental evidence supports or refutes an
         # oncogenic effect
-        FUNCTIONAL_ASSAY = "functional_assay"
+        FUNCTIONAL_DATA_ASSESSMENT = "functional_data_assessment"
 
         # Assessment of the primary sequence-level consequence of the variant,
         # including null/loss-of-function effects, protein-length changes,
         # stop-loss effects, or synonymous variants predicted to have no
         # splice or conservation impact
-        PRIMARY_SEQUENCE_CONSEQUENCE = "primary_sequence_consequence"
+        PRIMARY_SEQUENCE_CONSEQUENCE_ASSESSMENT = (
+            "primary_sequence_consequence_assessment"
+        )
 
         # Assessment of whether the variant occurs in a critical and
         # well-established functional domain or region, such as an enzyme
         # active site
-        FUNCTIONAL_DOMAIN_LOCATION = "functional_domain_location"
+        FUNCTIONAL_DOMAIN_ASSESSMENT = "functional_domain_assessment"
 
         # Assessment by analogy to previously established oncogenic variants,
         # including the same amino acid change or a different missense change
         # at the same residue
-        AMINO_ACID_OR_RESIDUE_ANALOGY = "amino_acid_or_residue_analogy"
+        AMINO_ACID_ANALOGY_ASSESSMENT = "amino_acid_analogy_assessment"
 
         # Assessment of somatic recurrence at cancer hotspots or recurrently
         # mutated residues, with evidence strength based on recurrence
         # thresholds
-        SOMATIC_HOTSPOT_RECURRENCE = "somatic_hotspot_recurrence"
+        SOMATIC_HOTSPOT_ASSESSMENT = "somatic_hotspot_assessment"
 
         # Aggregate assessment of computational predictions, including
         # conservation, missense-effect, and splice-effect tools, supporting
         # either oncogenic effect or no effect
-        COMPUTATIONAL_PREDICTION = "computational_prediction"
+        IN_SILICO_IMPACT_ASSESSMENT = "in_silico_impact_assessment"
 
         # Assessment of whether the variant occurs in a gene and malignancy
         # context where the disease has a single genetic etiology, making that
         # gene-level event supportive of oncogenicity
-        SINGLE_GENETIC_ETIOLOGY_CONTEXT = "single_genetic_etiology_context"
+        SINGLE_GENETIC_ETIOLOGY_ASSESSMENT = "single_genetic_etiology_assessment"
 
     ALLOWED_CRITERIA_BY_METHOD_TYPE: ClassVar[
         MappingProxyType[MethodType, frozenset[Criterion]]
     ] = MappingProxyType(
         {
-            MethodType.POPULATION_FREQUENCY: frozenset(
+            MethodType.POPULATION_DATA_ASSESSMENT: frozenset(
                 {
                     Criterion.SBVS1,
                     Criterion.SBS1,
                     Criterion.OP4,
                 }
             ),
-            MethodType.FUNCTIONAL_ASSAY: frozenset(
+            MethodType.FUNCTIONAL_DATA_ASSESSMENT: frozenset(
                 {
                     Criterion.OS2,
                     Criterion.SBS2,
                 }
             ),
-            MethodType.PRIMARY_SEQUENCE_CONSEQUENCE: frozenset(
+            MethodType.PRIMARY_SEQUENCE_CONSEQUENCE_ASSESSMENT: frozenset(
                 {
                     Criterion.OVS1,
                     Criterion.OM2,
                     Criterion.SBP2,
                 }
             ),
-            MethodType.FUNCTIONAL_DOMAIN_LOCATION: frozenset(
+            MethodType.FUNCTIONAL_DOMAIN_ASSESSMENT: frozenset(
                 {
                     Criterion.OM1,
                 }
             ),
-            MethodType.AMINO_ACID_OR_RESIDUE_ANALOGY: frozenset(
+            MethodType.AMINO_ACID_ANALOGY_ASSESSMENT: frozenset(
                 {
                     Criterion.OS1,
                     Criterion.OM4,
                 }
             ),
-            MethodType.SOMATIC_HOTSPOT_RECURRENCE: frozenset(
+            MethodType.SOMATIC_HOTSPOT_ASSESSMENT: frozenset(
                 {
                     Criterion.OS3,
                     Criterion.OM3,
                     Criterion.OP3,
                 }
             ),
-            MethodType.COMPUTATIONAL_PREDICTION: frozenset(
+            MethodType.IN_SILICO_IMPACT_ASSESSMENT: frozenset(
                 {
                     Criterion.OP1,
                     Criterion.SBP1,
                 }
             ),
-            MethodType.SINGLE_GENETIC_ETIOLOGY_CONTEXT: frozenset(
+            MethodType.SINGLE_GENETIC_ETIOLOGY_ASSESSMENT: frozenset(
                 {
                     Criterion.OP2,
                 }
@@ -270,7 +272,9 @@ class VariantOncogenicityStatement(CCV2022MetadataMixin, Statement):
         default=None,
         description="The strength of support that an CCV 2022 Oncogenicity statement is determined to provide for or against the proposed oncogenicity of the assessed variant. Strength is evaluated relative to the direction indicated by the 'direction' attribute. The indicated enumeration constrains the nested MappableConcept.primaryCoding > Coding.code attribute when capturing evidence strength. Conditional requirement: if directionOfEvidenceProvided is either 'supports' or 'disputes', then this attribute is required. If it is 'neutral', then this attribute is not allowed.",
     )
-    classification: MappableConcept
+    outcome: MappableConcept = Field(
+        ...,
+    )
     specifiedBy: Method | iriReference = Field(
         ...,
         description="The method that specifies how the oncogenicity classification is ultimately assigned to the variant, based on assessment of evidence.",
@@ -290,9 +294,9 @@ class VariantOncogenicityStatement(CCV2022MetadataMixin, Statement):
             v, SYSTEM, valid_codes=STRENGTH_CODES, mc_is_required=False
         )
 
-    @field_validator("classification")
+    @field_validator("outcome")
     @classmethod
-    def validate_classification(cls, v: MappableConcept) -> MappableConcept:
+    def validate_outcome(cls, v: MappableConcept) -> MappableConcept:
         """Validate classification
 
         :param v: classification
