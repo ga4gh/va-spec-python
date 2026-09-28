@@ -370,26 +370,6 @@ class ExperimentalVariantFunctionalImpactStudyResult(
     )
 
 
-class StudyResult(BaseMetadataMixin, RootModel):
-    """A collection of data items from a single study that pertain to a particular subject
-    or experimental unit in the study, along with optional provenance information
-    describing how these data items were generated.
-    """
-
-    _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
-
-    root: (
-        CohortAlleleFrequencyStudyResult
-        | ExperimentalVariantFunctionalImpactStudyResult
-    ) = Field(
-        ...,
-        json_schema_extra={
-            "description": "A collection of data items from a single study that pertain to a particular subject or experimental unit in the study, along with optional provenance information describing how these data items were generated."
-        },
-        discriminator="type",
-    )
-
-
 class ComputationalVariantFunctionalImpactAnalysisResult(
     InformationEntity, BaseModelForbidExtra
 ):
@@ -800,6 +780,26 @@ class Direction(str, Enum):
     SUPPORTS = "supports"
     NEUTRAL = "neutral"
     DISPUTES = "disputes"
+
+
+class StudyResult(BaseMetadataMixin, RootModel):
+    """A collection of data items from a single study that pertain to a particular subject
+    or experimental unit in the study, along with optional provenance information
+    describing how these data items were generated.
+    """
+
+    _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
+
+    root: (
+        CohortAlleleFrequencyStudyResult
+        | ExperimentalVariantFunctionalImpactStudyResult
+    ) = Field(
+        ...,
+        json_schema_extra={
+            "description": "A collection of data items from a single study that pertain to a particular subject or experimental unit in the study, along with optional provenance information describing how these data items were generated."
+        },
+        discriminator="type",
+    )
 
 
 class EvidenceLine(InformationEntity, BaseModelForbidExtra):

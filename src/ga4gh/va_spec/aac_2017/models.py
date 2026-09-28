@@ -13,7 +13,11 @@ from pydantic.dataclasses import dataclass
 from typing_extensions import Self
 
 from ga4gh.core.metadata import Maturity
-from ga4gh.core.models import BaseModelForbidExtra, MappableConcept, iriReference
+from ga4gh.core.models import (
+    BaseModelForbidExtra,
+    MappableConcept,
+    iriReference,
+)
 from ga4gh.va_spec.aac_2017.metadata import AAC2017MetadataMixin
 from ga4gh.va_spec.base.core import (
     Direction,
