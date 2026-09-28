@@ -340,7 +340,7 @@ def test_evidence_line(caf):
                         "code": "strong",
                     }
                 },
-                "outcome": {
+                "classification": {
                     "primaryCoding": {
                         "system": "AMP/ASCO/CAP Guidelines, 2017",
                         "code": "tier i",
@@ -428,7 +428,7 @@ def test_variant_pathogenicity_stmt(pathogenicity_evidence_line_params):
             "object": "conditions.json#/1",
             "subject": "alleles.json#/1",
         },
-        "outcome": {
+        "classification": {
             "primaryCoding": {"code": "pathogenic", "system": "ACMG Guidelines, 2015"}
         },
         "specifiedBy": {
@@ -444,28 +444,30 @@ def test_variant_pathogenicity_stmt(pathogenicity_evidence_line_params):
     assert isinstance(statement.hasEvidenceLines[0], VariantPathogenicityEvidenceLine)
 
     invalid_params = deepcopy(params)
-    del invalid_params["outcome"]["primaryCoding"]
-    invalid_params["outcome"]["name"] = "test"
+    del invalid_params["classification"]["primaryCoding"]
+    invalid_params["classification"]["name"] = "test"
     with pytest.raises(ValueError, match="`primaryCoding` is required."):
         VariantPathogenicityStatement(**invalid_params)
 
     invalid_params = deepcopy(params)
-    invalid_params["outcome"]["primaryCoding"]["system"] = (
+    invalid_params["classification"]["primaryCoding"]["system"] = (
         "AMP/ASCO/CAP Guidelines, 2017"
     )
     with pytest.raises(ValueError, match="`primaryCoding.system` must be one of"):
         VariantPathogenicityStatement(**invalid_params)
 
     invalid_params = deepcopy(params)
-    invalid_params["outcome"]["primaryCoding"]["code"] = "pathogenic, low penetrance"
+    invalid_params["classification"]["primaryCoding"]["code"] = (
+        "pathogenic, low penetrance"
+    )
     with pytest.raises(ValueError, match="`primaryCoding.code` must be one of"):
         VariantPathogenicityStatement(**invalid_params)
 
     invalid_params = deepcopy(params)
-    invalid_params["outcome"]["primaryCoding"]["system"] = (
+    invalid_params["classification"]["primaryCoding"]["system"] = (
         "ClinGen Low Penetrance and Risk Allele Recommendations, 2024"
     )
-    invalid_params["outcome"]["primaryCoding"]["code"] = "pathogenic"
+    invalid_params["classification"]["primaryCoding"]["code"] = "pathogenic"
     with pytest.raises(ValueError, match="`primaryCoding.code` must be one of"):
         VariantPathogenicityStatement(**invalid_params)
 
@@ -570,7 +572,7 @@ def test_variant_onco_stmt(oncogenicity_evidence_line_params):
             "object": "conditions.json#/1",
             "subject": "alleles.json#/1",
         },
-        "outcome": {
+        "classification": {
             "primaryCoding": {
                 "code": "oncogenic",
                 "system": "ClinGen/CGC/VICC Guidelines for Oncogenicity, 2022",
@@ -603,12 +605,14 @@ def test_variant_onco_stmt(oncogenicity_evidence_line_params):
         VariantOncogenicityStatement(**invalid_params)
 
     invalid_params = deepcopy(params)
-    invalid_params["outcome"]["primaryCoding"]["code"] = "pathogenic"
+    invalid_params["classification"]["primaryCoding"]["code"] = "pathogenic"
     with pytest.raises(ValueError, match="`primaryCoding.code` must be one of"):
         VariantOncogenicityStatement(**invalid_params)
 
     invalid_params = deepcopy(params)
-    invalid_params["outcome"]["primaryCoding"]["system"] = "ACMG Guidelines, 2015"
+    invalid_params["classification"]["primaryCoding"]["system"] = (
+        "ACMG Guidelines, 2015"
+    )
     with pytest.raises(ValueError, match="`primaryCoding.system` must be"):
         VariantOncogenicityStatement(**invalid_params)
 
@@ -711,7 +715,7 @@ def test_aac_statement():
             }
         },
         "specifiedBy": "documents.json#/1",
-        "outcome": {
+        "classification": {
             "name": "Tier I",
             "primaryCoding": {
                 "code": "tier i",
@@ -767,15 +771,15 @@ def test_aac_statement():
     with pytest.raises(ValidationError, match="`strength` must be: strong"):
         VariantClinicalSignificanceStatement(**invalid_params)
 
-    # Invalid outcome
+    # Invalid classification
     invalid_params = deepcopy(params)
-    invalid_params["outcome"]["primaryCoding"]["code"] = "Tier I"
+    invalid_params["classification"]["primaryCoding"]["code"] = "Tier I"
     with pytest.raises(ValidationError, match="`primaryCoding.code` must be one of"):
         VariantClinicalSignificanceStatement(**invalid_params)
 
     invalid_params = deepcopy(params)
-    invalid_params["outcome"]["name"] = "tier i"
-    with pytest.raises(ValidationError, match="`outcome.name` must be: Tier I"):
+    invalid_params["classification"]["name"] = "tier i"
+    with pytest.raises(ValidationError, match="`classification.name` must be: Tier I"):
         VariantClinicalSignificanceStatement(**invalid_params)
 
     # Invalid direction

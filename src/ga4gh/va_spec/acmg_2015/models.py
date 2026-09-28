@@ -337,7 +337,7 @@ class VariantPathogenicityStatement(ACMG2015MetadataMixin, Statement):
         default=None,
         description="The strength of support that an ACMG 2015 Variant Pathogenicity statement is determined to provide for or against the proposed pathogenicity of the assessed variant. Strength is evaluated relative to the direction indicated by the 'direction' attribute. The indicated enumeration constrains the nested MappableConcept.primaryCoding > Coding.code attribute when capturing evidence strength.",
     )
-    outcome: MappableConcept = Field(
+    classification: MappableConcept = Field(
         ...,
         description="The classification of the variant's pathogenicity, based on the ACMG 2015 guidelines. These classifications should coincide with the direction and strength values as follows: 'pathogenic' with supports-strong, 'likely pathogenic' with supports-moderate, 'benign' with disputes-strong, 'likely benign' with disputes-moderate 'uncertain significance' can be one of three possibilities... supports-weak, disputes-weak or neutral for uncertain significance (favoring pathogenic), uncertain significance (favoring benign) or uncertain significance (favoring neither pathogenic nor benign). The 'low penetrance' and 'risk allele' versions of pathogenicity classifications would be applied based on whether the variant proposition was defined to have a 'penetrance' of 'low' or 'risk' respectively.",
     )
@@ -362,9 +362,9 @@ class VariantPathogenicityStatement(ACMG2015MetadataMixin, Statement):
             v, SYSTEM, valid_codes=STRENGTH_CODES, mc_is_required=False
         )
 
-    @field_validator("outcome")
+    @field_validator("classification")
     @classmethod
-    def validate_outcome(cls, v: MappableConcept) -> MappableConcept:
+    def validate_classification(cls, v: MappableConcept) -> MappableConcept:
         """Validate classification
 
         :param v: classification
