@@ -127,8 +127,8 @@ class MethodTypeCriterionValidationMixin(Generic[MethodTypeT, CriterionT]):
             not valid for the specified method type, or if method type is invalid
         """
         try:
-            parsed_method_type = cls.MethodType[method_type.upper()]
-        except KeyError as e:
+            parsed_method_type = cls.MethodType(method_type)
+        except ValueError as e:
             msg = f"{method_type!r} is not a valid {cls.__qualname__}.MethodType"
             raise ValueError(msg) from e
         allowed_criteria = cls.ALLOWED_CRITERIA_BY_METHOD_TYPE[parsed_method_type]
