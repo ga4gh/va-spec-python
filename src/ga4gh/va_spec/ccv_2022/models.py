@@ -272,6 +272,7 @@ class VariantOncogenicityStatement(CCV2022MetadataMixin, Statement):
     )
     classification: MappableConcept | iriReference = Field(
         ...,
+        description="A single term or phrase classifying the subject variant based on the result of direction and strength assessments of the Statement's Proposition, using terms from the ClinGen/CGC/VICC 2022 Guidelines for Oncogenicity.",
     )
     specifiedBy: Method | iriReference = Field(
         ...,
