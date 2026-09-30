@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from abc import ABC
 from datetime import date, datetime
 from enum import Enum
 from typing import Annotated, ClassVar, Literal
@@ -191,7 +190,7 @@ class Method(BaseMetadataMixin, Entity, BaseModelForbidExtra):
     )
 
 
-class InformationEntity(BaseMetadataMixin, Entity, ABC):
+class InformationEntity(BaseMetadataMixin, Entity):
     """An abstract (non-physical) entity that represents 'information content' carried by
     physical or digital information artifacts such as books, web pages, data sets, or
     images.
@@ -286,7 +285,7 @@ class StudyGroup(BaseMetadataMixin, Entity, BaseModelForbidExtra):
     )
 
 
-class StudyResult(InformationEntity, ABC):
+class StudyResult(InformationEntity):
     """A collection of data items from a single study that pertain to a particular
     subject or experimental unit in the study, along with optional provenance
     information describing how these data items were generated.
@@ -416,7 +415,7 @@ class ExperimentalVariantFunctionalImpactStudyResult(StudyResult, BaseModelForbi
     )
 
 
-class Proposition(BaseMetadataMixin, Entity, ABC):
+class Proposition(BaseMetadataMixin, Entity):
     """An abstract entity representing a possible fact that may be true or false. As
     abstract entities, Propositions capture a 'sharable' piece of meaning whose identify
     and existence is independent of space and time, or whether it is ever asserted to be
@@ -465,7 +464,7 @@ class GeneDiseaseValidityProposition(Proposition, BaseModelForbidExtra):
     modeOfInheritanceQualifier: MappableConcept | iriReference | None = None
 
 
-class SubjectVariantProposition(Proposition, BaseModelForbidExtra, ABC):
+class SubjectVariantProposition(Proposition, BaseModelForbidExtra):
     """A `Proposition` that has a variant as the subject."""
 
     _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
@@ -476,7 +475,7 @@ class SubjectVariantProposition(Proposition, BaseModelForbidExtra, ABC):
     )
 
 
-class GeneticContextVariantProposition(SubjectVariantProposition, ABC):
+class GeneticContextVariantProposition(SubjectVariantProposition):
     """A variant proposition that includes or depends on genetic context."""
 
     _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
