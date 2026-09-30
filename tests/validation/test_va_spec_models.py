@@ -26,7 +26,6 @@ from ga4gh.va_spec.base import (
 from ga4gh.va_spec.base.core import (
     Direction,
     EvidenceLine,
-    InformationEntity,
     Method,
     Proposition,
     Statement,
@@ -369,7 +368,10 @@ def test_evidence_line(caf):
     }
     el = EvidenceLine(**el_dict)
     assert isinstance(el.hasEvidenceItems[0], iriReference)
-    assert isinstance(el.hasEvidenceItems[1], InformationEntity)
+    assert isinstance(el.hasEvidenceItems[1], Statement)
+    assert isinstance(
+        el.hasEvidenceItems[1].proposition, VariantTherapeuticResponseProposition
+    )
 
     el_dict = {
         "type": "EvidenceLine",
@@ -377,8 +379,7 @@ def test_evidence_line(caf):
         "directionOfEvidenceProvided": "supports",
     }
     el = EvidenceLine(**el_dict)
-    assert isinstance(el.hasEvidenceItems[0], InformationEntity)
-    assert el.hasEvidenceItems[0].type == "CohortAlleleFrequencyStudyResult"
+    assert isinstance(el.hasEvidenceItems[0], CohortAlleleFrequencyStudyResult)
 
     el_dict = {
         "type": "EvidenceLine",
@@ -388,8 +389,7 @@ def test_evidence_line(caf):
         "directionOfEvidenceProvided": "supports",
     }
     el = EvidenceLine(**el_dict)
-    assert isinstance(el.hasEvidenceItems[0], InformationEntity)
-    assert el.hasEvidenceItems[0].type == "EvidenceLine"
+    assert isinstance(el.hasEvidenceItems[0], EvidenceLine)
 
     el_dict = {
         "type": "EvidenceLine",
@@ -419,7 +419,8 @@ def test_evidence_line(caf):
         "hasEvidenceItems": [{"type": "Statement"}],
         "directionOfEvidenceProvided": "supports",
     }
-    assert EvidenceLine(**invalid_params)
+    with pytest.raises(ValueError, match="validation errors for EvidenceLine"):
+        EvidenceLine(**invalid_params)
 
 
 def test_variant_pathogenicity_stmt(pathogenicity_evidence_line_params):

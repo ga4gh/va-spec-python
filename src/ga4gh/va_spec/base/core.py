@@ -11,6 +11,7 @@ from pydantic import (
     ConfigDict,
     Field,
     StringConstraints,
+    field_validator,
 )
 
 from ga4gh.cat_vrs.models import CategoricalVariant
@@ -53,6 +54,44 @@ class CoreType(str, Enum):
     EVIDENCE_LINE = "EvidenceLine"
     DATA_SET = "DataSet"
     STUDY_GROUP = "StudyGroup"
+
+
+def _concrete_subclasses(model_class: type) -> list[type]:
+    """Return loaded descendants of a model class.
+
+    :param model_class: Base class whose descendants to return.
+    :returns: Loaded descendant model classes.
+    """
+    subclasses = []
+    for subclass in model_class.__subclasses__():
+        subclasses.append(subclass)
+        subclasses.extend(_concrete_subclasses(subclass))
+    return subclasses
+
+
+def _resolve_typed_model(value: object, base_class: type) -> object:
+    """Instantiate a loaded subclass selected by an object's ``type``.
+
+    Resolves schema references without a separate type registry.
+
+    :param value: Value to resolve when it is a typed object.
+    :param base_class: Base class of the candidate models.
+    :returns: A concrete model instance or the original value.
+    :raises ValidationError: If a matching concrete model rejects the value.
+    """
+    if not isinstance(value, dict) or not isinstance(value.get("type"), str):
+        return value
+
+    object_type = value["type"]
+    for model_class in _concrete_subclasses(base_class):
+        type_field = model_class.model_fields.get("type")
+        if (
+            "type" in model_class.__annotations__
+            and type_field is not None
+            and type_field.default == object_type
+        ):
+            return model_class.model_validate(value)
+    return value
 
 
 class Agent(BaseMetadataMixin, Entity, BaseModelForbidExtra):
@@ -800,6 +839,34 @@ class EvidenceLine(InformationEntity, BaseModelForbidExtra):
         description="A term summarizing the overall outcome of the evidence assessment represented by the Evidence Line, in terms of the direction and strength of support it provides for or against the target Proposition.",
     )
 
+    @field_validator("targetProposition", mode="before")
+    @classmethod
+    def _resolve_target_proposition(cls, value: object) -> object:
+        """Resolve an inline target proposition to its concrete model.
+
+        :param value: Inline proposition value.
+        :returns: Resolved proposition or the original value.
+        :raises ValidationError: If a matching proposition model rejects the value.
+        """
+        return _resolve_typed_model(value, Proposition)
+
+    @field_validator("hasEvidenceItems", mode="before")
+    @classmethod
+    def _resolve_evidence_items(cls, value: object) -> object:
+        """Resolve inline evidence items to their concrete models.
+
+        :param value: Inline evidence item values.
+        :returns: Resolved evidence items or the original value.
+        :raises ValueError: If a matching evidence model rejects an item.
+        """
+        if isinstance(value, list):
+            try:
+                return [_resolve_typed_model(item, InformationEntity) for item in value]
+            except ValueError as error:
+                msg = f"validation errors for {cls.__name__}"
+                raise ValueError(msg) from error
+        return value
+
     def _validate_evidence_outcome(
         self, system: System, code_pattern: str, is_required: bool = False
     ) -> None:
@@ -948,3 +1015,14 @@ class Statement(InformationEntity, BaseModelForbidExtra):
         default=None,
         description="An evidence-based argument that supports or disputes the validity of the proposition that a Statement assesses or puts forth as true. The strength and direction of this argument (whether it supports or disputes the proposition, and how strongly) is based on an interpretation of one or more pieces of information as evidence (i.e. 'Evidence Items).",
     )
+
+    @field_validator("proposition", mode="before")
+    @classmethod
+    def _resolve_proposition(cls, value: object) -> object:
+        """Resolve an inline proposition to its concrete model.
+
+        :param value: Inline proposition value.
+        :returns: Resolved proposition or the original value.
+        :raises ValidationError: If a matching proposition model rejects the value.
+        """
+        return _resolve_typed_model(value, Proposition)
