@@ -35,6 +35,7 @@ from .domain_entities import Condition, ConditionSet, Therapy, TherapyGroup
 from .enums import (
     CCV_CLASSIFICATIONS,
     CLIN_GEN_CLASSIFICATIONS,
+    NO_CRITERIA_MET,
     STRENGTH_CODES,
     STRENGTH_OF_EVIDENCE_PROVIDED_VALUES,
     CcvClassification,
@@ -73,6 +74,7 @@ __all__ = [
     "ExperimentalVariantFunctionalImpactStudyResult",
     "InformationEntity",
     "Method",
+    "NO_CRITERIA_MET",
     "PrognosticPredicate",
     "Proposition",
     "STRENGTH_CODES",

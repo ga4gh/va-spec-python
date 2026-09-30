@@ -6,7 +6,7 @@ from types import MappingProxyType
 from typing import ClassVar, Generic, TypeVar
 
 from ga4gh.core.models import MappableConcept, iriReference
-from ga4gh.va_spec.base.enums import System
+from ga4gh.va_spec.base.enums import NO_CRITERIA_MET, System
 
 
 def validate_mappable_concept(
@@ -133,7 +133,7 @@ class MethodTypeCriterionValidationMixin(Generic[MethodTypeT, CriterionT]):
             raise ValueError(msg) from e
         allowed_criteria = cls.ALLOWED_CRITERIA_BY_METHOD_TYPE[parsed_method_type]
 
-        if not evidence_outcome_code or evidence_outcome_code == "no_criteria_met":
+        if not evidence_outcome_code or evidence_outcome_code == NO_CRITERIA_MET:
             return
 
         criterion = cls._get_base_criterion_from_code(evidence_outcome_code)

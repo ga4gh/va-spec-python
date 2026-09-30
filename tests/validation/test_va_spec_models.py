@@ -16,6 +16,7 @@ from ga4gh.va_spec.acmg_2015.models import (
     VariantPathogenicityStatement,
 )
 from ga4gh.va_spec.base import (
+    NO_CRITERIA_MET,
     Agent,
     CohortAlleleFrequencyStudyResult,
     ExperimentalVariantFunctionalImpactStudyResult,
@@ -619,7 +620,7 @@ def test_variant_pathogenicity_el(pathogenicity_evidence_line_params):
         VariantPathogenicityEvidenceLine(**invalid_params)
 
 
-@pytest.mark.parametrize("outcome", ["no_criteria_met", "PS3_not_met"])
+@pytest.mark.parametrize("outcome", [NO_CRITERIA_MET, "PS3_not_met"])
 def test_pathogenicity_noncontributing_outcomes_require_neutral_without_strength(
     pathogenicity_evidence_line_params, outcome
 ):
@@ -762,7 +763,7 @@ def test_variant_onco_el(oncogenicity_evidence_line_params):
         VariantOncogenicityEvidenceLine(**invalid_params)
 
 
-@pytest.mark.parametrize("outcome", ["no_criteria_met", "OS2_not_met"])
+@pytest.mark.parametrize("outcome", [NO_CRITERIA_MET, "OS2_not_met"])
 def test_oncogenicity_noncontributing_outcomes_require_neutral_without_strength(
     oncogenicity_evidence_line_params, outcome
 ):

@@ -21,6 +21,7 @@ from ga4gh.va_spec.base.core import (
 )
 from ga4gh.va_spec.base.enums import (
     CCV_CLASSIFICATIONS,
+    NO_CRITERIA_MET,
     STRENGTH_CODES,
     STRENGTH_OF_EVIDENCE_PROVIDED_VALUES,
     System,
@@ -33,7 +34,7 @@ from ga4gh.va_spec.ccv_2022.metadata import CCV2022MetadataMixin
 
 SYSTEM = System.CCV
 CCV_CODE_PATTERN = (
-    r"^(?:no_criteria_met|"
+    rf"^(?:{NO_CRITERIA_MET}|"
     r"(?:OVS1|SBVS1)(?:_(?:not_met|(?:strong|moderate|supporting)))?"
     r"|(?:OS[1-3]|SBS[1-2])(?:_(?:not_met|(?:very_strong|moderate|supporting)))?"
     r"|(?:OM[1-4])(?:_(?:not_met|(?:very_strong|strong|supporting)))?"

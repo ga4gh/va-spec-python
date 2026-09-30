@@ -29,6 +29,7 @@ from ga4gh.va_spec.base.domain_entities import (
     TherapyGroup,
 )
 from ga4gh.va_spec.base.enums import (
+    NO_CRITERIA_MET,
     DiagnosticPredicate,
     PrognosticPredicate,
     System,
@@ -875,20 +876,20 @@ class EvidenceLine(InformationEntity, BaseModelForbidExtra):
             return
 
         outcome_code = self.evidenceOutcome.primaryCoding.code.root
-        if outcome_code != "no_criteria_met" and not outcome_code.endswith("_not_met"):
+        if outcome_code != NO_CRITERIA_MET and not outcome_code.endswith("_not_met"):
             return
 
         if self.directionOfEvidenceProvided != Direction.NEUTRAL:
             msg = (
                 "`directionOfEvidenceProvided` must be 'neutral' when "
-                "`evidenceOutcome` is 'no_criteria_met' or ends in '_not_met'."
+                f"`evidenceOutcome` is '{NO_CRITERIA_MET}' or ends in '_not_met'."
             )
             raise ValueError(msg)
 
         if self.strengthOfEvidenceProvided is not None:
             msg = (
                 "`strengthOfEvidenceProvided` must be null when "
-                "`evidenceOutcome` is 'no_criteria_met' or ends in '_not_met'."
+                f"`evidenceOutcome` is '{NO_CRITERIA_MET}' or ends in '_not_met'."
             )
             raise ValueError(msg)
 
