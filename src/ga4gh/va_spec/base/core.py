@@ -5,7 +5,7 @@ from __future__ import annotations
 from abc import ABC
 from datetime import date, datetime
 from enum import Enum
-from typing import Annotated, ClassVar, Literal, TypeAlias
+from typing import Annotated, ClassVar, Literal
 
 from pydantic import (
     ConfigDict,
@@ -758,20 +758,6 @@ class ComputationalVariantFunctionalImpactAnalysisResult(
         default=None,
         description="The specific feature for which the focus variant has a predicted impact",
     )
-
-
-# Any new proposition type should be added to this union, and ONLY this union
-# should be used when annotating a proposition property.
-_SubjectVariantPropositionType: TypeAlias = (
-    ExperimentalVariantFunctionalImpactProposition
-    | VariantPathogenicityProposition
-    | VariantDiagnosticProposition
-    | VariantPrognosticProposition
-    | VariantOncogenicityProposition
-    | VariantTherapeuticResponseProposition
-    | VariantClinicalSignificanceProposition
-    | VariantMolecularConsequenceProposition
-)
 
 
 class EvidenceLine(InformationEntity, BaseModelForbidExtra):
