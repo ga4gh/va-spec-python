@@ -22,9 +22,15 @@ VA_SPEC_TEST_DEFINITIONS = {schema: [] for schema in VaSpecSchema}
 
 
 for test_def in test_definitions:
-    if test_def["namespace"].startswith("va-spec."):
-        schema = get_va_spec_schema(test_def["namespace"].split("va-spec.")[-1])
-        VA_SPEC_TEST_DEFINITIONS[schema].append(test_def)
+    namespace = test_def["namespace"]
+    # Base (core) fixtures use the namespace ``va-spec``; profiles use
+    # ``va-spec.<profile>``. Anything else (e.g. ``vrs``) is out of scope.
+    if namespace != "va-spec" and not namespace.startswith("va-spec."):
+        continue
+    schema = get_va_spec_schema(namespace.split("va-spec.")[-1])
+    if schema is None:
+        continue
+    VA_SPEC_TEST_DEFINITIONS[schema].append(test_def)
 
 
 def test_va_spec_fixtures():
