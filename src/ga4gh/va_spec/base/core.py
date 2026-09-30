@@ -7,6 +7,7 @@ from enum import Enum
 from typing import Annotated, ClassVar, Literal
 
 from pydantic import (
+    BaseModel,
     ConfigDict,
     Field,
     StringConstraints,
@@ -464,7 +465,7 @@ class GeneDiseaseValidityProposition(Proposition, BaseModelForbidExtra):
     modeOfInheritanceQualifier: MappableConcept | iriReference | None = None
 
 
-class SubjectVariantProposition(Proposition, BaseModelForbidExtra):
+class SubjectVariantProposition(Proposition, BaseModel):
     """A `Proposition` that has a variant as the subject."""
 
     _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
