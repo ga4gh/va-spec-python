@@ -224,6 +224,9 @@ class VariantClinicalSignificanceStatement(
     @classmethod
     def validate_tier_evidence_lines(cls, values: dict) -> dict:
         """Validate tier I and II evidence-line types before base coercion."""
+        if not isinstance(values, dict):
+            return values
+
         classification = values.get("classification")
         if not isinstance(classification, dict):
             return values
