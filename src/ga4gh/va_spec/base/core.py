@@ -191,13 +191,14 @@ class Method(BaseMetadataMixin, Entity, BaseModelForbidExtra):
     )
 
 
-class InformationEntity(BaseMetadataMixin, Entity):
+class InformationEntity(BaseMetadataMixin, Entity, ABC):
     """An abstract (non-physical) entity that represents 'information content' carried by
     physical or digital information artifacts such as books, web pages, data sets, or
     images.
     """
 
     _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
+    _abstract: ClassVar[bool] = True
 
     specifiedBy: Method | iriReference | None = Field(
         default=None,
@@ -415,7 +416,7 @@ class ExperimentalVariantFunctionalImpactStudyResult(StudyResult, BaseModelForbi
     )
 
 
-class Proposition(BaseMetadataMixin, Entity):
+class Proposition(BaseMetadataMixin, Entity, ABC):
     """An abstract entity representing a possible fact that may be true or false. As
     abstract entities, Propositions capture a 'sharable' piece of meaning whose identify
     and existence is independent of space and time, or whether it is ever asserted to be
@@ -423,6 +424,7 @@ class Proposition(BaseMetadataMixin, Entity):
     """
 
     _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
+    _abstract: ClassVar[bool] = True
 
     subject: dict | iriReference = Field(
         ..., description="The Entity or concept about which the Proposition is made."
