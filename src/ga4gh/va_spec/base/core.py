@@ -10,7 +10,6 @@ from typing import Annotated, ClassVar, Literal, TypeAlias
 from pydantic import (
     ConfigDict,
     Field,
-    RootModel,
     StringConstraints,
 )
 
@@ -75,8 +74,8 @@ class Agent(BaseMetadataMixin, Entity, BaseModelForbidExtra):
 
 class Contribution(BaseMetadataMixin, Entity, BaseModelForbidExtra):
     """An action taken by an agent in contributing to the creation, modification,
-    assessment, or deprecation of a particular entity (e.g. a Statement, EvidenceLine,
-    DataSet, Publication, etc.)
+    assessment, or deprecation of a particular entity (e.g. a Statement, DataSet,
+    Publication, etc.)
     """
 
     _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
@@ -85,7 +84,7 @@ class Contribution(BaseMetadataMixin, Entity, BaseModelForbidExtra):
         default=CoreType.CONTRIBUTION.value,
         description=f"MUST be '{CoreType.CONTRIBUTION.value}'.",
     )
-    contributor: Agent | None = Field(
+    contributor: Agent | iriReference | None = Field(
         default=None, description="The agent that made the contribution."
     )
     activityType: str | None = Field(
@@ -175,7 +174,10 @@ class InformationEntity(BaseMetadataMixin, Entity):
 
 
 class DataItem(InformationEntity, BaseModelForbidExtra):
-    """An individual, method-generated item of information."""
+    """An Information Entity representing an individual piece of data, generated or
+    acquired through methods which reliably produce truthful information about
+    something.
+    """
 
     _maturity: ClassVar[Maturity] = Maturity.DRAFT
 
@@ -214,7 +216,7 @@ class DataSet(BaseMetadataMixin, Entity, BaseModelForbidExtra):
         default=None,
         description="The version of the DataSet, as assigned by its creator.",
     )
-    license: MappableConcept | None = Field(
+    license: MappableConcept | iriReference | None = Field(
         default=None,
         description="A specific license that dictates legal permissions for how a data set can be used (by whom, where, for what purposes, with what additional requirements, etc.)",
     )
@@ -237,21 +239,26 @@ class StudyGroup(BaseMetadataMixin, Entity, BaseModelForbidExtra):
         default=None,
         description="The total number of individual members in the StudyGroup.",
     )
-    characteristics: list[MappableConcept] | None = Field(
+    characteristics: list[MappableConcept | iriReference] | None = Field(
         default=None,
         description="A feature or role shared by all members of the StudyGroup, representing a criterion for membership in the group.",
     )
 
 
-class _StudyResult(InformationEntity, ABC):
-    """A collection of data items from a single study that pertain to a particular subject
-    or experimental unit in the study, along with optional provenance information
-    describing how these data items were generated.
+class StudyResult(InformationEntity, ABC):
+    """A collection of data items from a single study that pertain to a particular
+    subject or experimental unit in the study, along with optional provenance
+    information describing how these data items were generated.
     """
 
     _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
+    _abstract: ClassVar[bool] = True
 
-    sourceDataSet: DataSet | None = Field(
+    focus: Entity | iriReference = Field(
+        ...,
+        description="The specific participant, subject or experimental unit in a Study that data included in the StudyResult object is about - e.g. a particular variant in a population allele frequency dataset like ExAC or gnomAD.",
+    )
+    sourceDataSet: DataSet | iriReference | None = Field(
         default=None,
         description="A larger DataSet from which the data included in the StudyResult was taken or derived.",
     )
@@ -265,7 +272,7 @@ class _StudyResult(InformationEntity, ABC):
     )
 
 
-class CohortAlleleFrequencyStudyResult(_StudyResult, BaseModelForbidExtra):
+class CohortAlleleFrequencyStudyResult(StudyResult, BaseModelForbidExtra):
     """A StudyResult that reports measures related to the frequency of an Allele in a cohort"""
 
     _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
@@ -291,7 +298,7 @@ class CohortAlleleFrequencyStudyResult(_StudyResult, BaseModelForbidExtra):
     alleleFrequency: int | float = Field(
         ..., description="The frequency of the focus Allele in the cohort."
     )
-    cohort: StudyGroup = Field(
+    cohort: StudyGroup | iriReference = Field(
         ..., description="The cohort from which the frequency was derived."
     )
     subCohortFrequency: list[CohortAlleleFrequencyStudyResult] | None = Field(
@@ -300,7 +307,7 @@ class CohortAlleleFrequencyStudyResult(_StudyResult, BaseModelForbidExtra):
     )
 
 
-class TumorVariantFrequencyStudyResult(_StudyResult, BaseModelForbidExtra):
+class TumorVariantFrequencyStudyResult(StudyResult, BaseModelForbidExtra):
     """A Study Result that reports measures related to the frequency of an variant
     across different tumor types.
     """
@@ -331,7 +338,7 @@ class TumorVariantFrequencyStudyResult(_StudyResult, BaseModelForbidExtra):
         ...,
         description="The frequency of tumor samples that include the focus variant in the sample group.",
     )
-    sampleGroup: StudyGroup | None = Field(
+    sampleGroup: StudyGroup | iriReference | None = Field(
         default=None,
         description="The set of samples about which the frequency data was generated.",
     )
@@ -341,9 +348,7 @@ class TumorVariantFrequencyStudyResult(_StudyResult, BaseModelForbidExtra):
     )
 
 
-class ExperimentalVariantFunctionalImpactStudyResult(
-    _StudyResult, BaseModelForbidExtra
-):
+class ExperimentalVariantFunctionalImpactStudyResult(StudyResult, BaseModelForbidExtra):
     """A StudyResult that reports a functional impact score from a variant functional assay or study."""
 
     _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
@@ -370,68 +375,6 @@ class ExperimentalVariantFunctionalImpactStudyResult(
     )
 
 
-class ComputationalVariantFunctionalImpactAnalysisResult(
-    InformationEntity, BaseModelForbidExtra
-):
-    """A computational assessment of a variant's functional impact."""
-
-    _maturity: ClassVar[Maturity] = Maturity.DRAFT
-
-    specifiedBy: Method | iriReference | None = Field(
-        default=None,
-        description="The in silico method or algorithm that was applied to generate the reported score(s).",
-    )
-    contributions: list[Contribution] | None = Field(
-        default=None,
-        description="Specific actions taken by an Agent toward the creation, modification, validation, or deprecation of this Information Entity.",
-    )
-
-    type: Literal["ComputationalVariantFunctionalImpactAnalysisResult"] = Field(
-        default="ComputationalVariantFunctionalImpactAnalysisResult",
-        description='MUST be "ComputationalVariantFunctionalImpactAnalysisResult".',
-    )
-    focus: MolecularVariation | CategoricalVariant | iriReference = Field(
-        ...,
-        description="The genetic variant for which the in silico analysis was performed.",
-    )
-    sourceDataSet: DataSet | iriReference | None = Field(
-        default=None,
-        description="The dataset from which the in silico scores were retrieved or derived (e.g., an Ensembl VEP annotation dataset).",
-    )
-    ancillaryResults: dict | None = Field(
-        default=None,
-        description="An object in which implementers can define custom fields to capture additional scores or outputs produced by the in silico tool beyond the primary score. For example, CADD reports both a raw score and a Phred-scaled score; the primary score field would hold one, and ancillaryResults would hold the other.",
-    )
-    qualityMeasures: dict | None = Field(
-        default=None,
-        description="An object in which implementers can define custom fields to capture metadata about the quality/provenance of the primary data items captured in standard attributes in the main body of the Study Result. e.g. a sequencing coverage metric in a Cohort Allele Frequency Study Result.",
-    )
-    transcriptVariationContext: Allele | iriReference = Field(
-        ...,
-        description="The transcript in the context of which the in silico analysis was performed.",
-    )
-    impactScore: float = Field(
-        ...,
-        description="The primary numeric score produced by the in silico tool for this variant.",
-    )
-    impactScoreType: MappableConcept | iriReference | None = Field(
-        default=None,
-        description="A descriptor indicating what the score represents (e.g., 'SIFT impact score', 'CADD Phred-scaled impact score').",
-    )
-    categoricalImpact: MappableConcept | iriReference | None = Field(
-        default=None,
-        description="The categorical interpretation derived from the score by the in silico tool (e.g., 'tolerated', 'benign', 'pathogenic').",
-    )
-    impactedFeatureType: MappableConcept | iriReference | None = Field(
-        default=None,
-        description="A descriptor indicating the type of feature for which the focus variant has a predicted impact",
-    )
-    impactedFeature: MappableConcept | iriReference | None = Field(
-        default=None,
-        description="The specific feature for which the focus variant has a predicted impact",
-    )
-
-
 class Proposition(BaseMetadataMixin, Entity):
     """An abstract entity representing a possible fact that may be true or false. As
     abstract entities, Propositions capture a 'sharable' piece of meaning whose identify
@@ -441,21 +384,24 @@ class Proposition(BaseMetadataMixin, Entity):
 
     _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
 
-    subject: dict = Field(
+    subject: dict | iriReference = Field(
         ..., description="The Entity or concept about which the Proposition is made."
     )
     predicate: str = Field(
         ...,
         description="The relationship declared to hold between the subject and the object of the Proposition.",
     )
-    object: dict = Field(
+    object: dict | iriReference = Field(
         ...,
         description="An Entity or concept that is related to the subject of a Proposition via its predicate.",
     )
 
 
 class GeneDiseaseValidityProposition(Proposition, BaseModelForbidExtra):
-    """A proposition relating a gene, condition, and mode of inheritance."""
+    """A proposition used to describe knowledge about a variant that includes or depends
+    on its genetic context - e.g. the allelic origin of the variant, or its relationship
+    to a specific gene.
+    """
 
     _maturity: ClassVar[Maturity] = Maturity.DRAFT
 
@@ -477,23 +423,26 @@ class GeneDiseaseValidityProposition(Proposition, BaseModelForbidExtra):
     modeOfInheritanceQualifier: MappableConcept | iriReference | None = None
 
 
-class _SubjectVariantPropositionBase(BaseMetadataMixin, Entity, ABC):
+class SubjectVariantProposition(Proposition, BaseModelForbidExtra, ABC):
+    """A `Proposition` that has a variant as the subject."""
+
     _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
+    _abstract: ClassVar[bool] = True
 
     subject: MolecularVariation | CategoricalVariant | iriReference = Field(
-        ...,
-        description="A variant that is the subject of the Proposition.",
+        ..., description="A variant that is the subject of the Proposition."
     )
 
 
-class _ClinicalVariantProposition(_SubjectVariantPropositionBase):
-    """A proposition for use in describing the effect of variants in human subjects."""
+class GeneticContextVariantProposition(SubjectVariantProposition, ABC):
+    """A variant proposition that includes or depends on genetic context."""
 
     _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
+    _abstract: ClassVar[bool] = True
     condition_field_name: ClassVar[str]
 
     @property
-    def condition(self) -> Condition | iriReference:
+    def condition(self) -> Condition | ConditionSet | iriReference:
         """Return the condition associated with the proposition."""
         return getattr(self, self.condition_field_name)
 
@@ -507,36 +456,18 @@ class _ClinicalVariantProposition(_SubjectVariantPropositionBase):
     )
 
 
-class GeneticContextVariantProposition(
-    _SubjectVariantPropositionBase, BaseModelForbidExtra
-):
-    """An abstract proposition whose meaning depends on a variant's genetic context."""
-
-    _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
-    _abstract: ClassVar[bool] = True
-
-    predicate: str = Field(
-        ...,
-        description="The relationship declared to hold between the subject and the object of the Proposition.",
-    )
-    object: Entity | iriReference = Field(
-        ...,
-        description="An Entity or concept that is related to the subject of a Proposition via its predicate.",
-    )
-    geneContextQualifier: MappableConcept | iriReference | None = Field(
-        default=None,
-        description="Reports a gene impacted by the variant, which may contribute to the association described in the Proposition.",
-    )
-    alleleOriginQualifier: MappableConcept | iriReference | None = Field(
-        default=None,
-        description='Reports whether the Proposition should be interpreted in the context of a heritable "germline" variant, an acquired "somatic" variant in a tumor, or a post-zygotic "mosaic" variant. While these are the most commonly reported allele origins, other more nuanced concepts can be captured  (e.g. "maternal" vs "paternal" allele origin). In practice, populating this field may be complicated by the fact that some sources report allele origin based on the type of tissue that was sequenced to identify the variant, and others use it more generally to specify a category of variant for which the proposition holds. The stated intent of this attribute is the latter. However, if an implementer is not sure about which is reported in their data, it may be safer to create an Extension to hold this information, where they can explicitly acknowledge this ambiguity.',
-    )
-
-
 class VariantMolecularConsequenceProposition(
-    BaseMetadataMixin, Entity, BaseModelForbidExtra
+    SubjectVariantProposition, BaseModelForbidExtra
 ):
-    """A proposition describing a variant's molecular consequence."""
+    """A Proposition describing a predicted molecular consequence of a variant on
+    transcript and protein molecules - typically reporting the type of sequence feature
+    affected (e.g. 'intron variant', 'splice-site variant'), or an impact on the
+    processing of the molecule along the path from gene to transcript to polypeptide
+    (e.g. 'missense variant', 'frameshift variant'). Note that annotations about variant
+    impact on gene product function, which may occur downstream of a molecular
+    consequence, are not in scope here. These are covered by a Variant Functional Impact
+    Proposition classes.
+    """
 
     _maturity: ClassVar[Maturity] = Maturity.DRAFT
 
@@ -573,7 +504,7 @@ class VariantMolecularConsequenceProposition(
 
 
 class ExperimentalVariantFunctionalImpactProposition(
-    _SubjectVariantPropositionBase, BaseModelForbidExtra
+    SubjectVariantProposition, BaseModelForbidExtra
 ):
     """A Proposition describing the impact of a variant on the function sequence feature
     (typically a gene or gene product).
@@ -589,7 +520,7 @@ class ExperimentalVariantFunctionalImpactProposition(
         default="impactsFunctionOf",
         description="The relationship the Proposition describes between the subject variant and object sequence feature whose function it may alter. MUST be 'impactsFunctionOf'.",
     )
-    object: iriReference | MappableConcept = Field(
+    object: iriReference | MappableConcept | iriReference = Field(
         ...,
         description="The sequence feature (typically a gene or gene product) on whose function the impact of the subject variant is reported.",
     )
@@ -600,7 +531,7 @@ class ExperimentalVariantFunctionalImpactProposition(
 
 
 class VariantClinicalSignificanceProposition(
-    _ClinicalVariantProposition, BaseModelForbidExtra
+    GeneticContextVariantProposition, BaseModelForbidExtra
 ):
     """A Proposition describing the clinical significance of a variant with respect to a
     condition.
@@ -625,7 +556,9 @@ class VariantClinicalSignificanceProposition(
     )
 
 
-class VariantDiagnosticProposition(_ClinicalVariantProposition, BaseModelForbidExtra):
+class VariantDiagnosticProposition(
+    GeneticContextVariantProposition, BaseModelForbidExtra
+):
     """A Proposition about whether a variant is associated with a disease (a diagnostic
     inclusion criterion), or absence of a disease (diagnostic exclusion criterion).
     """
@@ -649,7 +582,9 @@ class VariantDiagnosticProposition(_ClinicalVariantProposition, BaseModelForbidE
     )
 
 
-class VariantOncogenicityProposition(_ClinicalVariantProposition, BaseModelForbidExtra):
+class VariantOncogenicityProposition(
+    GeneticContextVariantProposition, BaseModelForbidExtra
+):
     """A proposition describing the role of a variant in causing a tumor type."""
 
     _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
@@ -670,7 +605,7 @@ class VariantOncogenicityProposition(_ClinicalVariantProposition, BaseModelForbi
 
 
 class VariantPathogenicityProposition(
-    _ClinicalVariantProposition, BaseModelForbidExtra
+    GeneticContextVariantProposition, BaseModelForbidExtra
 ):
     """A proposition describing the role of a variant in causing a heritable condition."""
 
@@ -689,17 +624,19 @@ class VariantPathogenicityProposition(
         ...,
         description="The Condition or ConditionSet for which the variant impact is stated.",
     )
-    penetranceQualifier: MappableConcept | None = Field(
+    penetranceQualifier: MappableConcept | iriReference | None = Field(
         default=None,
         description="Reports the penetrance of the pathogenic effect - i.e. the extent to which the variant impact is expressed by individuals carrying it as a measure of the proportion of carriers exhibiting the condition.",
     )
-    modeOfInheritanceQualifier: MappableConcept | None = Field(
+    modeOfInheritanceQualifier: MappableConcept | iriReference | None = Field(
         default=None,
         description="Reports a pattern of inheritance expected for the pathogenic effect of the variant. Consider using terms or codes from community terminologies here - e.g. terms from the 'Mode of inheritance' branch of the Human Phenotype Ontology such as HP:0000006 (autosomal dominant inheritance).",
     )
 
 
-class VariantPrognosticProposition(_ClinicalVariantProposition, BaseModelForbidExtra):
+class VariantPrognosticProposition(
+    GeneticContextVariantProposition, BaseModelForbidExtra
+):
     """A Proposition about whether a variant is associated with an improved or worse outcome for a disease."""
 
     model_config = ConfigDict(use_enum_values=True)
@@ -722,7 +659,7 @@ class VariantPrognosticProposition(_ClinicalVariantProposition, BaseModelForbidE
 
 
 class VariantTherapeuticResponseProposition(
-    _ClinicalVariantProposition, BaseModelForbidExtra
+    GeneticContextVariantProposition, BaseModelForbidExtra
 ):
     """A Proposition about the role of a variant in modulating the response of a
     neoplasm to drug administration or other therapeutic procedures.
@@ -745,31 +682,10 @@ class VariantTherapeuticResponseProposition(
         ...,
         description="A drug administration or other therapeutic procedure that the neoplasm is intended to respond to.",
     )
-    conditionQualifier: Condition | iriReference = Field(
+    conditionQualifier: Condition | ConditionSet | iriReference = Field(
         ...,
         description="Reports the disease context in which the variant's association with therapeutic sensitivity or resistance is evaluated. Note that this is a required qualifier in therapeutic response propositions.",
     )
-
-
-# Any new proposition type should be added to this union, and ONLY this union
-# should be used when annotating a proposition property
-_SubjectVariantPropositionType: TypeAlias = (
-    ExperimentalVariantFunctionalImpactProposition
-    | VariantPathogenicityProposition
-    | VariantDiagnosticProposition
-    | VariantPrognosticProposition
-    | VariantOncogenicityProposition
-    | VariantTherapeuticResponseProposition
-    | VariantClinicalSignificanceProposition
-)
-
-
-class SubjectVariantProposition(BaseMetadataMixin, RootModel):
-    """A `Proposition` that has a variant as the subject."""
-
-    _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
-
-    root: _SubjectVariantPropositionType = Field(discriminator="type")
 
 
 class Direction(str, Enum):
@@ -782,24 +698,79 @@ class Direction(str, Enum):
     DISPUTES = "disputes"
 
 
-class StudyResult(BaseMetadataMixin, RootModel):
-    """A collection of data items from a single study that pertain to a particular subject
-    or experimental unit in the study, along with optional provenance information
-    describing how these data items were generated.
-    """
+class ComputationalVariantFunctionalImpactAnalysisResult(
+    StudyResult, BaseModelForbidExtra
+):
+    """A computational assessment of a variant's functional impact."""
 
-    _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
+    _maturity: ClassVar[Maturity] = Maturity.DRAFT
 
-    root: (
-        CohortAlleleFrequencyStudyResult
-        | ExperimentalVariantFunctionalImpactStudyResult
-    ) = Field(
+    focus: MolecularVariation | CategoricalVariant | iriReference = Field(
         ...,
-        json_schema_extra={
-            "description": "A collection of data items from a single study that pertain to a particular subject or experimental unit in the study, along with optional provenance information describing how these data items were generated."
-        },
-        discriminator="type",
+        description="The genetic variant for which the in silico analysis was performed.",
     )
+    transcriptVariationContext: Allele | iriReference = Field(
+        ...,
+        description="The transcript in the context of which the in silico analysis was performed.",
+    )
+    impactScore: float = Field(
+        ...,
+        description="The primary numeric score produced by the in silico tool for this variant.",
+    )
+    specifiedBy: Method | iriReference | None = Field(
+        default=None,
+        description="The in silico method or algorithm that was applied to generate the reported score(s).",
+    )
+    contributions: list[Contribution] | None = Field(
+        default=None,
+        description="Specific actions taken by an Agent toward the creation, modification, validation, or deprecation of this Information Entity.",
+    )
+    type: Literal["ComputationalVariantFunctionalImpactAnalysisResult"] = Field(
+        default="ComputationalVariantFunctionalImpactAnalysisResult",
+        description='MUST be "ComputationalVariantFunctionalImpactAnalysisResult".',
+    )
+    sourceDataSet: DataSet | iriReference | None = Field(
+        default=None,
+        description="The dataset from which the in silico scores were retrieved or derived (e.g., an Ensembl VEP annotation dataset).",
+    )
+    ancillaryResults: dict | None = Field(
+        default=None,
+        description="An object in which implementers can define custom fields to capture additional scores or outputs produced by the in silico tool beyond the primary score. For example, CADD reports both a raw score and a Phred-scaled score; the primary score field would hold one, and ancillaryResults would hold the other.",
+    )
+    qualityMeasures: dict | None = Field(
+        default=None,
+        description="An object in which implementers can define custom fields to capture metadata about the quality/provenance of the primary data items captured in standard attributes in the main body of the Study Result. e.g. a sequencing coverage metric in a Cohort Allele Frequency Study Result.",
+    )
+    impactScoreType: MappableConcept | iriReference | None = Field(
+        default=None,
+        description="A descriptor indicating what the score represents (e.g., 'SIFT impact score', 'CADD Phred-scaled impact score').",
+    )
+    categoricalImpact: MappableConcept | iriReference | None = Field(
+        default=None,
+        description="The categorical interpretation derived from the score by the in silico tool (e.g., 'tolerated', 'benign', 'pathogenic').",
+    )
+    impactedFeatureType: MappableConcept | iriReference | None = Field(
+        default=None,
+        description="A descriptor indicating the type of feature for which the focus variant has a predicted impact",
+    )
+    impactedFeature: MappableConcept | iriReference | None = Field(
+        default=None,
+        description="The specific feature for which the focus variant has a predicted impact",
+    )
+
+
+# Any new proposition type should be added to this union, and ONLY this union
+# should be used when annotating a proposition property.
+_SubjectVariantPropositionType: TypeAlias = (
+    ExperimentalVariantFunctionalImpactProposition
+    | VariantPathogenicityProposition
+    | VariantDiagnosticProposition
+    | VariantPrognosticProposition
+    | VariantOncogenicityProposition
+    | VariantTherapeuticResponseProposition
+    | VariantClinicalSignificanceProposition
+    | VariantMolecularConsequenceProposition
+)
 
 
 class EvidenceLine(InformationEntity, BaseModelForbidExtra):
@@ -821,9 +792,7 @@ class EvidenceLine(InformationEntity, BaseModelForbidExtra):
         default=None,
         description="The possible fact against which evidence items contained in an Evidence Line were collectively evaluated, in determining the overall strength and direction of support they provide. For example, in an ACMG Guideline-based assessment of variant pathogenicity, the support provided by distinct lines of evidence are assessed against a target proposition that the variant is pathogenic for a specific disease.",
     )
-    hasEvidenceItems: (
-        list[StudyResult | Statement | EvidenceLine | iriReference] | None
-    ) = Field(
+    hasEvidenceItems: list[InformationEntity | iriReference] | None = Field(
         default=None,
         description="An individual piece of information that was evaluated as evidence in building the argument represented by an Evidence Line.",
     )
@@ -831,7 +800,7 @@ class EvidenceLine(InformationEntity, BaseModelForbidExtra):
         ...,
         description="The direction of support that the Evidence Line is determined to provide toward its target Proposition (supports, disputes, neutral)",
     )
-    strengthOfEvidenceProvided: MappableConcept | None = Field(
+    strengthOfEvidenceProvided: MappableConcept | iriReference | None = Field(
         default=None,
         description="The strength of support that an Evidence Line is determined to provide for or against its target Proposition, evaluated relative to the direction indicated by the directionOfEvidenceProvided value.",
     )
@@ -839,7 +808,7 @@ class EvidenceLine(InformationEntity, BaseModelForbidExtra):
         default=None,
         description="A quantitative score indicating the strength of support that an Evidence Line is determined to provide for or against its target Proposition, evaluated relative to the direction indicated by the directionOfEvidenceProvided value.",
     )
-    evidenceOutcome: MappableConcept | None = Field(
+    evidenceOutcome: MappableConcept | iriReference | None = Field(
         default=None,
         description="A term summarizing the overall outcome of the evidence assessment represented by the Evidence Line, in terms of the direction and strength of support it provides for or against the target Proposition.",
     )
@@ -893,6 +862,36 @@ class EvidenceLine(InformationEntity, BaseModelForbidExtra):
             err_msg = f"`strengthOfEvidenceProvided` is not allowed when `directionOfEvidenceProvided` is '{Direction.NEUTRAL.value}'."
             raise ValueError(err_msg)
 
+    def _validate_noncontributing_evidence_outcome(self) -> None:
+        """Validate direction and strength for noncontributing evidence outcomes.
+
+        ``no_criteria_met`` and criterion outcomes ending in ``_not_met`` do not
+        contribute evidence for or against the target proposition.
+
+        :raises ValueError: If a noncontributing outcome has a non-neutral
+            direction or a strength
+        """
+        if not self.evidenceOutcome:
+            return
+
+        outcome_code = self.evidenceOutcome.primaryCoding.code.root
+        if outcome_code != "no_criteria_met" and not outcome_code.endswith("_not_met"):
+            return
+
+        if self.directionOfEvidenceProvided != Direction.NEUTRAL:
+            msg = (
+                "`directionOfEvidenceProvided` must be 'neutral' when "
+                "`evidenceOutcome` is 'no_criteria_met' or ends in '_not_met'."
+            )
+            raise ValueError(msg)
+
+        if self.strengthOfEvidenceProvided is not None:
+            msg = (
+                "`strengthOfEvidenceProvided` must be null when "
+                "`evidenceOutcome` is 'no_criteria_met' or ends in '_not_met'."
+            )
+            raise ValueError(msg)
+
     def _validate_criterion_specified_by(self) -> None:
         """Validate specifiedBy for criterion evidence lines
 
@@ -930,16 +929,18 @@ class Statement(InformationEntity, BaseModelForbidExtra):
         default=CoreType.STATEMENT.value,
         description=f"MUST be '{CoreType.STATEMENT.value}'.",
     )
-    proposition: _SubjectVariantPropositionType = Field(
+    proposition: (
+        Annotated[_SubjectVariantPropositionType, Field(discriminator="type")]
+        | iriReference
+    ) = Field(
         ...,
         description="A possible fact, the validity of which is assessed and reported by the Statement. A Statement can put forth the proposition as being true, false, or uncertain, and may provide an assessment of the level of confidence/evidence supporting this claim.",
-        discriminator="type",
     )
     direction: Direction | None = Field(
         default=None,
         description="A term indicating whether the Statement supports, disputes, or remains neutral w.r.t. the validity of the Proposition it evaluates.",
     )
-    strength: MappableConcept | None = Field(
+    strength: MappableConcept | iriReference | None = Field(
         default=None,
         description="A term used to report the strength of a Proposition's assessment in the direction indicated (i.e. how strongly supported or disputed the Proposition is believed to be).  Implementers may choose to frame a strength assessment in terms of how *confident* an agent is that the Proposition is true or false, or in terms of the *strength of all evidence* they believe supports or disputes it.",
     )
@@ -949,23 +950,17 @@ class Statement(InformationEntity, BaseModelForbidExtra):
     )
     classification: MappableConcept | iriReference | None = Field(
         default=None,
-        description="A single term or phrase summarizing the outcome of direction and strength assessments of a Statement's Proposition, in terms of a classification of its subject.",
+        description="A single term or phrase summarizing the result of direction and strength assessments of a Statement's Proposition, in terms of a classification of its subject.",
     )
     quality: MappableConcept | iriReference | None = Field(
         default=None,
         description="A term used to report the quality of the assessment of a Proposition taking into consideration the reliability of the method, the contributor's self-reporting of the rigor of the evaluation, and the overall robustness of the supporting or disputing evidence. This is useful when there is a consistent policy and authority that manages and a governing framework for evaluating the quality of evidence. Also known as trust rating, review status or ranking.",
     )
-    hasEvidence: list[StudyResult | Statement | EvidenceLine | iriReference] | None = (
-        Field(
-            default=None,
-            description="An individual piece of information that was evaluated as evidence in assessing the validity of the Proposition put forth by the Statement.",
-        )
+    hasEvidence: list[Statement | StudyResult | DataItem | iriReference] | None = Field(
+        default=None,
+        description="An individual piece of information that was evaluated as evidence in assessing the validity of the Proposition put forth by the Statement.",
     )
     hasEvidenceLines: list[EvidenceLine | iriReference] | None = Field(
         default=None,
         description="An evidence-based argument that supports or disputes the validity of the proposition that a Statement assesses or puts forth as true. The strength and direction of this argument (whether it supports or disputes the proposition, and how strongly) is based on an interpretation of one or more pieces of information as evidence (i.e. 'Evidence Items).",
     )
-
-
-Statement.model_rebuild()
-EvidenceLine.model_rebuild()

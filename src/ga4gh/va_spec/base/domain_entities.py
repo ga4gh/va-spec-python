@@ -16,10 +16,9 @@ from ga4gh.va_spec.base.metadata import BaseMetadataMixin
 
 
 class ConditionSet(BaseMetadataMixin, ConceptSet):
-    """A set of conditions (diseases, phenotypes, traits) that occur together or are
-    related, depending on the membership operator, and may manifest together in the
-    same patient or individually in a different subset of participants in a research
-    study.
+    """A specialization of ConceptSet representing a set of conditions (diseases,
+    phenotypes, traits) that occur together or are related, depending on the membership
+    operator. Concepts are restricted to Condition and ConditionSet members.
     """
 
     _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
@@ -36,20 +35,27 @@ class ConditionSet(BaseMetadataMixin, ConceptSet):
 
 
 class Condition(BaseMetadataMixin, MappableConcept):
-    """A mappable concept representing an individual condition."""
+    """A specialization of MappableConcept representing a single condition (disease,
+    phenotype, or trait).
+
+    Allowed conceptType values include: Condition, Phenotype,
+    Disease, Trait, Absent.
+    """
 
     _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
 
     conceptType: str = Field(
         default="Condition",
-        description="A term indicating the type of concept being represented.",
+        description="A term indicating the type of concept being represented by the MappableConcept.",
     )
 
 
 class TherapyGroup(BaseMetadataMixin, ConceptSet):
-    """A group of two or more therapies that are applied in combination to a single
-    patient/subject, or applied individually to a different subset of participants in a
-    research study.
+    """A specialization of ConceptSet representing a group of two or more therapies that
+    are applied in combination to a single patient/subject, or applied individually to a
+    different subset of participants in a research study.
+
+    Concepts are restricted to Therapy and TherapyGroup members.
     """
 
     _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
@@ -66,11 +72,16 @@ class TherapyGroup(BaseMetadataMixin, ConceptSet):
 
 
 class Therapy(BaseMetadataMixin, MappableConcept):
-    """A mappable concept representing an individual therapy."""
+    """A specialization of MappableConcept representing an individual therapy (drug,
+    procedure, behavioral intervention, etc.).
+
+    Allowed conceptType values include: Therapy, Absent, Drug, Procedure, Behavioral
+    Intervention.
+    """
 
     _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
 
     conceptType: str = Field(
         default="Therapy",
-        description="A term indicating the type of concept being represented.",
+        description="A term indicating the type of concept being represented by the MappableConcept.",
     )

@@ -13,7 +13,6 @@ from typing_extensions import Self
 from ga4gh.core.metadata import Maturity
 from ga4gh.core.models import MappableConcept, iriReference
 from ga4gh.va_spec.base.core import (
-    Direction,
     Document,
     EvidenceLine,
     Method,
@@ -73,13 +72,9 @@ class VariantOncogenicityEvidenceLine(
 
     _maturity: ClassVar[Maturity] = Maturity.DRAFT
 
-    targetProposition: VariantOncogenicityProposition | None = Field(
+    targetProposition: VariantOncogenicityProposition | iriReference | None = Field(
         default=None,
         description="A Variant Oncoogenicity Proposition against which a specific type of evidence was assessed, to determine the strength and direction of support this evidence provides for or against the proposition's validity.",
-    )
-    directionOfEvidenceProvided: Direction = Field(
-        ...,
-        description="The direction of support that the Evidence Line is determined to provide toward its target Proposition (supports, disputes, neutral). For CCV-based assessments, if a oncogenicity criterion is 'met' in the Evidence Line the direction is 'supports', if a benignity criterion is 'met' the direction is 'disputes', and if a criteria is 'not met' the direction is 'none'.",
     )
     strengthOfEvidenceProvided: MappableConcept | None = Field(
         default=None,
@@ -241,8 +236,9 @@ class VariantOncogenicityEvidenceLine(
             ``strengthOfEvidenceProvided`` is provided when
             ``directionOfEvidenceProvided`` is neutral
         """
-        self._validate_direction_of_evidence_provided()
         self._validate_evidence_outcome(SYSTEM, CCV_CODE_PATTERN, is_required=False)
+        self._validate_noncontributing_evidence_outcome()
+        self._validate_direction_of_evidence_provided()
         self._validate_criterion_specified_by()
 
         evidence_outcome = (
@@ -264,7 +260,7 @@ class VariantOncogenicityStatement(CCV2022MetadataMixin, Statement):
 
     _maturity: ClassVar[Maturity] = Maturity.DRAFT
 
-    proposition: VariantOncogenicityProposition = Field(
+    proposition: VariantOncogenicityProposition | iriReference = Field(
         ...,
         description="A proposition about the oncogenicity of a variant, for which the study provides evidence. The validity of this proposition, and the level of confidence/evidence supporting it, may be assessed and reported by the Statement.",
     )

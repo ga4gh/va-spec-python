@@ -14,7 +14,6 @@ from ga4gh.core.metadata import Maturity
 from ga4gh.core.models import MappableConcept, iriReference
 from ga4gh.va_spec.acmg_2015.metadata import ACMG2015MetadataMixin
 from ga4gh.va_spec.base.core import (
-    Direction,
     Document,
     EvidenceLine,
     Method,
@@ -75,13 +74,9 @@ class VariantPathogenicityEvidenceLine(
 
     _maturity: ClassVar[Maturity] = Maturity.DRAFT
 
-    targetProposition: VariantPathogenicityProposition | None = Field(
+    targetProposition: VariantPathogenicityProposition | iriReference | None = Field(
         default=None,
         description="A Variant Pathogenicity Proposition against which a specific type of evidence was assessed, to determine the strength and direction of support this evidence provides for or against the proposition's validity.",
-    )
-    directionOfEvidenceProvided: Direction = Field(
-        ...,
-        description="The direction of support that the Evidence Line is determined to provide toward its target Proposition (supports, disputes, neutral). For ACMG-based assessments, if a pathogenicity criterion is 'met' in the Evidence Line the direction is 'supports', if a benignity criterion is 'met' the direction is 'disputes', and if a criteria is 'not met' the direction is 'none'.",
     )
     strengthOfEvidenceProvided: MappableConcept | None = Field(
         default=None,
@@ -314,9 +309,10 @@ class VariantPathogenicityEvidenceLine(
             ``strengthOfEvidenceProvided`` is provided when
             ``directionOfEvidenceProvided`` is neutral
         """
-        self._validate_direction_of_evidence_provided()
         acmg_code_pattern = r"^(?:no_criteria_met|(?:PVS1)(?:_(?:not_met|(?:strong|moderate|supporting)))?|(?:PS[1-4]|BS[1-4])(?:_(?:not_met|(?:very_strong|moderate|supporting)))?|BA1(?:_not_met)?|(?:PM[1-6])(?:_(?:not_met|(?:very_strong|strong|supporting)))?|(PP[1-5]|BP[1-7])(?:_(?:not_met|very_strong|strong|moderate))?)$"
         self._validate_evidence_outcome(SYSTEM, acmg_code_pattern, is_required=True)
+        self._validate_noncontributing_evidence_outcome()
+        self._validate_direction_of_evidence_provided()
         self._validate_criterion_specified_by()
         self._validate_method_type_evidence_outcome(
             self.specifiedBy.methodType, self.evidenceOutcome.primaryCoding.code.root
@@ -329,7 +325,7 @@ class VariantPathogenicityStatement(ACMG2015MetadataMixin, Statement):
 
     _maturity: ClassVar[Maturity] = Maturity.DRAFT
 
-    proposition: VariantPathogenicityProposition = Field(
+    proposition: VariantPathogenicityProposition | iriReference = Field(
         ...,
         description="A proposition about the pathogenicity of a variant, the validity of which is assessed and reported by the Statement. A Statement can put forth the proposition as being true, false, or uncertain, and may provide an assessment of the level of confidence/evidence supporting this claim.",
     )

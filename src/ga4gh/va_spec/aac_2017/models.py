@@ -66,7 +66,7 @@ AMP_ASCO_CAP_EVIDENCE_LINE_STRENGTHS = [
 
 
 class AmpAscoCapEvidenceLine(AAC2017MetadataMixin, EvidenceLine):
-    """Evidence line for AMP/ASCO/CAP"""
+    """General evidence line for AMP/ASCO/CAP"""
 
     _maturity: ClassVar[Maturity] = Maturity.DRAFT
 
@@ -74,6 +74,7 @@ class AmpAscoCapEvidenceLine(AAC2017MetadataMixin, EvidenceLine):
         VariantPrognosticProposition
         | VariantDiagnosticProposition
         | VariantTherapeuticResponseProposition
+        | iriReference
     )
 
     @field_validator("strengthOfEvidenceProvided", mode="after")
@@ -94,7 +95,7 @@ class AmpAscoCapEvidenceLine(AAC2017MetadataMixin, EvidenceLine):
 class _PrognosticEvidenceLineObject(AmpAscoCapEvidenceLine):
     """Internal prognostic evidence line for AMP/ASCO/CAP"""
 
-    targetProposition: VariantPrognosticProposition
+    targetProposition: VariantPrognosticProposition | iriReference
 
 
 class PrognosticEvidenceLine(
@@ -108,7 +109,7 @@ class PrognosticEvidenceLine(
 class _DiagnosticEvidenceLineObject(AmpAscoCapEvidenceLine):
     """Internal diagnostic evidence line for AMP/ASCO/CAP"""
 
-    targetProposition: VariantDiagnosticProposition
+    targetProposition: VariantDiagnosticProposition | iriReference
 
 
 class DiagnosticEvidenceLine(
@@ -122,7 +123,7 @@ class DiagnosticEvidenceLine(
 class _TherapeuticEvidenceLineObject(AmpAscoCapEvidenceLine):
     """Internal therapeutic evidence line for AMP/ASCO/CAP"""
 
-    targetProposition: VariantTherapeuticResponseProposition
+    targetProposition: VariantTherapeuticResponseProposition | iriReference
 
 
 class TherapeuticEvidenceLine(
@@ -208,14 +209,14 @@ class VariantClinicalSignificanceStatement(
 
     _maturity: ClassVar[Maturity] = Maturity.DRAFT
 
-    proposition: VariantClinicalSignificanceProposition
+    proposition: VariantClinicalSignificanceProposition | iriReference
     strength: MappableConcept | None = Field(
         default=None,
         description="The strength of support that the Statement is determined to provide for or against the Variant Clinical Significance Proposition for the assessed variant, based on the curation and reporting conventions of the AMP/ASCO/CAP 2017 Guidelines.",
     )
     classification: MappableConcept = Field(
         ...,
-        description="A single term or phrase classifying the subject variant based on the outcome of direction and strength assessments of the Statement's Proposition, using terms from the AMP/ASCO/CAP 2017 Guidelines.",
+        description="A single term or phrase classifying the subject variant based on the result of direction and strength assessments of the Statement's Proposition, using terms from the AMP/ASCO/CAP 2017 Guidelines.",
     )
     specifiedBy: Method | iriReference
 
@@ -232,6 +233,7 @@ class VariantClinicalSignificanceStatement(
                 DiagnosticEvidenceLine,
                 PrognosticEvidenceLine,
                 TherapeuticEvidenceLine,
+                iriReference,
             ]
             if classification_code in {
                 AmpAscoCapClassificationCode.TIER_1,
@@ -252,7 +254,7 @@ class VariantClinicalSignificanceStatement(
                         except Exception:  # noqa: S112
                             continue
                     else:
-                        msg = "`hasEvidenceLines` must be one of: `DiagnosticEvidenceLine`, `PrognosticEvidenceLine`, or `TherapeuticEvidenceLine`"
+                        msg = "`hasEvidenceLines` must be one of: `DiagnosticEvidenceLine`, `PrognosticEvidenceLine`, `TherapeuticEvidenceLine`, or `iriReference`"
                         raise ValueError(msg)
 
         def _validate_amp_asco_cap_classification_constraints(

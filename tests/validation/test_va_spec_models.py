@@ -23,10 +23,10 @@ from ga4gh.va_spec.base import (
 from ga4gh.va_spec.base.core import (
     Direction,
     EvidenceLine,
+    InformationEntity,
     Method,
     Statement,
     StudyGroup,
-    StudyResult,
     VariantClinicalSignificanceProposition,
     VariantDiagnosticProposition,
     VariantOncogenicityProposition,
@@ -365,7 +365,7 @@ def test_evidence_line(caf):
     }
     el = EvidenceLine(**el_dict)
     assert isinstance(el.hasEvidenceItems[0], iriReference)
-    assert isinstance(el.hasEvidenceItems[1], Statement)
+    assert isinstance(el.hasEvidenceItems[1], InformationEntity)
 
     el_dict = {
         "type": "EvidenceLine",
@@ -373,8 +373,8 @@ def test_evidence_line(caf):
         "directionOfEvidenceProvided": "supports",
     }
     el = EvidenceLine(**el_dict)
-    assert isinstance(el.hasEvidenceItems[0], StudyResult)
-    assert isinstance(el.hasEvidenceItems[0].root, CohortAlleleFrequencyStudyResult)
+    assert isinstance(el.hasEvidenceItems[0], InformationEntity)
+    assert el.hasEvidenceItems[0].type == "CohortAlleleFrequencyStudyResult"
 
     el_dict = {
         "type": "EvidenceLine",
@@ -384,7 +384,8 @@ def test_evidence_line(caf):
         "directionOfEvidenceProvided": "supports",
     }
     el = EvidenceLine(**el_dict)
-    assert isinstance(el.hasEvidenceItems[0], EvidenceLine)
+    assert isinstance(el.hasEvidenceItems[0], InformationEntity)
+    assert el.hasEvidenceItems[0].type == "EvidenceLine"
 
     el_dict = {
         "type": "EvidenceLine",
@@ -414,8 +415,7 @@ def test_evidence_line(caf):
         "hasEvidenceItems": [{"type": "Statement"}],
         "directionOfEvidenceProvided": "supports",
     }
-    with pytest.raises(ValueError, match="validation errors for EvidenceLine"):
-        EvidenceLine(**invalid_params)
+    assert EvidenceLine(**invalid_params)
 
 
 def test_variant_pathogenicity_stmt(pathogenicity_evidence_line_params):
@@ -477,9 +477,16 @@ def test_variant_pathogenicity_stmt(pathogenicity_evidence_line_params):
         VariantPathogenicityStatement(**invalid_params)
 
 
+def test_statement_proposition_accepts_iri_reference():
+    """Statements may reference a proposition instead of embedding one."""
+    statement = Statement(proposition="propositions.json#/1")
+
+    assert statement.proposition == iriReference(root="propositions.json#/1")
+
+
 def test_variant_pathogenicity_el(pathogenicity_evidence_line_params):
     """Ensure VariantPathogenicityEvidenceLine model works as expected"""
-    params = pathogenicity_evidence_line_params
+    params = deepcopy(pathogenicity_evidence_line_params)
     vp = VariantPathogenicityEvidenceLine(**params)
 
     assert isinstance(vp.specifiedBy, Method)
@@ -560,6 +567,32 @@ def test_variant_pathogenicity_el(pathogenicity_evidence_line_params):
         match="`strengthOfEvidenceProvided` is not allowed when `directionOfEvidenceProvided` is 'neutral'.",
     ):
         VariantPathogenicityEvidenceLine(**invalid_params)
+
+
+@pytest.mark.parametrize("outcome", ["no_criteria_met", "PS3_not_met"])
+def test_pathogenicity_noncontributing_outcomes_require_neutral_without_strength(
+    pathogenicity_evidence_line_params, outcome
+):
+    """Noncontributing ACMG outcomes must have neutral direction and no strength."""
+    params = deepcopy(pathogenicity_evidence_line_params)
+    strength = deepcopy(params["strengthOfEvidenceProvided"])
+    params["evidenceOutcome"]["primaryCoding"]["code"] = outcome
+    params["directionOfEvidenceProvided"] = "neutral"
+    params["strengthOfEvidenceProvided"] = None
+    assert VariantPathogenicityEvidenceLine(**params)
+
+    invalid_direction = deepcopy(params)
+    invalid_direction["directionOfEvidenceProvided"] = "supports"
+    invalid_direction["strengthOfEvidenceProvided"] = strength
+    with pytest.raises(
+        ValueError, match="`directionOfEvidenceProvided` must be 'neutral'"
+    ):
+        VariantPathogenicityEvidenceLine(**invalid_direction)
+
+    invalid_strength = deepcopy(params)
+    invalid_strength["strengthOfEvidenceProvided"] = strength
+    with pytest.raises(ValueError, match="`strengthOfEvidenceProvided` must be null"):
+        VariantPathogenicityEvidenceLine(**invalid_strength)
 
 
 def test_variant_onco_stmt(oncogenicity_evidence_line_params):
@@ -658,6 +691,32 @@ def test_variant_onco_el(oncogenicity_evidence_line_params):
         match="`strengthOfEvidenceProvided` is not allowed when `directionOfEvidenceProvided` is 'neutral'.",
     ):
         VariantOncogenicityEvidenceLine(**invalid_params)
+
+
+@pytest.mark.parametrize("outcome", ["no_criteria_met", "OS2_not_met"])
+def test_oncogenicity_noncontributing_outcomes_require_neutral_without_strength(
+    oncogenicity_evidence_line_params, outcome
+):
+    """Noncontributing CCV outcomes must have neutral direction and no strength."""
+    params = deepcopy(oncogenicity_evidence_line_params)
+    strength = deepcopy(params["strengthOfEvidenceProvided"])
+    params["evidenceOutcome"]["primaryCoding"]["code"] = outcome
+    params["directionOfEvidenceProvided"] = "neutral"
+    params["strengthOfEvidenceProvided"] = None
+    assert VariantOncogenicityEvidenceLine(**params)
+
+    invalid_direction = deepcopy(params)
+    invalid_direction["directionOfEvidenceProvided"] = "supports"
+    invalid_direction["strengthOfEvidenceProvided"] = strength
+    with pytest.raises(
+        ValueError, match="`directionOfEvidenceProvided` must be 'neutral'"
+    ):
+        VariantOncogenicityEvidenceLine(**invalid_direction)
+
+    invalid_strength = deepcopy(params)
+    invalid_strength["strengthOfEvidenceProvided"] = strength
+    with pytest.raises(ValueError, match="`strengthOfEvidenceProvided` must be null"):
+        VariantOncogenicityEvidenceLine(**invalid_strength)
 
 
 def test_variant_onco_el_no_evidence_outcome():
