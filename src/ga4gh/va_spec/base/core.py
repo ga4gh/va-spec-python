@@ -521,7 +521,7 @@ class ExperimentalVariantFunctionalImpactProposition(
         default="impactsFunctionOf",
         description="The relationship the Proposition describes between the subject variant and object sequence feature whose function it may alter. MUST be 'impactsFunctionOf'.",
     )
-    object: iriReference | MappableConcept | iriReference = Field(
+    object: MappableConcept | iriReference = Field(
         ...,
         description="The sequence feature (typically a gene or gene product) on whose function the impact of the subject variant is reported.",
     )
