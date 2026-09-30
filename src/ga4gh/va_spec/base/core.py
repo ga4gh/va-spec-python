@@ -281,7 +281,7 @@ class CohortAlleleFrequencyStudyResult(StudyResult, BaseModelForbidExtra):
         default="CohortAlleleFrequencyStudyResult",
         description="MUST be 'CohortAlleleFrequencyStudyResult'.",
     )
-    sourceDataSet: DataSet | None = Field(
+    sourceDataSet: DataSet | iriReference | None = Field(
         default=None,
         description="The dataset from which the CohortAlleleFrequencyStudyResult was reported.",
     )
@@ -318,7 +318,7 @@ class TumorVariantFrequencyStudyResult(StudyResult, BaseModelForbidExtra):
         default="TumorVariantFrequencyStudyResult",
         description="MUST be 'TumorVariantFrequencyStudyResult'.",
     )
-    sourceDataSet: DataSet | None = Field(
+    sourceDataSet: DataSet | iriReference | None = Field(
         default=None,
         description="The dataset from which data in the Tumor Variant Frequency Study Result was taken.",
     )
@@ -369,7 +369,7 @@ class ExperimentalVariantFunctionalImpactStudyResult(StudyResult, BaseModelForbi
         default=None,
         description="The assay that was performed to generate the reported functional impact score.",
     )
-    sourceDataSet: DataSet | None = Field(
+    sourceDataSet: DataSet | iriReference | None = Field(
         default=None,
         description="The full data set that provided the reported the functional impact score.",
     )
@@ -788,7 +788,7 @@ class EvidenceLine(InformationEntity, BaseModelForbidExtra):
         default=CoreType.EVIDENCE_LINE.value,
         description=f"MUST be '{CoreType.EVIDENCE_LINE.value}'.",
     )
-    targetProposition: _SubjectVariantPropositionType | iriReference | None = Field(
+    targetProposition: Proposition | iriReference | None = Field(
         default=None,
         description="The possible fact against which evidence items contained in an Evidence Line were collectively evaluated, in determining the overall strength and direction of support they provide. For example, in an ACMG Guideline-based assessment of variant pathogenicity, the support provided by distinct lines of evidence are assessed against a target proposition that the variant is pathogenic for a specific disease.",
     )
@@ -871,7 +871,7 @@ class EvidenceLine(InformationEntity, BaseModelForbidExtra):
         :raises ValueError: If a noncontributing outcome has a non-neutral
             direction or a strength
         """
-        if not self.evidenceOutcome:
+        if not self.evidenceOutcome or isinstance(self.evidenceOutcome, iriReference):
             return
 
         outcome_code = self.evidenceOutcome.primaryCoding.code.root
@@ -929,10 +929,7 @@ class Statement(InformationEntity, BaseModelForbidExtra):
         default=CoreType.STATEMENT.value,
         description=f"MUST be '{CoreType.STATEMENT.value}'.",
     )
-    proposition: (
-        Annotated[_SubjectVariantPropositionType, Field(discriminator="type")]
-        | iriReference
-    ) = Field(
+    proposition: Proposition | iriReference = Field(
         ...,
         description="A possible fact, the validity of which is assessed and reported by the Statement. A Statement can put forth the proposition as being true, false, or uncertain, and may provide an assessment of the level of confidence/evidence supporting this claim.",
     )

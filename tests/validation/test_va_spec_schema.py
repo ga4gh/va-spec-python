@@ -49,8 +49,7 @@ def _update_va_spec_schema_mapping(
 VA_SPEC_SCHEMA_MAPPING = {schema: VaSpecSchemaMapping() for schema in VaSpecSchema}
 
 
-# The reinstated EvidenceLine schema puts core JSON schemas directly under
-# ``va-spec/json`` and profile schemas below their profile namespace.
+# Core schemas are in ``va-spec/json``. Profile schemas use subdirectories.
 for f in VA_SCHEMA_DIR.glob("json/*"):
     if f.is_file():
         _update_va_spec_schema_mapping(f, VA_SPEC_SCHEMA_MAPPING[VaSpecSchema.BASE])

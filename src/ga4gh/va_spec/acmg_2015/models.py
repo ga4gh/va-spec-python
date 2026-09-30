@@ -78,7 +78,7 @@ class VariantPathogenicityEvidenceLine(
         default=None,
         description="A Variant Pathogenicity Proposition against which a specific type of evidence was assessed, to determine the strength and direction of support this evidence provides for or against the proposition's validity.",
     )
-    strengthOfEvidenceProvided: MappableConcept | None = Field(
+    strengthOfEvidenceProvided: MappableConcept | iriReference | None = Field(
         default=None,
         description="The strength of support that an Evidence Line is determined to provide for or against the proposed pathogenicity of the assessed variant. Strength is evaluated relative to the direction indicated by the 'directionOfEvidenceProvided' attribute, and captured using a MappableConcept, whose nested 'code' field is bound to an enumerated set of values. Conditional requirement: if `directionOfEvidenceProvided` is either 'supports' or 'disputes', then this attribute is required. If it is 'none', then this attribute is not allowed.",
     )
@@ -314,9 +314,13 @@ class VariantPathogenicityEvidenceLine(
         self._validate_noncontributing_evidence_outcome()
         self._validate_direction_of_evidence_provided()
         self._validate_criterion_specified_by()
-        self._validate_method_type_evidence_outcome(
-            self.specifiedBy.methodType, self.evidenceOutcome.primaryCoding.code.root
-        )
+        if isinstance(self.specifiedBy, Method) and isinstance(
+            self.evidenceOutcome, MappableConcept
+        ):
+            self._validate_method_type_evidence_outcome(
+                self.specifiedBy.methodType,
+                self.evidenceOutcome.primaryCoding.code.root,
+            )
         return self
 
 
@@ -329,11 +333,11 @@ class VariantPathogenicityStatement(ACMG2015MetadataMixin, Statement):
         ...,
         description="A proposition about the pathogenicity of a variant, the validity of which is assessed and reported by the Statement. A Statement can put forth the proposition as being true, false, or uncertain, and may provide an assessment of the level of confidence/evidence supporting this claim.",
     )
-    strength: MappableConcept | None = Field(
+    strength: MappableConcept | iriReference | None = Field(
         default=None,
         description="The strength of support that an ACMG 2015 Variant Pathogenicity statement is determined to provide for or against the proposed pathogenicity of the assessed variant. Strength is evaluated relative to the direction indicated by the 'direction' attribute. The indicated enumeration constrains the nested MappableConcept.primaryCoding > Coding.code attribute when capturing evidence strength.",
     )
-    classification: MappableConcept = Field(
+    classification: MappableConcept | iriReference = Field(
         ...,
         description="The classification of the variant's pathogenicity, based on the ACMG 2015 guidelines. These classifications should coincide with the direction and strength values as follows: 'pathogenic' with supports-strong, 'likely pathogenic' with supports-moderate, 'benign' with disputes-strong, 'likely benign' with disputes-moderate 'uncertain significance' can be one of three possibilities... supports-weak, disputes-weak or neutral for uncertain significance (favoring pathogenic), uncertain significance (favoring benign) or uncertain significance (favoring neither pathogenic nor benign). The 'low penetrance' and 'risk allele' versions of pathogenicity classifications would be applied based on whether the variant proposition was defined to have a 'penetrance' of 'low' or 'risk' respectively.",
     )
@@ -347,7 +351,9 @@ class VariantPathogenicityStatement(ACMG2015MetadataMixin, Statement):
 
     @field_validator("strength")
     @classmethod
-    def validate_strength(cls, v: MappableConcept | None) -> MappableConcept | None:
+    def validate_strength(
+        cls, v: MappableConcept | iriReference | None
+    ) -> MappableConcept | iriReference | None:
         """Validate strength
 
         :param v: strength
@@ -360,13 +366,18 @@ class VariantPathogenicityStatement(ACMG2015MetadataMixin, Statement):
 
     @field_validator("classification")
     @classmethod
-    def validate_classification(cls, v: MappableConcept) -> MappableConcept:
+    def validate_classification(
+        cls, v: MappableConcept | iriReference
+    ) -> MappableConcept | iriReference:
         """Validate classification
 
         :param v: classification
         :raises ValueError: If invalid classification values are provided
         :return: Validated classification value
         """
+        if isinstance(v, iriReference):
+            return v
+
         if not v.primaryCoding:
             err_msg = "`primaryCoding` is required."
             raise ValueError(err_msg)

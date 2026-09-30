@@ -76,7 +76,7 @@ class VariantOncogenicityEvidenceLine(
         default=None,
         description="A Variant Oncoogenicity Proposition against which a specific type of evidence was assessed, to determine the strength and direction of support this evidence provides for or against the proposition's validity.",
     )
-    strengthOfEvidenceProvided: MappableConcept | None = Field(
+    strengthOfEvidenceProvided: MappableConcept | iriReference | None = Field(
         default=None,
         description="The strength of support that an Evidence Line is determined to provide for or against the proposed oncogenicity of the assessed variant. Strength is evaluated relative to the direction indicated by the 'directionOfEvidenceProvided' attribute, and captured using a MappableConcept, whose nested 'code' field is bound to an enumerated set of values. Conditional requirement: if `directionOfEvidenceProvided` is either 'supports' or 'disputes', then this attribute is required. If it is 'none', then this attribute is not allowed.",
     )
@@ -241,14 +241,15 @@ class VariantOncogenicityEvidenceLine(
         self._validate_direction_of_evidence_provided()
         self._validate_criterion_specified_by()
 
-        evidence_outcome = (
-            self.evidenceOutcome.primaryCoding.code.root
-            if self.evidenceOutcome
-            else None
-        )
-        self._validate_method_type_evidence_outcome(
-            self.specifiedBy.methodType, evidence_outcome
-        )
+        if isinstance(self.specifiedBy, Method):
+            evidence_outcome = (
+                self.evidenceOutcome.primaryCoding.code.root
+                if isinstance(self.evidenceOutcome, MappableConcept)
+                else None
+            )
+            self._validate_method_type_evidence_outcome(
+                self.specifiedBy.methodType, evidence_outcome
+            )
         return self
 
 
@@ -264,11 +265,11 @@ class VariantOncogenicityStatement(CCV2022MetadataMixin, Statement):
         ...,
         description="A proposition about the oncogenicity of a variant, for which the study provides evidence. The validity of this proposition, and the level of confidence/evidence supporting it, may be assessed and reported by the Statement.",
     )
-    strength: MappableConcept | None = Field(
+    strength: MappableConcept | iriReference | None = Field(
         default=None,
         description="The strength of support that an CCV 2022 Oncogenicity statement is determined to provide for or against the proposed oncogenicity of the assessed variant. Strength is evaluated relative to the direction indicated by the 'direction' attribute. The indicated enumeration constrains the nested MappableConcept.primaryCoding > Coding.code attribute when capturing evidence strength. Conditional requirement: if directionOfEvidenceProvided is either 'supports' or 'disputes', then this attribute is required. If it is 'neutral', then this attribute is not allowed.",
     )
-    classification: MappableConcept = Field(
+    classification: MappableConcept | iriReference = Field(
         ...,
     )
     specifiedBy: Method | iriReference = Field(
@@ -279,7 +280,9 @@ class VariantOncogenicityStatement(CCV2022MetadataMixin, Statement):
 
     @field_validator("strength")
     @classmethod
-    def validate_strength(cls, v: MappableConcept | None) -> MappableConcept | None:
+    def validate_strength(
+        cls, v: MappableConcept | iriReference | None
+    ) -> MappableConcept | iriReference | None:
         """Validate strength
 
         :param v: strength
@@ -292,7 +295,9 @@ class VariantOncogenicityStatement(CCV2022MetadataMixin, Statement):
 
     @field_validator("classification")
     @classmethod
-    def validate_classification(cls, v: MappableConcept) -> MappableConcept:
+    def validate_classification(
+        cls, v: MappableConcept | iriReference
+    ) -> MappableConcept | iriReference:
         """Validate classification
 
         :param v: classification

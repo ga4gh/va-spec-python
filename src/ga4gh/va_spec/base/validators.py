@@ -5,17 +5,17 @@ from enum import Enum
 from types import MappingProxyType
 from typing import ClassVar, Generic, TypeVar
 
-from ga4gh.core.models import MappableConcept
+from ga4gh.core.models import MappableConcept, iriReference
 from ga4gh.va_spec.base.enums import System
 
 
 def validate_mappable_concept(
-    mc: MappableConcept | None,
+    mc: MappableConcept | iriReference | None,
     valid_system: System,
     valid_codes: list[str] | None = None,
     code_pattern: str | None = None,
     mc_is_required: bool = False,
-) -> MappableConcept | None:
+) -> MappableConcept | iriReference | None:
     """Validate GKS Core Mappable Concept object
 
     :param mc: Mappable Concept object
@@ -33,6 +33,9 @@ def validate_mappable_concept(
             msg = "MappableConcept is required"
             raise ValueError(msg)
         return None
+
+    if isinstance(mc, iriReference):
+        return mc
 
     if not mc.primaryCoding:
         msg = "`primaryCoding` is required."

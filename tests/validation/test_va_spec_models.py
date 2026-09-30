@@ -19,12 +19,15 @@ from ga4gh.va_spec.base import (
     Agent,
     CohortAlleleFrequencyStudyResult,
     ExperimentalVariantFunctionalImpactStudyResult,
+    TherapyGroup,
+    TumorVariantFrequencyStudyResult,
 )
 from ga4gh.va_spec.base.core import (
     Direction,
     EvidenceLine,
     InformationEntity,
     Method,
+    Proposition,
     Statement,
     StudyGroup,
     VariantClinicalSignificanceProposition,
@@ -484,6 +487,53 @@ def test_statement_proposition_accepts_iri_reference():
     assert statement.proposition == iriReference(root="propositions.json#/1")
 
 
+def test_base_statement_and_evidence_line_accept_generic_propositions():
+    """Base models accept generic schema propositions."""
+    proposition = Proposition(
+        type="Proposition", subject={}, predicate="relatedTo", object={}
+    )
+
+    statement = Statement(proposition=proposition)
+    evidence_line = EvidenceLine(
+        directionOfEvidenceProvided="neutral", targetProposition=proposition
+    )
+
+    assert statement.proposition == proposition
+    assert evidence_line.targetProposition == proposition
+
+
+def test_concept_sets_accept_iri_references():
+    """Concept sets accept schema-permitted IRIs."""
+    condition_set = ConditionSet(
+        concepts=["conditions.json#/1", "conditions.json#/2"],
+        membershipOperator="OR",
+    )
+    therapy_group = TherapyGroup(
+        concepts=["therapies.json#/1", "therapies.json#/2"],
+        membershipOperator="AND",
+    )
+
+    assert all(isinstance(concept, iriReference) for concept in condition_set.concepts)
+    assert all(isinstance(concept, iriReference) for concept in therapy_group.concepts)
+
+
+def test_study_results_accept_iri_source_data_sets(caf):
+    """Study result models accept IRI source datasets."""
+    assert CohortAlleleFrequencyStudyResult(
+        **(caf.model_dump() | {"sourceDataSet": "datasets.json#/1"})
+    ).sourceDataSet == iriReference(root="datasets.json#/1")
+    assert TumorVariantFrequencyStudyResult(
+        focus="alleles.json#/1",
+        affectedSampleCount=1,
+        totalSampleCount=2,
+        affectedFrequency=0.5,
+        sourceDataSet="datasets.json#/1",
+    ).sourceDataSet == iriReference(root="datasets.json#/1")
+    assert ExperimentalVariantFunctionalImpactStudyResult(
+        focus="alleles.json#/1", sourceDataSet="datasets.json#/1"
+    ).sourceDataSet == iriReference(root="datasets.json#/1")
+
+
 def test_variant_pathogenicity_el(pathogenicity_evidence_line_params):
     """Ensure VariantPathogenicityEvidenceLine model works as expected"""
     params = deepcopy(pathogenicity_evidence_line_params)
@@ -593,6 +643,25 @@ def test_pathogenicity_noncontributing_outcomes_require_neutral_without_strength
     invalid_strength["strengthOfEvidenceProvided"] = strength
     with pytest.raises(ValueError, match="`strengthOfEvidenceProvided` must be null"):
         VariantPathogenicityEvidenceLine(**invalid_strength)
+
+
+def test_pathogenicity_profile_accepts_schema_permitted_references():
+    """Pathogenicity models accept opaque IRI references."""
+    evidence_line = VariantPathogenicityEvidenceLine(
+        specifiedBy="methods.json#/1",
+        directionOfEvidenceProvided="supports",
+        evidenceOutcome="outcomes.json#/1",
+        strengthOfEvidenceProvided="strengths.json#/1",
+    )
+    statement = VariantPathogenicityStatement(
+        proposition="propositions.json#/1",
+        strength="strengths.json#/1",
+        classification="classifications.json#/1",
+        specifiedBy="methods.json#/1",
+    )
+
+    assert isinstance(evidence_line.evidenceOutcome, iriReference)
+    assert isinstance(statement.classification, iriReference)
 
 
 def test_variant_onco_stmt(oncogenicity_evidence_line_params):
@@ -719,6 +788,25 @@ def test_oncogenicity_noncontributing_outcomes_require_neutral_without_strength(
         VariantOncogenicityEvidenceLine(**invalid_strength)
 
 
+def test_oncogenicity_profile_accepts_schema_permitted_references():
+    """Oncogenicity models accept inherited IRI branches."""
+    evidence_line = VariantOncogenicityEvidenceLine(
+        specifiedBy="methods.json#/1",
+        directionOfEvidenceProvided="supports",
+        evidenceOutcome="outcomes.json#/1",
+        strengthOfEvidenceProvided="strengths.json#/1",
+    )
+    statement = VariantOncogenicityStatement(
+        proposition="propositions.json#/1",
+        strength="strengths.json#/1",
+        classification="classifications.json#/1",
+        specifiedBy="methods.json#/1",
+    )
+
+    assert isinstance(evidence_line.evidenceOutcome, iriReference)
+    assert isinstance(statement.classification, iriReference)
+
+
 def test_variant_onco_el_no_evidence_outcome():
     """Test that VariantOncogenicityEvidenceLine validates without evidence
     outcome
@@ -749,6 +837,19 @@ def test_variant_onco_el_no_evidence_outcome():
         match="'dummy' is not a valid VariantOncogenicityEvidenceLine.MethodType",
     ):
         VariantOncogenicityEvidenceLine.model_validate(invalid)
+
+
+def test_aac_profile_accepts_schema_permitted_references():
+    """AAC models accept opaque classification and strength IRIs."""
+    statement = VariantClinicalSignificanceStatement(
+        proposition="propositions.json#/1",
+        strength="strengths.json#/1",
+        classification="classifications.json#/1",
+        specifiedBy="methods.json#/1",
+    )
+
+    assert isinstance(statement.strength, iriReference)
+    assert isinstance(statement.classification, iriReference)
 
 
 def test_aac_statement():

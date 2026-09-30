@@ -11,6 +11,7 @@ from ga4gh.core.models import (
     ConceptSet,
     MappableConcept,
     MembershipOperator,
+    iriReference,
 )
 from ga4gh.va_spec.base.metadata import BaseMetadataMixin
 
@@ -23,7 +24,7 @@ class ConditionSet(BaseMetadataMixin, ConceptSet):
 
     _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
 
-    concepts: list[Condition | ConditionSet] = Field(
+    concepts: list[Condition | ConditionSet | iriReference] = Field(
         ...,
         min_length=2,
         description="A list of conditions (diseases, phenotypes, traits) that are co-occurring or related, depending on the membership operator.",
@@ -60,7 +61,7 @@ class TherapyGroup(BaseMetadataMixin, ConceptSet):
 
     _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
 
-    concepts: list[Therapy | TherapyGroup] = Field(
+    concepts: list[Therapy | TherapyGroup | iriReference] = Field(
         ...,
         min_length=2,
         description="A list of therapies that are applied to treat a condition.",

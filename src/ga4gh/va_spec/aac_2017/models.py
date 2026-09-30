@@ -210,59 +210,63 @@ class VariantClinicalSignificanceStatement(
     _maturity: ClassVar[Maturity] = Maturity.DRAFT
 
     proposition: VariantClinicalSignificanceProposition | iriReference
-    strength: MappableConcept | None = Field(
+    strength: MappableConcept | iriReference | None = Field(
         default=None,
         description="The strength of support that the Statement is determined to provide for or against the Variant Clinical Significance Proposition for the assessed variant, based on the curation and reporting conventions of the AMP/ASCO/CAP 2017 Guidelines.",
     )
-    classification: MappableConcept = Field(
+    classification: MappableConcept | iriReference = Field(
         ...,
         description="A single term or phrase classifying the subject variant based on the result of direction and strength assessments of the Statement's Proposition, using terms from the AMP/ASCO/CAP 2017 Guidelines.",
     )
     specifiedBy: Method | iriReference
 
+    @model_validator(mode="before")
+    @classmethod
+    def validate_tier_evidence_lines(cls, values: dict) -> dict:
+        """Validate tier I and II evidence-line types before base coercion."""
+        classification = values.get("classification")
+        if not isinstance(classification, dict):
+            return values
+
+        primary_coding = classification.get("primaryCoding")
+        if not isinstance(primary_coding, dict) or primary_coding.get("code") not in {
+            AmpAscoCapClassificationCode.TIER_1,
+            AmpAscoCapClassificationCode.TIER_2,
+        }:
+            return values
+
+        approved_el_classes = (
+            DiagnosticEvidenceLine,
+            PrognosticEvidenceLine,
+            TherapeuticEvidenceLine,
+            iriReference,
+        )
+        for evidence_line in values.get("hasEvidenceLines") or []:
+            for approved_el_cls in approved_el_classes:
+                try:
+                    approved_el_cls.model_validate(evidence_line)
+                    break
+                except Exception:  # noqa: S112
+                    continue
+            else:
+                msg = "`hasEvidenceLines` must be one of: `DiagnosticEvidenceLine`, `PrognosticEvidenceLine`, `TherapeuticEvidenceLine`, or `iriReference`"
+                raise ValueError(msg)
+
+        return values
+
     @model_validator(mode="after")
     def validate_statement(self) -> Self:
         """Validate VariantClinicalSignificanceStatement"""
-
-        def _validate_evidence_lines(
-            classification_code: AmpAscoCapClassificationCode,
-            has_evidence_lines: list,
-        ) -> None:
-            """Validate allowed evidence lines given classification code"""
-            approved_el_classes = [
-                DiagnosticEvidenceLine,
-                PrognosticEvidenceLine,
-                TherapeuticEvidenceLine,
-                iriReference,
-            ]
-            if classification_code in {
-                AmpAscoCapClassificationCode.TIER_1,
-                AmpAscoCapClassificationCode.TIER_2,
-            }:
-                for evidence_line in has_evidence_lines:
-                    if hasattr(evidence_line, "root"):
-                        el_input = evidence_line.root
-                    elif hasattr(evidence_line, "model_dump"):
-                        el_input = evidence_line.model_dump()
-                    else:
-                        el_input = evidence_line
-
-                    for approved_el_cls in approved_el_classes:
-                        try:
-                            approved_el_cls.model_validate(el_input)
-                            break
-                        except Exception:  # noqa: S112
-                            continue
-                    else:
-                        msg = "`hasEvidenceLines` must be one of: `DiagnosticEvidenceLine`, `PrognosticEvidenceLine`, `TherapeuticEvidenceLine`, or `iriReference`"
-                        raise ValueError(msg)
+        if isinstance(self.classification, iriReference) or isinstance(
+            self.strength, iriReference
+        ):
+            return self
 
         def _validate_amp_asco_cap_classification_constraints(
             classification_code: AmpAscoCapClassificationCode,
             classification_name: str | None,
             direction: str,
             strength_code: MappableConcept | None,
-            has_evidence_lines: list,
         ) -> None:
             """Validate that a classification code enforces required values for
             strength, name, direction, and when applicable allowed evidence line types.
@@ -289,8 +293,6 @@ class VariantClinicalSignificanceStatement(
                 msg = f"`direction` must be: {expected.direction.value}"
                 raise ValueError(msg)
 
-            _validate_evidence_lines(classification_code, has_evidence_lines)
-
         # Validate strength system. The actual value will be validated in
         # `_validate_amp_asco_cap_classification_constraints`
         validate_mappable_concept(
@@ -313,7 +315,6 @@ class VariantClinicalSignificanceStatement(
             self.classification.name,
             self.direction,
             self.strength,
-            self.hasEvidenceLines or [],
         )
 
         return self
