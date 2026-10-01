@@ -4,30 +4,27 @@ from __future__ import annotations
 
 from typing import ClassVar
 
-from pydantic import ConfigDict, Field, RootModel
+from pydantic import Field
 
 from ga4gh.core.metadata import Maturity
 from ga4gh.core.models import (
-    BaseModelForbidExtra,
-    Element,
+    ConceptSet,
     MappableConcept,
     MembershipOperator,
+    iriReference,
 )
 from ga4gh.va_spec.base.metadata import BaseMetadataMixin
 
 
-class ConditionSet(BaseMetadataMixin, Element, BaseModelForbidExtra):
-    """A set of conditions (diseases, phenotypes, traits) that occur together or are
-    related, depending on the membership operator, and may manifest together in the
-    same patient or individually in a different subset of participants in a research
-    study.
+class ConditionSet(BaseMetadataMixin, ConceptSet):
+    """A specialization of ConceptSet representing a set of conditions (diseases,
+    phenotypes, traits) that occur together or are related, depending on the membership
+    operator. Concepts are restricted to Condition and ConditionSet members.
     """
 
     _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
 
-    model_config = ConfigDict(use_enum_values=True)
-
-    conditions: list[MappableConcept | ConditionSet] = Field(
+    concepts: list[Condition | ConditionSet | iriReference] = Field(
         ...,
         min_length=2,
         description="A list of conditions (diseases, phenotypes, traits) that are co-occurring or related, depending on the membership operator.",
@@ -38,50 +35,54 @@ class ConditionSet(BaseMetadataMixin, Element, BaseModelForbidExtra):
     )
 
 
-class Condition(BaseMetadataMixin, RootModel):
-    """A single condition (disease, phenotype, or trait), or a set of conditions
-    (ConditionSet).
+class Condition(BaseMetadataMixin, MappableConcept):
+    """A specialization of MappableConcept representing a single condition (disease,
+    phenotype, or trait).
+
+    Allowed conceptType values include: Condition, Phenotype,
+    Disease, Trait, Absent.
     """
 
     _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
 
-    root: ConditionSet | MappableConcept = Field(
-        ...,
-        json_schema_extra={
-            "description": "A single condition (disease, phenotype, or trait), or a set of conditions (ConditionSet)."
-        },
+    conceptType: str = Field(
+        default="Condition",
+        description="A term indicating the type of concept being represented by the MappableConcept.",
     )
 
 
-class TherapyGroup(BaseMetadataMixin, Element, BaseModelForbidExtra):
-    """A group of two or more therapies that are applied in combination to a single
-    patient/subject, or applied individually to a different subset of participants in a
-    research study.
+class TherapyGroup(BaseMetadataMixin, ConceptSet):
+    """A specialization of ConceptSet representing a group of two or more therapies that
+    are applied in combination to a single patient/subject, or applied individually to a
+    different subset of participants in a research study.
+
+    Concepts are restricted to Therapy and TherapyGroup members.
     """
 
     _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
 
-    model_config = ConfigDict(use_enum_values=True)
-
-    therapies: list[MappableConcept] = Field(
+    concepts: list[Therapy | TherapyGroup | iriReference] = Field(
         ...,
         min_length=2,
         description="A list of therapies that are applied to treat a condition.",
     )
     membershipOperator: MembershipOperator = Field(
         ...,
-        description="The logical relationship between members of the group, that indicates how they were applied in treating participants in a study.  The value 'AND' indicates that all therapies in the group were applied in combination to a given patient or subject. The value 'OR' indicates that each therapy was applied individually to a distinct subset of participants in the cohort that was interrogated in a given study.",
+        description="The logical relationship between members of the group, that indicates how they were applied in treating participants in a study. The value 'AND' indicates that all therapies in the group were applied in combination to a given patient or subject. The value 'OR' indicates that each therapy was applied individually to a distinct subset of participants in the cohort that was interrogated in a given study.",
     )
 
 
-class Therapeutic(BaseMetadataMixin, RootModel):
-    """An individual therapy (drug, procedure, behavioral intervention, etc.), or group of therapies (TherapyGroup)."""
+class Therapy(BaseMetadataMixin, MappableConcept):
+    """A specialization of MappableConcept representing an individual therapy (drug,
+    procedure, behavioral intervention, etc.).
+
+    Allowed conceptType values include: Therapy, Absent, Drug, Procedure, Behavioral
+    Intervention.
+    """
 
     _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
 
-    root: TherapyGroup | MappableConcept = Field(
-        ...,
-        json_schema_extra={
-            "description": "An individual therapy (drug, procedure, behavioral intervention, etc.), or group of therapies (TherapyGroup)."
-        },
+    conceptType: str = Field(
+        default="Therapy",
+        description="A term indicating the type of concept being represented by the MappableConcept.",
     )

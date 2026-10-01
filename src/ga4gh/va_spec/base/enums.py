@@ -2,6 +2,9 @@
 
 from enum import Enum
 
+# Evidence outcome code used when an assessment meets no criteria.
+NO_CRITERIA_MET = "no_criteria_met"
+
 
 class DiagnosticPredicate(str, Enum):
     """Define constraints for diagnostic predicate"""

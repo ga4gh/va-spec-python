@@ -15,103 +15,103 @@ from ga4gh.va_spec.ccv_2022 import (
             VariantOncogenicityEvidenceLine.Criterion.OP1,
             "supporting",
             1,
-            VariantOncogenicityEvidenceLine.MethodType.COMPUTATIONAL_PREDICTION,
+            VariantOncogenicityEvidenceLine.MethodType.IN_SILICO_IMPACT_ASSESSMENT,
         ),
         (
             VariantOncogenicityEvidenceLine.Criterion.OP2,
             "supporting",
             1,
-            VariantOncogenicityEvidenceLine.MethodType.SINGLE_GENETIC_ETIOLOGY_CONTEXT,
+            VariantOncogenicityEvidenceLine.MethodType.SINGLE_GENETIC_ETIOLOGY_ASSESSMENT,
         ),
         (
             VariantOncogenicityEvidenceLine.Criterion.OP3,
             "supporting",
             1,
-            VariantOncogenicityEvidenceLine.MethodType.SOMATIC_HOTSPOT_RECURRENCE,
+            VariantOncogenicityEvidenceLine.MethodType.SOMATIC_HOTSPOT_ASSESSMENT,
         ),
         (
             VariantOncogenicityEvidenceLine.Criterion.OP4,
             "supporting",
             1,
-            VariantOncogenicityEvidenceLine.MethodType.POPULATION_FREQUENCY,
+            VariantOncogenicityEvidenceLine.MethodType.POPULATION_DATA_ASSESSMENT,
         ),
         (
             VariantOncogenicityEvidenceLine.Criterion.OM1,
             "moderate",
             2,
-            VariantOncogenicityEvidenceLine.MethodType.FUNCTIONAL_DOMAIN_LOCATION,
+            VariantOncogenicityEvidenceLine.MethodType.FUNCTIONAL_DOMAIN_ASSESSMENT,
         ),
         (
             VariantOncogenicityEvidenceLine.Criterion.OM2,
             "moderate",
             2,
-            VariantOncogenicityEvidenceLine.MethodType.PRIMARY_SEQUENCE_CONSEQUENCE,
+            VariantOncogenicityEvidenceLine.MethodType.PRIMARY_SEQUENCE_CONSEQUENCE_ASSESSMENT,
         ),
         (
             VariantOncogenicityEvidenceLine.Criterion.OM3,
             "moderate",
             2,
-            VariantOncogenicityEvidenceLine.MethodType.SOMATIC_HOTSPOT_RECURRENCE,
+            VariantOncogenicityEvidenceLine.MethodType.SOMATIC_HOTSPOT_ASSESSMENT,
         ),
         (
             VariantOncogenicityEvidenceLine.Criterion.OM4,
             "moderate",
             2,
-            VariantOncogenicityEvidenceLine.MethodType.AMINO_ACID_OR_RESIDUE_ANALOGY,
+            VariantOncogenicityEvidenceLine.MethodType.AMINO_ACID_ANALOGY_ASSESSMENT,
         ),
         (
             VariantOncogenicityEvidenceLine.Criterion.OS1,
             "strong",
             4,
-            VariantOncogenicityEvidenceLine.MethodType.AMINO_ACID_OR_RESIDUE_ANALOGY,
+            VariantOncogenicityEvidenceLine.MethodType.AMINO_ACID_ANALOGY_ASSESSMENT,
         ),
         (
             VariantOncogenicityEvidenceLine.Criterion.OS2,
             "strong",
             4,
-            VariantOncogenicityEvidenceLine.MethodType.FUNCTIONAL_ASSAY,
+            VariantOncogenicityEvidenceLine.MethodType.FUNCTIONAL_DATA_ASSESSMENT,
         ),
         (
             VariantOncogenicityEvidenceLine.Criterion.OS3,
             "strong",
             4,
-            VariantOncogenicityEvidenceLine.MethodType.SOMATIC_HOTSPOT_RECURRENCE,
+            VariantOncogenicityEvidenceLine.MethodType.SOMATIC_HOTSPOT_ASSESSMENT,
         ),
         (
             VariantOncogenicityEvidenceLine.Criterion.OVS1,
             "very strong",
             8,
-            VariantOncogenicityEvidenceLine.MethodType.PRIMARY_SEQUENCE_CONSEQUENCE,
+            VariantOncogenicityEvidenceLine.MethodType.PRIMARY_SEQUENCE_CONSEQUENCE_ASSESSMENT,
         ),
         (
             VariantOncogenicityEvidenceLine.Criterion.SBP1,
             "supporting",
             -1,
-            VariantOncogenicityEvidenceLine.MethodType.COMPUTATIONAL_PREDICTION,
+            VariantOncogenicityEvidenceLine.MethodType.IN_SILICO_IMPACT_ASSESSMENT,
         ),
         (
             VariantOncogenicityEvidenceLine.Criterion.SBP2,
             "supporting",
             -1,
-            VariantOncogenicityEvidenceLine.MethodType.PRIMARY_SEQUENCE_CONSEQUENCE,
+            VariantOncogenicityEvidenceLine.MethodType.PRIMARY_SEQUENCE_CONSEQUENCE_ASSESSMENT,
         ),
         (
             VariantOncogenicityEvidenceLine.Criterion.SBS1,
             "strong",
             -4,
-            VariantOncogenicityEvidenceLine.MethodType.POPULATION_FREQUENCY,
+            VariantOncogenicityEvidenceLine.MethodType.POPULATION_DATA_ASSESSMENT,
         ),
         (
             VariantOncogenicityEvidenceLine.Criterion.SBS2,
             "strong",
             -4,
-            VariantOncogenicityEvidenceLine.MethodType.FUNCTIONAL_ASSAY,
+            VariantOncogenicityEvidenceLine.MethodType.FUNCTIONAL_DATA_ASSESSMENT,
         ),
         (
             VariantOncogenicityEvidenceLine.Criterion.SBVS1,
             "very strong",
             -8,
-            VariantOncogenicityEvidenceLine.MethodType.POPULATION_FREQUENCY,
+            VariantOncogenicityEvidenceLine.MethodType.POPULATION_DATA_ASSESSMENT,
         ),
     ],
 )
@@ -141,13 +141,13 @@ def test_derive_onco_evidence_attributes(
             "OS2_moderate",
             "supports",
             2,
-            VariantOncogenicityEvidenceLine.MethodType.FUNCTIONAL_ASSAY,
+            VariantOncogenicityEvidenceLine.MethodType.FUNCTIONAL_DATA_ASSESSMENT,
         ),
         (
             "SBS2_moderate",
             "disputes",
             -2,
-            VariantOncogenicityEvidenceLine.MethodType.FUNCTIONAL_ASSAY,
+            VariantOncogenicityEvidenceLine.MethodType.FUNCTIONAL_DATA_ASSESSMENT,
         ),
     ],
 )
@@ -205,6 +205,6 @@ def test_derive_onco_evidence_attributes_from_not_met_outcome():
     assert onco_evidence_attrs.scoreOfEvidenceProvided is None
     assert (
         onco_evidence_attrs.specifiedBy.methodType
-        == VariantOncogenicityEvidenceLine.MethodType.FUNCTIONAL_ASSAY.value
+        == VariantOncogenicityEvidenceLine.MethodType.FUNCTIONAL_DATA_ASSESSMENT.value
     )
     VariantOncogenicityEvidenceLine(**onco_evidence_attrs.model_dump())

@@ -16,17 +16,20 @@ from ga4gh.va_spec.acmg_2015.models import (
     VariantPathogenicityStatement,
 )
 from ga4gh.va_spec.base import (
+    NO_CRITERIA_MET,
     Agent,
     CohortAlleleFrequencyStudyResult,
     ExperimentalVariantFunctionalImpactStudyResult,
+    TherapyGroup,
+    TumorVariantFrequencyStudyResult,
 )
 from ga4gh.va_spec.base.core import (
     Direction,
     EvidenceLine,
     Method,
+    Proposition,
     Statement,
     StudyGroup,
-    StudyResult,
     VariantClinicalSignificanceProposition,
     VariantDiagnosticProposition,
     VariantOncogenicityProposition,
@@ -55,10 +58,10 @@ def test_definitions():
 def caf():
     """Create test fixture for CohortAlleleFrequencyStudyResult"""
     return CohortAlleleFrequencyStudyResult(
-        focusAllele="allele.json#/1",
-        focusAlleleCount=0,
-        focusAlleleFrequency=0,
-        locusAlleleCount=34086,
+        focus="allele.json#/1",
+        focusCount=0,
+        alleleFrequency=0,
+        locusCount=34086,
         cohort=StudyGroup(id="ALL", name="Overall"),
     )
 
@@ -77,7 +80,7 @@ def pathogenicity_evidence_line_params():
                 "pmid": "25741868",
                 "name": "ACMG Guidelines, 2015",
             },
-            "methodType": "Functional Data Assessment",
+            "methodType": "functional_data_assessment",
         },
         "directionOfEvidenceProvided": "supports",
         "evidenceOutcome": {
@@ -108,7 +111,7 @@ def oncogenicity_evidence_line_params():
                 "pmid": "35101336",
                 "name": "ClinGen/CGC/VICC Guidelines for Oncogenicity, 2022",
             },
-            "methodType": "functional_assay",
+            "methodType": "functional_data_assessment",
         },
         "directionOfEvidenceProvided": "supports",
         "scoreOfEvidenceProvided": 1,
@@ -132,19 +135,19 @@ def oncogenicity_evidence_line_params():
     [
         (
             VariantClinicalSignificanceProposition,
-            "objectCondition",
+            "object",
             "hasClinicalSignificanceFor",
         ),
         (
             VariantDiagnosticProposition,
-            "objectCondition",
+            "object",
             "isDiagnosticInclusionCriterionFor",
         ),
-        (VariantOncogenicityProposition, "objectTumorType", "isOncogenicFor"),
-        (VariantPathogenicityProposition, "objectCondition", "isCausalFor"),
+        (VariantOncogenicityProposition, "object", "isOncogenicFor"),
+        (VariantPathogenicityProposition, "object", "isCausalFor"),
         (
             VariantPrognosticProposition,
-            "objectCondition",
+            "object",
             "associatedWithBetterOutcomeFor",
         ),
         (
@@ -160,12 +163,12 @@ def test_proposition_condition_helpers(
     """Test condition access without knowing the proposition field name."""
     initial_condition = iriReference(root="conditions.json#/1")
     proposition_data = {
-        "subjectVariant": "alleles.json#/1",
+        "subject": "alleles.json#/1",
         "predicate": predicate,
         condition_field_name: initial_condition,
     }
     if proposition_class is VariantTherapeuticResponseProposition:
-        proposition_data["objectTherapeutic"] = "therapeutics.json#/1"
+        proposition_data["object"] = "therapeutics.json#/1"
 
     proposition = proposition_class(**proposition_data)
 
@@ -179,7 +182,7 @@ def test_condition_set():
     """Ensure ConditionSet model works as expected"""
     condition_set_dict = {
         "membershipOperator": "AND",
-        "conditions": [
+        "concepts": [
             {
                 "conceptType": "Disease",
                 "id": "civic.did:3387",
@@ -195,7 +198,7 @@ def test_condition_set():
                 "name": "Diffuse Astrocytoma, MYB- Or MYBL1-altered",
             },
             {
-                "conditions": [
+                "concepts": [
                     {
                         "conceptType": "Phenotype",
                         "id": "civic.phenotype:8121",
@@ -247,7 +250,7 @@ def test_condition_set():
     assert ConditionSet(**condition_set_dict)
 
     invalid_params = deepcopy(condition_set_dict)
-    invalid_params["conditions"].pop()
+    invalid_params["concepts"].pop()
 
     with pytest.raises(
         ValidationError, match="List should have at least 2 items after validation"
@@ -273,53 +276,31 @@ def test_agent():
 
 def test_caf_study_result(caf):
     """Ensure CohortAlleleFrequencyStudyResult model works as expected"""
-    assert caf.focusAllele.root == "allele.json#/1"
-    assert caf.focusAlleleCount == 0
-    assert caf.focusAlleleFrequency == 0
-    assert caf.locusAlleleCount == 34086
+    assert caf.focus.root == "allele.json#/1"
+    assert caf.focusCount == 0
+    assert caf.alleleFrequency == 0
+    assert caf.locusCount == 34086
     assert caf.cohort.id == "ALL"
     assert caf.cohort.name == "Overall"
     assert caf.cohort.type == "StudyGroup"
 
-    assert "focus" not in caf.model_dump()
-    assert "focus" not in json.loads(caf.model_dump_json())
-
-    with pytest.raises(
-        AttributeError,
-        match="'CohortAlleleFrequencyStudyResult' object has no attribute 'focus'",
-    ):
-        caf.focus  # noqa: B018
-
-    with pytest.raises(
-        ValueError,
-        match='"CohortAlleleFrequencyStudyResult" object has no field "focus"',
-    ):
-        caf.focus = "focus"
+    assert caf.model_dump()["focus"] == "allele.json#/1"
+    assert json.loads(caf.model_dump_json())["focus"] == "allele.json#/1"
 
 
 def test_experimental_func_impact_study_result():
     """Ensure ExperimentalVariantFunctionalImpactStudyResult model works as expected"""
     experimental_func_impact_study_result = (
-        ExperimentalVariantFunctionalImpactStudyResult(focusVariant="allele.json#/1")
+        ExperimentalVariantFunctionalImpactStudyResult(focus="allele.json#/1")
     )
-    assert experimental_func_impact_study_result.focusVariant.root == "allele.json#/1"
+    assert experimental_func_impact_study_result.focus.root == "allele.json#/1"
 
-    assert "focus" not in experimental_func_impact_study_result.model_dump()
-    assert "focus" not in json.loads(
+    assert (
+        experimental_func_impact_study_result.model_dump()["focus"] == "allele.json#/1"
+    )
+    assert "focus" in json.loads(
         experimental_func_impact_study_result.model_dump_json()
     )
-
-    with pytest.raises(
-        AttributeError,
-        match="'ExperimentalVariantFunctionalImpactStudyResult' object has no attribute 'focus'",
-    ):
-        experimental_func_impact_study_result.focus  # noqa: B018
-
-    with pytest.raises(
-        ValueError,
-        match='"ExperimentalVariantFunctionalImpactStudyResult" object has no field "focus"',
-    ):
-        experimental_func_impact_study_result.focus = "focus"
 
 
 def test_evidence_line(caf):
@@ -333,7 +314,7 @@ def test_evidence_line(caf):
                 "type": "Statement",
                 "proposition": {
                     "type": "VariantTherapeuticResponseProposition",
-                    "subjectVariant": {
+                    "subject": {
                         "id": "civic.mpid:33",
                         "type": "CategoricalVariant",
                         "name": "EGFR L858R",
@@ -345,7 +326,7 @@ def test_evidence_line(caf):
                     },
                     "alleleOriginQualifier": {"name": "somatic"},
                     "predicate": "predictsSensitivityTo",
-                    "objectTherapeutic": {
+                    "object": {
                         "id": "civic.tid:146",
                         "conceptType": "Therapy",
                         "name": "Afatinib",
@@ -388,6 +369,9 @@ def test_evidence_line(caf):
     el = EvidenceLine(**el_dict)
     assert isinstance(el.hasEvidenceItems[0], iriReference)
     assert isinstance(el.hasEvidenceItems[1], Statement)
+    assert isinstance(
+        el.hasEvidenceItems[1].proposition, VariantTherapeuticResponseProposition
+    )
 
     el_dict = {
         "type": "EvidenceLine",
@@ -395,8 +379,7 @@ def test_evidence_line(caf):
         "directionOfEvidenceProvided": "supports",
     }
     el = EvidenceLine(**el_dict)
-    assert isinstance(el.hasEvidenceItems[0], StudyResult)
-    assert isinstance(el.hasEvidenceItems[0].root, CohortAlleleFrequencyStudyResult)
+    assert isinstance(el.hasEvidenceItems[0], CohortAlleleFrequencyStudyResult)
 
     el_dict = {
         "type": "EvidenceLine",
@@ -447,8 +430,8 @@ def test_variant_pathogenicity_stmt(pathogenicity_evidence_line_params):
         "proposition": {
             "type": "VariantPathogenicityProposition",
             "predicate": "isCausalFor",
-            "objectCondition": "conditions.json#/1",
-            "subjectVariant": "alleles.json#/1",
+            "object": "conditions.json#/1",
+            "subject": "alleles.json#/1",
         },
         "classification": {
             "primaryCoding": {"code": "pathogenic", "system": "ACMG Guidelines, 2015"}
@@ -499,9 +482,63 @@ def test_variant_pathogenicity_stmt(pathogenicity_evidence_line_params):
         VariantPathogenicityStatement(**invalid_params)
 
 
+def test_statement_proposition_accepts_iri_reference():
+    """Statements may reference a proposition instead of embedding one."""
+    statement = Statement(proposition="propositions.json#/1")
+
+    assert statement.proposition == iriReference(root="propositions.json#/1")
+
+
+def test_base_statement_and_evidence_line_accept_generic_propositions():
+    """Base models accept generic schema propositions."""
+    proposition = Proposition(
+        type="Proposition", subject={}, predicate="relatedTo", object={}
+    )
+
+    statement = Statement(proposition=proposition)
+    evidence_line = EvidenceLine(
+        directionOfEvidenceProvided="neutral", targetProposition=proposition
+    )
+
+    assert statement.proposition == proposition
+    assert evidence_line.targetProposition == proposition
+
+
+def test_concept_sets_accept_iri_references():
+    """Concept sets accept schema-permitted IRIs."""
+    condition_set = ConditionSet(
+        concepts=["conditions.json#/1", "conditions.json#/2"],
+        membershipOperator="OR",
+    )
+    therapy_group = TherapyGroup(
+        concepts=["therapies.json#/1", "therapies.json#/2"],
+        membershipOperator="AND",
+    )
+
+    assert all(isinstance(concept, iriReference) for concept in condition_set.concepts)
+    assert all(isinstance(concept, iriReference) for concept in therapy_group.concepts)
+
+
+def test_study_results_accept_iri_source_data_sets(caf):
+    """Study result models accept IRI source datasets."""
+    assert CohortAlleleFrequencyStudyResult(
+        **(caf.model_dump() | {"sourceDataSet": "datasets.json#/1"})
+    ).sourceDataSet == iriReference(root="datasets.json#/1")
+    assert TumorVariantFrequencyStudyResult(
+        focus="alleles.json#/1",
+        affectedSampleCount=1,
+        totalSampleCount=2,
+        affectedFrequency=0.5,
+        sourceDataSet="datasets.json#/1",
+    ).sourceDataSet == iriReference(root="datasets.json#/1")
+    assert ExperimentalVariantFunctionalImpactStudyResult(
+        focus="alleles.json#/1", sourceDataSet="datasets.json#/1"
+    ).sourceDataSet == iriReference(root="datasets.json#/1")
+
+
 def test_variant_pathogenicity_el(pathogenicity_evidence_line_params):
     """Ensure VariantPathogenicityEvidenceLine model works as expected"""
-    params = pathogenicity_evidence_line_params
+    params = deepcopy(pathogenicity_evidence_line_params)
     vp = VariantPathogenicityEvidenceLine(**params)
 
     assert isinstance(vp.specifiedBy, Method)
@@ -584,6 +621,51 @@ def test_variant_pathogenicity_el(pathogenicity_evidence_line_params):
         VariantPathogenicityEvidenceLine(**invalid_params)
 
 
+@pytest.mark.parametrize("outcome", [NO_CRITERIA_MET, "PS3_not_met"])
+def test_pathogenicity_noncontributing_outcomes_require_neutral_without_strength(
+    pathogenicity_evidence_line_params, outcome
+):
+    """Noncontributing ACMG outcomes must have neutral direction and no strength."""
+    params = deepcopy(pathogenicity_evidence_line_params)
+    strength = deepcopy(params["strengthOfEvidenceProvided"])
+    params["evidenceOutcome"]["primaryCoding"]["code"] = outcome
+    params["directionOfEvidenceProvided"] = "neutral"
+    params["strengthOfEvidenceProvided"] = None
+    assert VariantPathogenicityEvidenceLine(**params)
+
+    invalid_direction = deepcopy(params)
+    invalid_direction["directionOfEvidenceProvided"] = "supports"
+    invalid_direction["strengthOfEvidenceProvided"] = strength
+    with pytest.raises(
+        ValueError, match="`directionOfEvidenceProvided` must be 'neutral'"
+    ):
+        VariantPathogenicityEvidenceLine(**invalid_direction)
+
+    invalid_strength = deepcopy(params)
+    invalid_strength["strengthOfEvidenceProvided"] = strength
+    with pytest.raises(ValueError, match="`strengthOfEvidenceProvided` must be null"):
+        VariantPathogenicityEvidenceLine(**invalid_strength)
+
+
+def test_pathogenicity_profile_accepts_schema_permitted_references():
+    """Pathogenicity models accept opaque IRI references."""
+    evidence_line = VariantPathogenicityEvidenceLine(
+        specifiedBy="methods.json#/1",
+        directionOfEvidenceProvided="supports",
+        evidenceOutcome="outcomes.json#/1",
+        strengthOfEvidenceProvided="strengths.json#/1",
+    )
+    statement = VariantPathogenicityStatement(
+        proposition="propositions.json#/1",
+        strength="strengths.json#/1",
+        classification="classifications.json#/1",
+        specifiedBy="methods.json#/1",
+    )
+
+    assert isinstance(evidence_line.evidenceOutcome, iriReference)
+    assert isinstance(statement.classification, iriReference)
+
+
 def test_variant_onco_stmt(oncogenicity_evidence_line_params):
     """Ensure VariantOncogenicityStatement model works as expected"""
     params = {
@@ -591,8 +673,8 @@ def test_variant_onco_stmt(oncogenicity_evidence_line_params):
         "proposition": {
             "type": "VariantOncogenicityProposition",
             "predicate": "isOncogenicFor",
-            "objectTumorType": "conditions.json#/1",
-            "subjectVariant": "alleles.json#/1",
+            "object": "conditions.json#/1",
+            "subject": "alleles.json#/1",
         },
         "classification": {
             "primaryCoding": {
@@ -682,6 +764,51 @@ def test_variant_onco_el(oncogenicity_evidence_line_params):
         VariantOncogenicityEvidenceLine(**invalid_params)
 
 
+@pytest.mark.parametrize("outcome", [NO_CRITERIA_MET, "OS2_not_met"])
+def test_oncogenicity_noncontributing_outcomes_require_neutral_without_strength(
+    oncogenicity_evidence_line_params, outcome
+):
+    """Noncontributing CCV outcomes must have neutral direction and no strength."""
+    params = deepcopy(oncogenicity_evidence_line_params)
+    strength = deepcopy(params["strengthOfEvidenceProvided"])
+    params["evidenceOutcome"]["primaryCoding"]["code"] = outcome
+    params["directionOfEvidenceProvided"] = "neutral"
+    params["strengthOfEvidenceProvided"] = None
+    assert VariantOncogenicityEvidenceLine(**params)
+
+    invalid_direction = deepcopy(params)
+    invalid_direction["directionOfEvidenceProvided"] = "supports"
+    invalid_direction["strengthOfEvidenceProvided"] = strength
+    with pytest.raises(
+        ValueError, match="`directionOfEvidenceProvided` must be 'neutral'"
+    ):
+        VariantOncogenicityEvidenceLine(**invalid_direction)
+
+    invalid_strength = deepcopy(params)
+    invalid_strength["strengthOfEvidenceProvided"] = strength
+    with pytest.raises(ValueError, match="`strengthOfEvidenceProvided` must be null"):
+        VariantOncogenicityEvidenceLine(**invalid_strength)
+
+
+def test_oncogenicity_profile_accepts_schema_permitted_references():
+    """Oncogenicity models accept inherited IRI branches."""
+    evidence_line = VariantOncogenicityEvidenceLine(
+        specifiedBy="methods.json#/1",
+        directionOfEvidenceProvided="supports",
+        evidenceOutcome="outcomes.json#/1",
+        strengthOfEvidenceProvided="strengths.json#/1",
+    )
+    statement = VariantOncogenicityStatement(
+        proposition="propositions.json#/1",
+        strength="strengths.json#/1",
+        classification="classifications.json#/1",
+        specifiedBy="methods.json#/1",
+    )
+
+    assert isinstance(evidence_line.evidenceOutcome, iriReference)
+    assert isinstance(statement.classification, iriReference)
+
+
 def test_variant_onco_el_no_evidence_outcome():
     """Test that VariantOncogenicityEvidenceLine validates without evidence
     outcome
@@ -695,7 +822,7 @@ def test_variant_onco_el_no_evidence_outcome():
                 "pmid": "35101336",
                 "name": "ClinGen/CGC/VICC Guidelines for Oncogenicity, 2022",
             },
-            "methodType": "functional_assay",
+            "methodType": "functional_data_assessment",
         },
         directionOfEvidenceProvided=Direction.NEUTRAL,
         scoreOfEvidenceProvided=0,
@@ -714,21 +841,34 @@ def test_variant_onco_el_no_evidence_outcome():
         VariantOncogenicityEvidenceLine.model_validate(invalid)
 
 
+def test_aac_profile_accepts_schema_permitted_references():
+    """AAC models accept opaque classification and strength IRIs."""
+    statement = VariantClinicalSignificanceStatement(
+        proposition="propositions.json#/1",
+        strength="strengths.json#/1",
+        classification="classifications.json#/1",
+        specifiedBy="methods.json#/1",
+    )
+
+    assert isinstance(statement.strength, iriReference)
+    assert isinstance(statement.classification, iriReference)
+
+
 def test_aac_statement():
     """Test that AMP/ASCO/CAP statement model validators work correctly"""
     prop = {
         "type": "VariantDiagnosticProposition",
         "predicate": "isDiagnosticExclusionCriterionFor",
-        "objectCondition": "conditions.json#/1",
-        "subjectVariant": "alleles.json#/1",
+        "object": "conditions.json#/1",
+        "subject": "alleles.json#/1",
     }
     params = {
         "direction": "supports",
         "proposition": {
             "type": "VariantClinicalSignificanceProposition",
             "predicate": "hasClinicalSignificanceFor",
-            "objectCondition": "conditions.json#/1",
-            "subjectVariant": "alleles.json#/1",
+            "object": "conditions.json#/1",
+            "subject": "alleles.json#/1",
         },
         "strength": {
             "primaryCoding": {

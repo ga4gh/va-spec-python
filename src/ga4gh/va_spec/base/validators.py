@@ -5,17 +5,17 @@ from enum import Enum
 from types import MappingProxyType
 from typing import ClassVar, Generic, TypeVar
 
-from ga4gh.core.models import MappableConcept
-from ga4gh.va_spec.base.enums import System
+from ga4gh.core.models import MappableConcept, iriReference
+from ga4gh.va_spec.base.enums import NO_CRITERIA_MET, System
 
 
 def validate_mappable_concept(
-    mc: MappableConcept | None,
+    mc: MappableConcept | iriReference | None,
     valid_system: System,
     valid_codes: list[str] | None = None,
     code_pattern: str | None = None,
     mc_is_required: bool = False,
-) -> MappableConcept | None:
+) -> MappableConcept | iriReference | None:
     """Validate GKS Core Mappable Concept object
 
     :param mc: Mappable Concept object
@@ -33,6 +33,9 @@ def validate_mappable_concept(
             msg = "MappableConcept is required"
             raise ValueError(msg)
         return None
+
+    if isinstance(mc, iriReference):
+        return mc
 
     if not mc.primaryCoding:
         msg = "`primaryCoding` is required."
@@ -123,10 +126,14 @@ class MethodTypeCriterionValidationMixin(Generic[MethodTypeT, CriterionT]):
         :raises ValueError: If the evidence outcome criterion is invalid or is
             not valid for the specified method type, or if method type is invalid
         """
-        parsed_method_type = cls.MethodType(method_type)
+        try:
+            parsed_method_type = cls.MethodType(method_type)
+        except ValueError as e:
+            msg = f"{method_type!r} is not a valid {cls.__qualname__}.MethodType"
+            raise ValueError(msg) from e
         allowed_criteria = cls.ALLOWED_CRITERIA_BY_METHOD_TYPE[parsed_method_type]
 
-        if not evidence_outcome_code:
+        if not evidence_outcome_code or evidence_outcome_code == NO_CRITERIA_MET:
             return
 
         criterion = cls._get_base_criterion_from_code(evidence_outcome_code)
