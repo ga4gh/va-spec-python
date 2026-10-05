@@ -12,13 +12,15 @@ import ga4gh.va_spec.aac_2017
 import ga4gh.va_spec.acmg_2015
 import ga4gh.va_spec.base
 import ga4gh.va_spec.ccv_2022
-from ga4gh.va_spec.base import Statement
+from ga4gh.va_spec.base import Direction, Statement
 
 Statement(
+    direction=Direction.SUPPORTS,
     proposition={"type": "Proposition", "subject": {}, "predicate": "relatedTo", "object": {}},
     hasEvidence=[
         {
             "type": "Statement",
+            "direction": "supports",
             "proposition": {"type": "Proposition", "subject": {}, "predicate": "relatedTo", "object": {}},
         }
     ],

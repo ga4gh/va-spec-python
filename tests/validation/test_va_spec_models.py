@@ -484,7 +484,9 @@ def test_variant_pathogenicity_stmt(pathogenicity_evidence_line_params):
 
 def test_statement_proposition_accepts_iri_reference():
     """Statements may reference a proposition instead of embedding one."""
-    statement = Statement(proposition="propositions.json#/1")
+    statement = Statement(
+        proposition="propositions.json#/1", direction=Direction.SUPPORTS
+    )
 
     assert statement.proposition == iriReference(root="propositions.json#/1")
 
@@ -495,7 +497,7 @@ def test_base_statement_and_evidence_line_accept_generic_propositions():
         type="Proposition", subject={}, predicate="relatedTo", object={}
     )
 
-    statement = Statement(proposition=proposition)
+    statement = Statement(proposition=proposition, direction=Direction.SUPPORTS)
     evidence_line = EvidenceLine(
         directionOfEvidenceProvided="neutral", targetProposition=proposition
     )
@@ -656,6 +658,7 @@ def test_pathogenicity_profile_accepts_schema_permitted_references():
         strengthOfEvidenceProvided="strengths.json#/1",
     )
     statement = VariantPathogenicityStatement(
+        direction=Direction.SUPPORTS,
         proposition="propositions.json#/1",
         strength="strengths.json#/1",
         classification="classifications.json#/1",
@@ -799,6 +802,7 @@ def test_oncogenicity_profile_accepts_schema_permitted_references():
         strengthOfEvidenceProvided="strengths.json#/1",
     )
     statement = VariantOncogenicityStatement(
+        direction=Direction.SUPPORTS,
         proposition="propositions.json#/1",
         strength="strengths.json#/1",
         classification="classifications.json#/1",
@@ -844,6 +848,7 @@ def test_variant_onco_el_no_evidence_outcome():
 def test_aac_profile_accepts_schema_permitted_references():
     """AAC models accept opaque classification and strength IRIs."""
     statement = VariantClinicalSignificanceStatement(
+        direction=Direction.SUPPORTS,
         proposition="propositions.json#/1",
         strength="strengths.json#/1",
         classification="classifications.json#/1",
