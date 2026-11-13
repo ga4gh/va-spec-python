@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from enum import Enum
 from typing import ClassVar
 
 from pydantic import Field
@@ -35,6 +36,20 @@ class ConditionSet(BaseMetadataMixin, ConceptSet):
     )
 
 
+class ConditionConceptType(str, Enum):
+    """A delineation of widely-used Condition concept types.
+
+    Note that this is not intended to exhaustively define those values, but rather to
+    provide a baseline for common uses.
+    """
+
+    CONDITION = "Condition"
+    DISEASE = "Disease"
+    PHENOTYPE = "Phenotype"
+    TRAIT = "Trait"
+    ABSENT = "Absent"
+
+
 class Condition(BaseMetadataMixin, MappableConcept):
     """A specialization of MappableConcept representing a single condition (disease,
     phenotype, or trait).
@@ -45,8 +60,8 @@ class Condition(BaseMetadataMixin, MappableConcept):
 
     _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
 
-    conceptType: str = Field(
-        default="Condition",
+    conceptType: ConditionConceptType | str = Field(
+        default=ConditionConceptType.CONDITION,
         description="A term indicating the type of concept being represented by the MappableConcept.",
     )
 
@@ -72,6 +87,20 @@ class TherapyGroup(BaseMetadataMixin, ConceptSet):
     )
 
 
+class TherapyConceptType(str, Enum):
+    """A delineation of widely-used Therapy concept types.
+
+    Note that this is not intended to exhaustively define those values, but rather to
+    provide a baseline for common uses.
+    """
+
+    THERAPY = "Therapy"
+    ABSENT = "Absent"
+    DRUG = "Drug"
+    PROCEDURE = "Procedure"
+    BEHAVIORAL_INTERVENTION = "Behavioral Intervention"
+
+
 class Therapy(BaseMetadataMixin, MappableConcept):
     """A specialization of MappableConcept representing an individual therapy (drug,
     procedure, behavioral intervention, etc.).
@@ -82,7 +111,7 @@ class Therapy(BaseMetadataMixin, MappableConcept):
 
     _maturity: ClassVar[Maturity] = Maturity.TRIAL_USE
 
-    conceptType: str = Field(
-        default="Therapy",
+    conceptType: TherapyConceptType | str = Field(
+        default=TherapyConceptType.THERAPY,
         description="A term indicating the type of concept being represented by the MappableConcept.",
     )
