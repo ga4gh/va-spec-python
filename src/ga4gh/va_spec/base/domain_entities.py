@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from enum import StrEnum
+from enum import Enum
 from typing import ClassVar
 
 from pydantic import Field
@@ -36,7 +36,7 @@ class ConditionSet(BaseMetadataMixin, ConceptSet):
     )
 
 
-class ConditionConceptType(StrEnum):
+class ConditionConceptType(str, Enum):
     """A delineation of widely-used Condition concept types.
 
     Note that this is not intended to exhaustively define those values, but rather to
@@ -87,7 +87,7 @@ class TherapyGroup(BaseMetadataMixin, ConceptSet):
     )
 
 
-class TherapyConceptType(StrEnum):
+class TherapyConceptType(str, Enum):
     """A delineation of widely-used Therapy concept types.
 
     Note that this is not intended to exhaustively define those values, but rather to
